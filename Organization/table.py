@@ -30,17 +30,19 @@ class Table(object):
         self.b_player = nr_w
     
     def _dump_result(self):
+        _str = 'No results'
         if self.result == -1.0:
-            return '--/--'
+            _str = '--/--'
         elif self.result == 0.0:
-            return '0.0/1.0'
+            _str = '0.0/1.0'
         elif self.result == 0.5:
-            return '0.5/0.5'
+            _str = '0.5/0.5'
         elif self.result == 1.0:
-            return '1.0/0.0'
+            _str = '1.0/0.0'
+        return _str
     
     def dump(self):
         _str = f' Table: #{self.number}  --  result: {self._dump_result()}\n'
         _str += f'  Whites: #{self.w_player}\n'
-        _str += f'  Blacks: #{self.b_player}\n'
+        _str += f'  Blacks: #{self.b_player}'
         return _str

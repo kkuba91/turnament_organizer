@@ -70,7 +70,8 @@ class Player(object):
         self._achieved_rank = 0
         self._last_played_white = False
         self._rounds = None
-        self._oponents = list()
+        self._opponents = list()
+        self._possible_opponents = list()
         self._results = list()
         self._set = False    # For setting round flag
         self._round_done = False
@@ -138,6 +139,32 @@ class Player(object):
         else:
             _exist = False
         return _exist
+    
+    def set_round(self, round_nr, opponent_idnt, result=-1.0):
+        while len(self._opponents) < round_nr:
+            self._opponents.append(-1)
+        while len(self._results) < round_nr:
+            self._results.append(-1)
+        self._opponents[round_nr-1] = opponent_idnt
+        self._results[round_nr-1] = result
+
+    def check_opponent_played(self, opponent_idnt):
+        _played = False
+        for opponent in self._opponents:
+            if opponent == opponent_idnt and not _played:
+                _played = True
+        if opponent_idnt == self._idnt:
+            _played = True
+        return _played
+    
+    def refresh_possible_opponents(self, players):
+        self._possible_opponents.clear()
+        for player in players:
+            if player._idnt != self._idnt and player._idnt not in self._opponents:
+               self._possible_opponents.append(player._idnt)
+        if not self._paused:
+            self._possible_opponents.append(-1)
+
 
     def dump(self):
         _dump = f"\nPLAYER (#{self._idnt}): {self._name} {self._surname}\n"
@@ -148,3 +175,23 @@ class Player(object):
         _dump += f"Elo rating: {self._elo}\n"
         _dump += f"Turnament rating: {self._rank}\n"
         return _dump
+    
+    def dump_short(self):
+        _dump = f"\nPLAYER #{self._idnt}: {self._name} {self._surname}"
+        return _dump
+
+    def dump_opponents(self):
+        _round_nr = 1
+        _dump = "Opponents:\n"
+        for oppo in self._opponents:
+             _dump += f"Round {_round_nr}: #{oppo}, Result: {self._results[_round_nr-1]}\n"
+             _round_nr += 1
+        return _dump
+    
+    def dump_possible_opponents(self):
+        _dump = f"Player: #{self._idnt} can play with:\n"
+        for oppo in self._possible_opponents:
+             _dump += f"{oppo}\n"
+        return _dump
+
+
