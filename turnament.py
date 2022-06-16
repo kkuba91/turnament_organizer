@@ -74,12 +74,20 @@ class Turnament(object):
             ident += 1
         system = set_system(self._system)
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
+        self._players = system._players
     
     def next_round(self):
         if self._act_round_nr < self._rounds_num:
             self._act_round_nr += 1
             system = set_system(self._system)
             self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
+            self._players = system._players
+            _ret = None
+        else:
+            _ret = -1
+            print(f'[Error] Maximum turnament round: {self._rounds_num}!!')
+        return _ret
+
 
     def apply_round_results(self):
         # Handle if wrong type passed
@@ -98,18 +106,19 @@ class Turnament(object):
             table = _round.tables[t_key]
             print('Check table.dump():')
             print(table.dump())
-            print('\n')
             for player in self._players:
                 if player._idnt == table.w_player:
                     player._points += table.result
                     player._progress += player._points
-                    player._oponents.append(table.b_player)
+                    player._opponents.append(table.b_player)
+                    player.refresh_possible_opponents(self._players)
                     player._results.append(table.result)
                     player._round_done = True
                 if player._idnt == table.b_player:
                     player._points += (1.0 - table.result)
                     player._progress += player._points
-                    player._oponents.append(table.w_player)
+                    player._opponents.append(table.w_player)
+                    player.refresh_possible_opponents(self._players)
                     player._results.append(1.0 - table.result)
                     player._round_done = True
         if _round.pausing > 0:
@@ -117,10 +126,13 @@ class Turnament(object):
                 if player._idnt == _round.pausing:
                     player._points += 1
                     player._progress += player._points
-        # Calculate bucholz for each player aftr the round:
+                    player._opponents.append(-1)
+                    player._results.append(1.0)
+                    print(f'Pausing: #{ _round.pausing}\n')
+        # Calculate bucholz for each player after the round:
         for player in self._players:
             _bucholz = 0.0
-            for opponent_idnt in player._oponents:
+            for opponent_idnt in player._opponents:
                 for opponent in self._players:
                     if opponent._idnt == opponent_idnt:
                         _bucholz += opponent._points
@@ -145,6 +157,13 @@ class Turnament(object):
         _dump = f'PLAYERS - LIST:'
         for player in self._players:
             _dump += player.dump()
+            _dump += player.dump_opponents()
+        return _dump
+    
+    def dump_players_p_o(self):
+        _dump = f'PLAYERS - POSSIBLE OPPONENTS:\n'
+        for player in self._players:
+            _dump += player.dump_possible_opponents()
         return _dump
 
     def dump(self):

@@ -23,7 +23,7 @@ class Application:
         self._browser: None
         self._cmd: None
         self._turnament: None
-        print(f'Strting "{name}" application.. ')
+        print(f'Starting "{name}" application.. ')
     
     def init(self):
         self._browser = Browser()
@@ -80,10 +80,10 @@ class Application:
             os.system('cls' if os.name == 'nt' else 'clear')
             if self._turnament:
                 self._turnament.add_player(
-                    name = "Jacob", surname = "Kochaniak", sex = "male",
+                    name = "Jacob", surname = "K", sex = "male",
                     city = "Bedzin", category = "III", elo = 0)
                 self._turnament.add_player(
-                    name = "Joannah", surname = "Kochaniak", sex = "female",
+                    name = "Joannah", surname = "K", sex = "female",
                     city = "Bedzin", category = "bk", elo = 0)
                 self._turnament.add_player(
                     name = "Jaroslaw", surname = "Katchynsky", sex = "male",
@@ -100,42 +100,64 @@ class Application:
                 self._turnament.add_player(
                     name = "Mario", surname = "Super", sex = "male",
                     city = "Pilsudsky Square", category = "bk", elo = 1355)
-                print('\n\n [DEBUG] ROUND #1:\n')
-                self._turnament.begin(rounds=4)
-                self._turnament.add_result(table_nr=1, result=0.5)
+                print('[DEBUG] ROUND #1:\n')
+                self._turnament.begin(rounds=6)
+                self._turnament.add_result(table_nr=1, result=1.0)
                 self._turnament.add_result(table_nr=2, result=1.0)
                 self._turnament.add_result(table_nr=3, result=0.5)
+                self._turnament.apply_round_results()
+                # print(self._turnament.dump_act_results())
+                # print(self._turnament.dump_players())
+
+                print('[DEBUG] ROUND #2:\n')
+                self._turnament.next_round()
+                # print(self._turnament.dump())
+                self._turnament.add_result(table_nr=1, result=0.5)
+                self._turnament.add_result(table_nr=2, result=0.0)
+                self._turnament.add_result(table_nr=3, result=1.0)
+                self._turnament.apply_round_results()
+                # print(self._turnament.dump_act_results())
+                # print(self._turnament.dump_players())
+
+                print('[DEBUG] ROUND #3:\n')
+                self._turnament.next_round()
+                # print(self._turnament.dump())
+                self._turnament.add_result(table_nr=1, result=0.5)
+                self._turnament.add_result(table_nr=2, result=0.0)
+                self._turnament.add_result(table_nr=3, result=1.0)
+                self._turnament.apply_round_results()
+                # print(self._turnament.dump_act_results())
+                # print(self._turnament.dump_players())
+
+                print('[DEBUG] ROUND #4:\n')
+                self._turnament.next_round()
+                # print(self._turnament.dump())
+                self._turnament.add_result(table_nr=1, result=0.5)
+                self._turnament.add_result(table_nr=2, result=0.5)
+                self._turnament.add_result(table_nr=3, result=1.0)
+                self._turnament.apply_round_results()
+                # print(self._turnament.dump_act_results())
+                # print(self._turnament.dump_players())
+
+                print('[DEBUG] ROUND #5:\n')
+                self._turnament.next_round()
+                # print(self._turnament.dump())
+                self._turnament.add_result(table_nr=1, result=0.5)
+                self._turnament.add_result(table_nr=2, result=-1.0)
+                self._turnament.add_result(table_nr=3, result=1.0)
+                self._turnament.apply_round_results()
+                # print(self._turnament.dump_act_results())
+                print(self._turnament.dump_players_p_o())
+
+                print('[DEBUG] ROUND #6:\n')
+                self._turnament.next_round()
+                # print(self._turnament.dump())
+                self._turnament.add_result(table_nr=1, result=0.5)
+                self._turnament.add_result(table_nr=2, result=0.0)
+                self._turnament.add_result(table_nr=3, result=0.0)
+                self._turnament.apply_round_results()
+                print(self._turnament.dump_act_results())
                 print(self._turnament.dump_players())
-                print(self._turnament.dump())
-                self._turnament.apply_round_results()
-                print(self._turnament.dump_act_results())
-
-                print('\n\n [DEBUG] ROUND #2:\n')
-                self._turnament.next_round()
-                print(self._turnament.dump())
-                self._turnament.add_result(table_nr=1, result=0.5)
-                self._turnament.add_result(table_nr=2, result=0.0)
-                self._turnament.add_result(table_nr=3, result=1.0)
-                self._turnament.apply_round_results()
-                print(self._turnament.dump_act_results())
-
-                print('\n\n [DEBUG] ROUND #3:\n')
-                self._turnament.next_round()
-                print(self._turnament.dump())
-                self._turnament.add_result(table_nr=1, result=0.5)
-                self._turnament.add_result(table_nr=2, result=0.0)
-                self._turnament.add_result(table_nr=3, result=1.0)
-                self._turnament.apply_round_results()
-                print(self._turnament.dump_act_results())
-
-                print('\n\n [DEBUG] ROUND #4:\n')
-                self._turnament.next_round()
-                print(self._turnament.dump())
-                self._turnament.add_result(table_nr=1, result=0.5)
-                self._turnament.add_result(table_nr=2, result=0.0)
-                self._turnament.add_result(table_nr=3, result=1.0)
-                self._turnament.apply_round_results()
-                print(self._turnament.dump_act_results())
             else:
                 print('No turnament file selected.')
             

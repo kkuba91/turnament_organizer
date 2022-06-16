@@ -31,6 +31,27 @@ class Round(object):
                 all_results = False
         return all_results
     
+    def get_opponent(self, _idnt):
+        _ret = None
+        for nr in self.tables:
+            if self.tables[nr].w_player == _idnt:
+                _ret = self.tables[nr].b_player
+            if self.tables[nr].b_player == _idnt:
+                _ret = self.tables[nr].w_player
+        return _ret
+
+    def change_player(self, player_old, player_new):
+        _n_replaced = True
+        for nr in self.tables:
+            if _n_replaced:
+                if self.tables[nr].w_player == player_old:
+                    self.tables[nr].w_player = player_new
+                    _n_replaced = False
+                if self.tables[nr].b_player == player_old:
+                    self.tables[nr].b_player = player_new
+                    _n_replaced = False
+
+
     def dump(self):
         _str = f'Round nr: {self.number}\n'
         for nr in range(1, len(self.tables)+1):
