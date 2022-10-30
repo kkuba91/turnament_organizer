@@ -1,9 +1,10 @@
-from Organization.table import Table
 """round.py
 
     Turnament round with all data about playing sets and resuts.
 
 """
+from Organization.table import Table
+
 
 class Round(object):
     def __init__(self) -> None:
@@ -13,13 +14,13 @@ class Round(object):
         self.all_results = False
         self._players_num = 0
         self._tables_num = 0
-    
+
     def add_table(self, player_w, player_b):
         next_nr = len(self.tables) + 1
         table = Table(next_nr, player_w, player_b)
         self.tables[next_nr] = table
         return next_nr
-    
+
     def set_result(self, table_nr, result):
         self.tables[table_nr].result = result
         self.all_results = self._check_results()
@@ -30,7 +31,7 @@ class Round(object):
             if table.result == -1.0:
                 all_results = False
         return all_results
-    
+
     def get_opponent(self, _idnt):
         _ret = None
         for nr in self.tables:
@@ -51,11 +52,10 @@ class Round(object):
                     self.tables[nr].b_player = player_new
                     _n_replaced = False
 
-
     def dump(self):
-        _str = f'Round nr: {self.number}\n'
-        for nr in range(1, len(self.tables)+1):
+        _str = f"Round nr: {self.number}\n"
+        for nr in range(1, len(self.tables) + 1):
             _str += self.tables[nr].dump()
         if self.pausing > 0:
-            _str += f'Player with a Pause: #{self.pausing}\n'
+            _str += f"Player with a Pause: #{self.pausing}\n"
         return _str
