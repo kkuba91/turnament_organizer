@@ -10,8 +10,8 @@ from application import Application
 
 
 if __name__ == "__main__":
-    # Application life handler 
-    app = Application('Chess Organizer')
+    # Application life handler
+    app = Application("Chess Organizer")
     app.init()
     app.run()
     app.end()

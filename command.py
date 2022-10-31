@@ -4,6 +4,7 @@
 
 """
 
+
 class Command(object):
     def __init__(self) -> None:
         self._cmd_msg = ""
@@ -14,7 +15,7 @@ class Command(object):
         self._params = list()
         msg = input()
         self._interpret(msg)
-    
+
     def input_set(self, msg):
         self._interpret(msg)
 
@@ -29,13 +30,13 @@ class Command(object):
 
     def get_param(self, ident):
         return self._params[ident]
-    
+
     def get_cmd(self):
         return self._cmd_msg
 
     def check_param(self, ident, param):
         return self._params[ident] == param
-    
+
     def check_cmd(self, cmd_msg):
         return self._cmd_msg == cmd_msg
 
@@ -43,5 +44,5 @@ class Command(object):
         if len(self._params) > 0:
             return True
         else:
-            print('Wrong parameters. ')
+            print("Wrong parameters. ")
             return False
