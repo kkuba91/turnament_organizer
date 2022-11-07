@@ -1,4 +1,5 @@
 """__init__.py"""
+# noqa: F401
 from .player import CATEGORY, Player
 from .round import Round
 from .system import (
@@ -7,6 +8,6 @@ from .system import (
     SystemSingleElimination,
     SystemSwiss,
     set_system,
-    SystemType
+    SystemType,
 )
 from .table import Table

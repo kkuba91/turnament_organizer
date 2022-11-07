@@ -5,7 +5,7 @@
 """
 # Global package imports:
 import os
-from abc import ABC
+import logging
 
 # Local package imports:
 from browser import Browser
@@ -16,8 +16,31 @@ from turnament import Turnament
 DEBUG = True
 
 
+def debug(func):
+    """Debug filtered action - @decorator."""
+
+    def function_handler(*args, **kvargs):
+        _ret = None
+        if DEBUG:
+            _ret = func(*args, **kvargs)
+        return _ret
+
+    return function_handler
+
+
+def set_logging() -> None:
+    """Set logging configuration."""
+    if DEBUG:
+        logging.basicConfig(level=logging.DEBUG)
+        msg_debug = "Debugging is switched ON!"
+        logging.debug(msg=msg_debug)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+
 class Application:
     def __init__(self, name):
+        set_logging()
         self._name = name
         self._end = False
         self._is_db_opened = False
@@ -25,7 +48,8 @@ class Application:
         self._browser: None
         self._cmd: None
         self._turnament: None
-        print(f'Starting "{name}" application.. ')
+        msg = f'Starting "{name}" application.. '
+        logging.info(msg)
 
     def init(self):
         self._browser = Browser()
@@ -71,14 +95,16 @@ class Application:
     def dir_close(self):
         if self._cmd.check_cmd("Close"):
             self._browser.stop()
-            self._turnament._players.clear()
+            self._turnament.delete_players()
 
     def dir_end(self):
         if self._cmd.check_cmd("End"):
             self._end = True
 
+    @debug
     def dir_debug(self):
-        if self._cmd.check_cmd("debug") and DEBUG:
+        """Debugging purpose only."""
+        if self._cmd.check_cmd("debug"):
             os.system("cls" if os.name == "nt" else "clear")
             if self._turnament:
                 self._turnament.add_player(
@@ -137,68 +163,75 @@ class Application:
                     category="bk",
                     elo=1355,
                 )
-                print("[DEBUG] ROUND #1:\n")
+                msg_debug = "ROUND #1:"
+                logging.debug(msg=msg_debug)
                 self._turnament.begin(rounds=6)
                 self._turnament.add_result(table_nr=1, result=1.0)
                 self._turnament.add_result(table_nr=2, result=1.0)
                 self._turnament.add_result(table_nr=3, result=0.5)
                 self._turnament.apply_round_results()
-                # print(self._turnament.dump_act_results())
-                # print(self._turnament.dump_players())
+                # logging.debug(msg=self._turnament.dump_act_results())
+                # logging.debug(msg=self._turnament.dump_players())
 
-                print("[DEBUG] ROUND #2:\n")
+                msg_debug = "ROUND #2:"
+                logging.debug(msg=msg_debug)
                 self._turnament.next_round()
-                # print(self._turnament.dump())
+                # logging.debug(msg=self._turnament.dump())
                 self._turnament.add_result(table_nr=1, result=0.5)
                 self._turnament.add_result(table_nr=2, result=0.0)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # print(self._turnament.dump_act_results())
-                # print(self._turnament.dump_players())
+                # logging.debug(msg=self._turnament.dump_act_results())
+                # logging.debug(msg=self._turnament.dump_players())
 
-                print("[DEBUG] ROUND #3:\n")
+                msg_debug = "ROUND #3:"
+                logging.debug(msg=msg_debug)
                 self._turnament.next_round()
-                # print(self._turnament.dump())
+                # logging.debug(msg=self._turnament.dump())
                 self._turnament.add_result(table_nr=1, result=0.5)
                 self._turnament.add_result(table_nr=2, result=0.0)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # print(self._turnament.dump_act_results())
-                # print(self._turnament.dump_players())
+                # logging.debug(msg=self._turnament.dump_act_results())
+                # logging.debug(msg=self._turnament.dump_players())
 
-                print("[DEBUG] ROUND #4:\n")
+                msg_debug = "ROUND #4:"
+                logging.debug(msg=msg_debug)
                 self._turnament.next_round()
-                # print(self._turnament.dump())
+                # logging.debug(msg=self._turnament.dump())
                 self._turnament.add_result(table_nr=1, result=0.5)
                 self._turnament.add_result(table_nr=2, result=0.5)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # print(self._turnament.dump_act_results())
-                # print(self._turnament.dump_players())
+                # logging.debug(msg=self._turnament.dump_act_results())
+                # logging.debug(msg=self._turnament.dump_players())
 
-                print("[DEBUG] ROUND #5:\n")
+                msg_debug = "ROUND #5:"
+                logging.debug(msg=msg_debug)
                 self._turnament.next_round()
-                # print(self._turnament.dump())
+                # logging.debug(msg=self._turnament.dump())
                 self._turnament.add_result(table_nr=1, result=0.5)
                 self._turnament.add_result(table_nr=2, result=-1.0)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # print(self._turnament.dump_act_results())
-                print(self._turnament.dump_players_p_o())
+                # logging.debug(msg=self._turnament.dump_act_results())
+                logging.debug(msg=self._turnament.dump_players_p_o())
 
-                print("[DEBUG] ROUND #6:\n")
+                msg_debug = "ROUND #6:"
+                logging.debug(msg=msg_debug)
                 self._turnament.next_round()
-                # print(self._turnament.dump())
+                # logging.debug(msg=self._turnament.dump())
                 self._turnament.add_result(table_nr=1, result=0.5)
                 self._turnament.add_result(table_nr=2, result=0.0)
                 self._turnament.add_result(table_nr=3, result=0.0)
                 self._turnament.apply_round_results()
-                print(self._turnament.dump_act_results())
-                print(self._turnament.dump_players())
+                logging.debug(msg=self._turnament.dump_act_results())
+                # logging.debug(msg=self._turnament.dump_players())
             else:
-                print("No turnament file selected.")
+                msg_info = "No turnament file selected."
+                logging.info(msg=msg_info)
 
 
 if __name__ == "__main__":
-    _comment = "Application class. It handles init(), run() and end() methods. "
-    print(_comment)
+    msg_comment = "Application class. It handles init(), run() and end() methods. "
+    logging.info(msg=msg_comment)

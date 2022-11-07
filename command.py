@@ -1,19 +1,28 @@
 """command.py
 
-    Command API class.
+    Commandline API class.
 
 """
+import logging
 
 
-class Command(object):
+class Command:
+
+    """Commandline class handler."""
+
     def __init__(self) -> None:
         self._cmd_msg = ""
-        self._params = list()
+        self._params = []
 
     def input_std(self):
         self._cmd_msg = ""
-        self._params = list()
-        msg = input()
+        self._params = []
+        try:
+            msg = input()
+        except KeyboardInterrupt:
+            msg_debug = "Keyboard interrupt detected. App closed."
+            logging.debug(msg=msg_debug)
+            msg = "End"
         self._interpret(msg)
 
     def input_set(self, msg):
@@ -24,7 +33,7 @@ class Command(object):
             self._cmd_msg = msg.split(" ")[0]
             msg_len = len(msg.split(" "))
             if msg_len > 1:
-                params = list()
+                params = []
                 params = msg.split(" ")[1:msg_len]
                 self._params = params
 
@@ -41,8 +50,10 @@ class Command(object):
         return self._cmd_msg == cmd_msg
 
     def is_params(self):
+        _result = False
         if len(self._params) > 0:
-            return True
+            _result = True
         else:
-            print("Wrong parameters. ")
-            return False
+            msg_info = "Wrong/no parameters. "
+            logging.info(msg=msg_info)
+        return _result
