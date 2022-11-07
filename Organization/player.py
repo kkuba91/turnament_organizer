@@ -70,54 +70,149 @@ class Player(object):
         self._achieved_rank = 0
         self._last_played_white = False
         self._rounds = None
-        self._opponents = list()
-        self._possible_opponents = list()
-        self._results = list()
+        self._opponents = []
+        self._possible_opponents = []
+        self._results = []
         self._set = False  # For setting round flag
         self._round_done = False
+
+    def __eq__(self, __o: object) -> bool:
+        return self._idnt == __o._idnt
 
     def __repr__(self):
         ret = f"\n#({self._idnt})"
         ret += self.dump()
         return ret
 
-    def set_name(self, name):
-        self._name = name
-        return self
-
-    def set_surname(self, surname):
-        self._surname = surname
-        return self
-
-    def set_sex(self, sex):
-        self._sex = sex
-        return self
-
-    def set_birthdate(self, birthdate):
-        self._birth_date = birthdate
-        return self
-
-    def set_city(self, city):
-        self._city = city
-        return self
-
-    def set_category(self, category):
-        self._category = category
-        return self
-
-    def set_elo(self, elo):
-        self._elo = elo
-        return self
-
-    def set_club(self, club):
-        self._club = club
-        return club
-
-    def get_name(self):
+    @property
+    def name(self):
         return self._name
 
-    def get_surname(self):
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def surname(self):
         return self._surname
+
+    @surname.setter
+    def surname(self, surname):
+        self._surname = surname
+
+    @property
+    def sex(self):
+        return self._sex
+
+    @sex.setter
+    def sex(self, sex):
+        self._sex = sex
+
+    @property
+    def birthdate(self):
+        return self._birth_date
+
+    @birthdate.setter
+    def birthdate(self, birthdate):
+        self._birth_date = birthdate
+
+    @property
+    def city(self):
+        return self._city
+
+    @city.setter
+    def city(self, city):
+        self._city = city
+
+    @property
+    def category(self):
+        return self._category
+
+    @category.setter
+    def category(self, category):
+        self._category = category
+
+    @property
+    def elo(self):
+        return self._elo
+
+    @elo.setter
+    def elo(self, elo):
+        self._elo = elo
+
+    @property
+    def rank(self):
+        return self._rank
+
+    @rank.setter
+    def rank(self, rank):
+        self._rank = rank
+
+    @property
+    def club(self):
+        return self._club
+
+    @club.setter
+    def club(self, club):
+        self._club = club
+
+    @property
+    def id(self):
+        return self._idnt
+
+    @id.setter
+    def id(self, val: int):
+        if isinstance(val, int) and val > 0:
+            self._idnt = val
+
+    @property
+    def points(self):
+        return self._points
+
+    @points.setter
+    def points(self, val):
+        self._points = val
+
+    @property
+    def progress(self):
+        return self._progress
+
+    @progress.setter
+    def progress(self, val):
+        self._progress = val
+
+    @property
+    def bucholz(self):
+        return self._bucholz
+
+    @bucholz.setter
+    def bucholz(self, val):
+        self._bucholz = val
+
+    @property
+    def opponents(self):
+        return self._opponents
+
+    def add_opponent(self, player):
+        self._opponents.append(player)
+
+    @property
+    def results(self):
+        return self._results
+
+    @property
+    def paused(self):
+        return self._paused
+
+    @paused.setter
+    def paused(self, val: bool):
+        self._paused = val
+
+    def add_result(self, val):
+        self._results.append(val)
+
+    def round_done(self):
+        self._round_done = True
 
     def get_by_ident(self, ident):
         if ident == self._idnt:
@@ -134,7 +229,7 @@ class Player(object):
 
     def exist(self, name, surname):
         _exist = False
-        if self.get_name() == name and self.get_surname() == surname:
+        if self.name == name and self.surname == surname:
             _exist = True
         else:
             _exist = False
@@ -160,8 +255,8 @@ class Player(object):
     def refresh_possible_opponents(self, players):
         self._possible_opponents.clear()
         for player in players:
-            if player._idnt != self._idnt and player._idnt not in self._opponents:
-                self._possible_opponents.append(player._idnt)
+            if player.id != self._idnt and player.id not in self._opponents:
+                self._possible_opponents.append(player.id)
         if not self._paused:
             self._possible_opponents.append(-1)
 
@@ -193,5 +288,5 @@ class Player(object):
         _dump = f"Player: #{self._idnt} can play with:\n"
         for oppo in self._possible_opponents:
             _dump += f"{oppo}, "
-        _dump += '\n'
+        _dump += "\n"
         return _dump

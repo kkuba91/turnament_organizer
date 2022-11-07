@@ -3,8 +3,9 @@
     Browser class with with additional File class.
 
 """
-import errno, os
-from os import system as sys
+import os
+import errno
+import logging
 
 
 class File(object):
@@ -17,6 +18,18 @@ class File(object):
         self._name = ""
         self._path = ""
         self._valid = False
+
+    @property
+    def valid(self):
+        return self._valid
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def path(self):
+        return self._path
 
     def set_name(self, name):
         self._name = str(name)
@@ -31,8 +44,10 @@ class File(object):
             if self._is_path_valid():
                 self._valid = True
         if not self._valid:
-            print("File verification failed.")
-            print(self)
+            msg_error = "File verification failed."
+            logging.error(msg=msg_error)
+            msg_error = str(self)
+            logging.error(msg=msg_error)
         return self._valid
 
     def _is_name_valid(self) -> bool:
@@ -41,20 +56,20 @@ class File(object):
             if self._name.isalpha():
                 _valid = True
             else:
-                print("Wrong filename.. ")
+                msg_error = "Wrong filename.. "
+                logging.error(msg=msg_error)
         return _valid
 
     def _is_path_valid(self) -> bool:
         try:
             if not isinstance(self._path, str) or not self._path:
-                print("Wrong path type.. ")
+                msg_error = "Wrong path type.. "
+                logging.error(msg=msg_error)
                 return False
 
             _, self._path = os.path.splitdrive(self._path)
 
-            root_dirname = os.environ.get(
-                "HOMEDRIVE", "C:"
-            )  # if sys.platform == 'win32' else os.path.sep
+            root_dirname = os.environ.get("HOMEDRIVE", "C:")
             assert os.path.isdir(root_dirname)
 
             root_dirname = root_dirname.rstrip(os.path.sep) + os.path.sep
@@ -65,13 +80,16 @@ class File(object):
                 except OSError as exc:
                     if hasattr(exc, "winerror"):
                         if exc.winerror == 123:
-                            print("Wrong path with  winerror 123.. ")
+                            msg_error = f"Wrong path with  winerror.. ({str(exc)}) "
+                            logging.error(msg=msg_error)
                             return False
                     elif exc.errno in {errno.ENAMETOOLONG, errno.ERANGE}:
-                        print("Wrong path.. ")
+                        msg_error = "Wrong path.. "
+                        logging.error(msg=msg_error)
                         return False
         except TypeError as exc:
-            print("Wrong path type.. ")
+            msg_error = f"Wrong path type.. ({str(exc)}) "
+            logging.error(msg=msg_error)
             return False
         else:
             return True
@@ -97,36 +115,38 @@ class Browser(object):
 
     def get_file(self, option):
         _log = ""
-        if self._file._valid:
+        _ret = None
+        if self._file.valid:
             self._option = option
             for self._option in ["Open", "New"]:
                 if option == "New":
                     self._success = self._create_file()
-                    _log = f'Opened new db "{self._file._name}". '
+                    _log = f'Opened new db "{self._file.name}". '
                 elif option == "Open":
                     self._success = self._get_file()
-                    _log = f'Opened existing db "{self._file._name}". '
+                    _log = f'Opened existing db "{self._file.name}". '
                 if self._success and option:
                     self._file_opened = True
-                    print(_log)
-                return self._file_handler
-            else:
-                return None
+                    logging.info(msg=_log)
+                _ret = self._file_handler
+                break
         else:
             self._option = ""
-            print("Wrong file coordinates.")
-            return None
+            msg_error = "Wrong file coordinates."
+            logging.error(msg=msg_error)
+        return _ret
 
     def stop(self):
         self._option = ""
-        _log = f'Closed db "{self._file._name}". '
+        _log = f'Closed db "{self._file.name}". '
         if self._file_opened:
             self._file_handler.close()
             self._file_opened = False
             self._file.init()
-            print(_log)
+            logging.info(msg=_log)
         else:
-            print("Browser already closed.")
+            msg_error = "Browser already closed."
+            logging.error(msg=msg_error)
         return self._success
 
     def is_file_opened(self):
@@ -134,27 +154,29 @@ class Browser(object):
 
     def _create_file(self):
         _success = False
-        _full_file_name = self._file._path + "\\" + self._file._name + ".dbc"
+        _full_file_name = self._file.path + "\\" + self._file.name + ".dbc"
         try:
-            self._file_handler = open(_full_file_name, "w+")
+            self._file_handler = open(_full_file_name, "w+", encoding="utf-8")
             _success = True
-        except Exception:
-            print(f"Failed to create new file {_full_file_name}..")
+        except (FileExistsError, PermissionError, FileNotFoundError) as exc:
+            msg_error = f"Failed to create new file {_full_file_name}.. ({str(exc)}) "
+            logging.error(msg=msg_error)
             _success = False
         return _success
 
     def _get_file(self):
         _success = False
-        _full_file_name = self._file._path + "\\" + self._file._name + ".dbc"
+        _full_file_name = self._file.path + "\\" + self._file.name + ".dbc"
         try:
-            self._file_handler = open(_full_file_name, "r+")
+            self._file_handler = open(_full_file_name, "r+", encoding="utf-8")
             _success = True
-        except Exception:
-            print(f'Failed to create new file "{_full_file_name}"..')
+        except (FileExistsError, PermissionError, FileNotFoundError) as exc:
+            msg_error = f"Failed to create new file {_full_file_name}.. ({str(exc)}) "
+            logging.error(msg=msg_error)
             _success = False
         return _success
 
 
 if __name__ == "__main__":
-    _comment = "Browser class for creating new Turnament DB or opening existing one."
-    print(_comment)
+    msg_comment = "Browser class for creating new Turnament DB or opening existing one."
+    logging.info(msg=msg_comment)

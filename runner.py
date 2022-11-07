@@ -5,7 +5,6 @@
 """
 # Global package imports:
 # Local package imports:
-from browser import File
 from application import Application
 
 

@@ -6,6 +6,7 @@
 """
 # Global package imports:
 from datetime import date
+import logging
 
 # Local package imports:
 from Organization import set_system, Player, Round, SystemType
@@ -23,8 +24,8 @@ class Turnament(object):
         self._rounds_num = 0
         self._act_round_nr = 0
         self._system = SystemType.SWISS
-        self._players = list()
-        self._rounds = list()
+        self._players = []
+        self._rounds = []
 
         # Additional:
         self._place = ""
@@ -38,13 +39,16 @@ class Turnament(object):
     ):
         _dont_add = False
         for p in self._players:
-            if p._name == name and p._surname == surname:
+            if p.name == name and p.surname == surname:
                 _dont_add = True
         if not _dont_add:
             player = Player()
-            player.set_name(name).set_surname(surname).set_sex(sex)
-            player.set_city(city)
-            player.set_category(category).set_elo(elo)
+            player.name = name
+            player.surname = surname
+            player.sex = sex
+            player.city = city
+            player.category = category
+            player.elo = elo
             player.calculate_rank()
             self._players.append(player)
             self._players_num += 1
@@ -65,26 +69,27 @@ class Turnament(object):
     def _begin(self, rounds):
         self._rounds_num = rounds
         self._act_round_nr = 1
-        self._players.sort(key=lambda x: x._rank, reverse=True)
-        self._players.sort(key=lambda x: x._elo, reverse=True)
+        self._players.sort(key=lambda x: x.rank, reverse=True)
+        self._players.sort(key=lambda x: x.elo, reverse=True)
         ident = 1
         for player in self._players:
-            player._idnt = ident
+            player.id = ident
             ident += 1
         system = set_system(self._system)
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
-        self._players = system._players
+        self._players = system.players
 
     def next_round(self):
         if self._act_round_nr < self._rounds_num:
             self._act_round_nr += 1
             system = set_system(self._system)
             self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
-            self._players = system._players
+            self._players = system.players
             _ret = None
         else:
             _ret = -1
-            print(f"[Error] Maximum turnament round: {self._rounds_num}!!")
+            msg_log = f"[Error] Maximum turnament round: {self._rounds_num}!!"
+            logging.info(msg=msg_log)
         return _ret
 
     def apply_round_results(self):
@@ -95,73 +100,84 @@ class Turnament(object):
         if not isinstance(_round, Round):
             return None
         elif not _round.all_results:
-            _log = (
+            msg_info = (
                 "Cannot perform apply round results, "
-                + "because not all results are commited."
+                "because not all results are commited."
             )
-            print(_log)
+            logging.info(msg=msg_info)
             return None
         # Move results of tables to player scores:
         for t_key in _round.tables:
             table = _round.tables[t_key]
-            print("Check table.dump():")
-            print(table.dump())
+
+            msg_debug = "Check table.dump():"
+            logging.debug(msg=msg_debug)
+            logging.debug(msg=table.dump())
+
             for player in self._players:
-                if player._idnt == table.w_player:
-                    player._points += table.result
-                    player._progress += player._points
-                    player._opponents.append(table.b_player)
+                if player.id == table.w_player:
+                    player.points += table.result
+                    player.progress += player.points
+                    player.add_opponent(table.b_player)
                     player.refresh_possible_opponents(self._players)
-                    player._results.append(table.result)
-                    player._round_done = True
-                if player._idnt == table.b_player:
-                    player._points += 1.0 - table.result
-                    player._progress += player._points
-                    player._opponents.append(table.w_player)
+                    player.add_result(table.result)
+                    player.round_done()
+                if player.id == table.b_player:
+                    player.points += 1.0 - table.result
+                    player.progress += player.points
+                    player.add_opponent(table.w_player)
                     player.refresh_possible_opponents(self._players)
-                    player._results.append(1.0 - table.result)
-                    player._round_done = True
+                    player.add_result(1.0 - table.result)
+                    player.round_done()
         if _round.pausing > 0:
             for player in self._players:
-                if player._idnt == _round.pausing:
-                    player._points += 1
-                    player._progress += player._points
-                    player._opponents.append(-1)
-                    player._results.append(1.0)
-                    print(f"Pausing: #{ _round.pausing}\n")
+                if player.id == _round.pausing:
+                    player.points += 1
+                    player.progress += player.points
+                    player.add_opponent(-1)
+                    player.add_result(1.0)
+                    msg_debug = f"Pausing: #{ _round.pausing}"
+                    logging.debug(msg=msg_debug)
         # Calculate bucholz for each player after the round:
         for player in self._players:
             _bucholz = 0.0
-            for opponent_idnt in player._opponents:
+            for opponent_idnt in player.opponents:
                 for opponent in self._players:
-                    if opponent._idnt == opponent_idnt:
-                        _bucholz += opponent._points
-            player._bucholz = _bucholz
+                    if opponent.id == opponent_idnt:
+                        _bucholz += opponent.points
+            player.bucholz = _bucholz
         # Sort players:
-        self._players.sort(key=lambda x: x._bucholz, reverse=True)
-        self._players.sort(key=lambda x: x._progress, reverse=True)
-        self._players.sort(key=lambda x: x._points, reverse=True)
+        self._players.sort(key=lambda x: x.bucholz, reverse=True)
+        self._players.sort(key=lambda x: x.progress, reverse=True)
+        self._players.sort(key=lambda x: x.points, reverse=True)
+
+    def delete_players(self):
+        if self._players:
+            self._players.clear()
 
     def dump_act_results(self):
         _dump = f"RESULTS AFTER ROUND NR: #{self._act_round_nr}:\n\n"
-        _dump1 = f"#Id:  PLAYER: "
-        _dump2 = f"\tPTS:  \tPROG:  \tBUCH: \tRANK: \tCAT:\n"
+        _dump1 = "#Id:  PLAYER: "
+        _dump2 = "\tPTS:  \tPROG:  \tBUCH: \tRANK: \tCAT:\n"
         _dump += "{0:<34}".format(_dump1) + _dump2
         for player in self._players:
-            _dump1 = f"#{player._idnt}    {player._surname} {player._name}: "
-            _dump2 = f"\t{player._points}  \t{player._progress}  \t{player._bucholz} \t{player._rank} \t{player._category}\n"
+            _dump1 = f"#{player.id}    {player.surname} {player.name}: "
+            _dump2 = (
+                f"\t{player.points}  \t{player.progress}  \t{player.bucholz} "
+                f"\t{player.rank} \t{player.category}\n"
+            )
             _dump += "{0:<34}".format(_dump1) + _dump2
         return _dump
 
     def dump_players(self):
-        _dump = f"PLAYERS - LIST:"
+        _dump = "PLAYERS - LIST:"
         for player in self._players:
             _dump += player.dump()
             _dump += player.dump_opponents()
         return _dump
 
     def dump_players_p_o(self):
-        _dump = f"PLAYERS - POSSIBLE OPPONENTS:\n"
+        _dump = "PLAYERS - POSSIBLE OPPONENTS:\n"
         for player in self._players:
             _dump += player.dump_possible_opponents()
         return _dump
