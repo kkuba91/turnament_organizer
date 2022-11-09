@@ -8,6 +8,7 @@ import os
 import logging
 
 # Local package imports:
+from logger import set_logging, debug
 from browser import Browser
 from command import Command
 from turnament import Turnament
@@ -16,31 +17,9 @@ from turnament import Turnament
 DEBUG = True
 
 
-def debug(func):
-    """Debug filtered action - @decorator."""
-
-    def function_handler(*args, **kvargs):
-        _ret = None
-        if DEBUG:
-            _ret = func(*args, **kvargs)
-        return _ret
-
-    return function_handler
-
-
-def set_logging() -> None:
-    """Set logging configuration."""
-    if DEBUG:
-        logging.basicConfig(level=logging.DEBUG)
-        msg_debug = "Debugging is switched ON!"
-        logging.debug(msg=msg_debug)
-    else:
-        logging.basicConfig(level=logging.INFO)
-
-
 class Application:
     def __init__(self, name):
-        set_logging()
+        set_logging(debug=DEBUG)
         self._name = name
         self._end = False
         self._is_db_opened = False
