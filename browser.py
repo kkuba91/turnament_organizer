@@ -104,7 +104,7 @@ class Browser(object):
         self._option = ""
         self._success = False
         self._file = File()
-        self._file_handler: None
+        self._file_handler = None
 
     def set_file(self, path, filename) -> bool:
         if not self.is_file_opened():
@@ -118,7 +118,7 @@ class Browser(object):
         _ret = None
         if self._file.valid:
             self._option = option
-            for self._option in ["Open", "New"]:
+            if self._option in ("Open", "New"):
                 if option == "New":
                     self._success = self._create_file()
                     _log = f'Opened new db "{self._file.name}". '
@@ -129,7 +129,6 @@ class Browser(object):
                     self._file_opened = True
                     logging.info(msg=_log)
                 _ret = self._file_handler
-                break
         else:
             self._option = ""
             msg_error = "Wrong file coordinates."
@@ -171,7 +170,7 @@ class Browser(object):
             self._file_handler = open(_full_file_name, "r+", encoding="utf-8")
             _success = True
         except (FileExistsError, PermissionError, FileNotFoundError) as exc:
-            msg_error = f"Failed to create new file {_full_file_name}.. ({str(exc)}) "
+            msg_error = f"Failed to create/open the file {_full_file_name}.. ({str(exc)}) "
             logging.error(msg=msg_error)
             _success = False
         return _success

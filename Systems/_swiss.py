@@ -1,56 +1,16 @@
-"""system.py
+"""_swiss.py
 
-    System class with calculation model, players organization and ranks estimation.
-    This class is strictly related with class Player, Round - must be.
+    System class with swiss system calculation model.
 
 """
 # Global package imports:
-from abc import ABC, abstractmethod
-from enum import IntEnum
 import numpy as np
 import logging
 
 # Local package imports:
 from Organization import Round
-
-
-class SystemType(IntEnum):
-
-    """System Types (Enum)."""
-
-    SWISS = 1
-    CIRCULAR = 2
-    SINGLE_ELIMINATION = 3
-
-
-def set_system(sys_type: int):
-    if sys_type == SystemType.SWISS:
-        return SystemSwiss()
-    if sys_type == SystemType.CIRCULAR:
-        return SystemCircular()
-    if sys_type == SystemType.SINGLE_ELIMINATION:
-        return SystemSingleElimination()
-
-
-class System(ABC):
-    @abstractmethod
-    def __init__(self, sys_type):
-        self._round = 0
-        self.players: list
-
-    @abstractmethod
-    def prepare_round(self, players: list, round_nr):
-        pass
-
-    def _sort_players(self):
-        pass
-
-    def _get_player(self, _idnt):
-        _ret_p = None
-        for player in self.players:
-            if player.id == _idnt:
-                _ret_p = player
-        return _ret_p
+from Systems import System
+from resources import SystemType
 
 
 class SystemSwiss(System):
@@ -65,13 +25,15 @@ class SystemSwiss(System):
     def prepare_round(self, players: list, round_nr: int):
         self.players = players
         self._round = round_nr
-        msg_info = "Swiss system set. Players loaded."
-        logging.info(msg=msg_info)
         scored_players = self._sort_players()
         if self._round == 1:
             _round = self._set_tables_1(scored_players)
+            msg_info = "Swiss system set. Players loaded."
+            logging.info(msg=msg_info)
         else:
             _round = self._set_tables(scored_players)
+        msg_info = f"Prepare round #{self._round}."
+        logging.info(msg=msg_info)
         return _round
 
     def _sort_players(self):
@@ -274,32 +236,3 @@ class SystemSwiss(System):
             logging.debug(msg=msg_debug)
 
         return _round
-
-
-class SystemCircular(System):
-    def __init__(self):
-        self._round = 0
-        self._type = SystemType.CIRCULAR
-        self.players: list
-
-    def prepare_round(self, players: list, round_nr: int):
-        self.players = players
-        self._round = round_nr
-        self._sort_players()
-
-    def _sort_players(self):
-        pass
-
-
-class SystemSingleElimination(System):
-    def __init__(self):
-        self._round = 0
-        self._type = SystemType.SINGLE_ELIMINATION
-        self.players: list
-
-    def prepare_round(self, players: list, round_nr: int):
-        self.players = players
-        self._round = round_nr
-
-    def _sort_players(self):
-        return self._sort_players()

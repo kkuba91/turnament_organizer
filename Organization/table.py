@@ -5,37 +5,34 @@
     for player which plays whites.
 
 """
+# Global package imports:
+from pydantic import ValidationError
 
-
-class Table(object):
+# Local package imports:
+from Organization.Models import ModelTable
+class Table(ModelTable):
 
     """Table with chessboard score class."""
-
-    def __init__(self, nr, nr_w, nr_b):
-        self.number = nr
-        self.w_player = nr_w
-        self.b_player = nr_b
-        self.result = -1.0
 
     def set_result(self, result):
         if result in (0.0, 0.5, 1.0):
             self.result = result
 
-    def set_white_player(self, nr_w):
-        self.w_player = nr_w
+    def set_white_player(self, id_w):
+        self.w_player = id_w
 
-    def set_black_player(self, nr_b):
-        self.w_player = nr_b
+    def set_black_player(self, id_b):
+        self.w_player = id_b
 
     def swap_players(self):
-        nr_w = self.w_player
+        id_w = self.w_player
         self.w_player = self.b_player
-        self.b_player = nr_w
+        self.b_player = id_w
 
     def _dump_result(self):
         _str = "No results"
         if self.result == -1.0:
-            _str = "--/--"
+            _str = "---/---"
         elif self.result == 0.0:
             _str = "0.0/1.0"
         elif self.result == 0.5:
@@ -45,6 +42,13 @@ class Table(object):
         return _str
 
     def dump(self):
-        _str = f" Table: #{self.number}  --  result: {self._dump_result()}\n"
+        _str = f"Table: #{self.number}  --  result: {self._dump_result()}"
         _str += f"  #{self.w_player} vs. #{self.b_player}"
+        return _str
+
+    def dump_with_no_results(self):
+        _str = ""
+        if self.result == -1.0:
+            _str = f"Table: #{self.number}  --  result: {self._dump_result()}"
+            _str += f"  #{self.w_player} vs. #{self.b_player} \n"
         return _str
