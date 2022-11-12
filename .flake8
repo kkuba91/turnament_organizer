@@ -1,4 +1,8 @@
 [flake8]
 per-file-ignores =
      ./Organization/__init__.py: F401
+per-file-ignores =
+     ./Organization/Models/__init__.py: F401
+per-file-ignores =
+     ./Resources/__init__.py: F401
 max-line-length = 90

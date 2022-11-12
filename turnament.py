@@ -7,9 +7,12 @@
 # Global package imports:
 from datetime import date
 import logging
+from pydantic import ValidationError
 
 # Local package imports:
-from Organization import set_system, Player, Round, SystemType
+from Organization import Player, Round
+from Systems import System, get_system
+from resources import SystemType, SystemNames
 
 
 class Turnament(object):
@@ -23,12 +26,20 @@ class Turnament(object):
         self._mean_age = 0
         self._rounds_num = 0
         self._act_round_nr = 0
-        self._system = SystemType.SWISS
+        self.fine_to_begin = False
+        self._system = SystemType.UNKNOWN
         self._players = []
         self._rounds = []
 
         # Additional:
         self._place = ""
+    
+    def set_system(self, system_id: int):
+        if self._act_round_nr == 0:
+            msg_info = f"Set {SystemNames[system_id]} round pairing system."
+            logging.info(msg=msg_info)
+            self._system = system_id
+
 
     def set_date(self, start, end):
         self._date_start = start
@@ -42,29 +53,60 @@ class Turnament(object):
             if p.name == name and p.surname == surname:
                 _dont_add = True
         if not _dont_add:
-            player = Player()
-            player.name = name
-            player.surname = surname
-            player.sex = sex
-            player.city = city
-            player.category = category
-            player.elo = elo
-            player.calculate_rank()
-            self._players.append(player)
-            self._players_num += 1
+            try:
+                player = Player(
+                    name=name,
+                    surname=surname,
+                    sex=sex,
+                    city=city,
+                    category=category,
+                    elo=elo
+                )
+            except ValidationError as exc:
+                msg_error_2 = "\nCannot add Player with invalid data."
+                logging.error(msg=str(exc) + msg_error_2)
+            else:
+                self._players.append(player)
+                self._players_num += 1
+                msg_info = f"Set Player: {player.name} {player.surname}, " + \
+                        f"[elo: {player.elo}, cat: {player.category}] in turnament."
+                logging.info(msg=msg_info)
 
     def del_player(self, name="", surname=""):
         for player in self._players:
             if player.exist(name=name, surname=surname):
+                msg_info = f"Remove: {player.name} " + \
+                           f"{player.surname} from turnament."
+                logging.info(msg=msg_info)
                 self._players.pop(player)
+            else:
+                msg_info = f"No Player #{player.id} on turnament list."
+                logging.info(msg=msg_info)
 
     def add_result(self, table_nr, result):
-        self._rounds[self._act_round_nr - 1].tables[table_nr].result = result
+        round_id = self._act_round_nr - 1
+        if self.fine_to_begin:
+            try:
+                self._rounds[round_id].set_result(table_nr, result)
+            except KeyError as exc:
+                msg_error = f"Used values: round_id={round_id}, table_nr={table_nr}. ({exc})"
+                logging.error(msg=msg_error)
+        else:
+            msg_error = f"Something is wrong, turnament did not start. System {SystemNames[self._system]}."
+            logging.error(msg=msg_error)
 
     def begin(self, rounds):
         if isinstance(rounds, int):
-            if 0 < rounds < 23 and self._players_num > 1:
+            if self._system == SystemType.UNKNOWN:
+                msg_error = "Please set pairing system for turnament."
+                logging.error(msg=msg_error)
+            elif 0 < rounds < 23 and self._players_num > 1:
+                self.fine_to_begin = True
                 self._begin(rounds)
+            else:
+                msg_error = "Please add more Players to the event."
+                logging.error(msg=msg_error)
+
 
     def _begin(self, rounds):
         self._rounds_num = rounds
@@ -75,36 +117,36 @@ class Turnament(object):
         for player in self._players:
             player.id = ident
             ident += 1
-        system = set_system(self._system)
+        system = get_system(self._system)
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
         self._players = system.players
 
     def next_round(self):
+        _ret = None
         if self._act_round_nr < self._rounds_num:
             self._act_round_nr += 1
-            system = set_system(self._system)
+            system = get_system(self._system)
             self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
             self._players = system.players
             _ret = None
         else:
             _ret = -1
-            msg_log = f"[Error] Maximum turnament round: {self._rounds_num}!!"
-            logging.info(msg=msg_log)
+            msg_error = f"Maximum turnament round: {self._rounds_num}!!"
+            logging.error(msg=msg_error)
         return _ret
 
     def apply_round_results(self):
         # Handle if wrong type passed
-        # @todo: check out if all results are commited
-        self._rounds[self._act_round_nr - 1].all_results = True
+        if not self.fine_to_begin:
+            msg_error = "Round cannot be started. Check turnament settings."
+            logging.error(msg=msg_error)
+            return None
+        elif not self._rounds[self._act_round_nr - 1].all_results:
+            msg_error = f"Not all results have been applied yet! {self._rounds[self._act_round_nr - 1].dump()}"
+            logging.error(msg=msg_error)
+            return None
         _round = self._rounds[self._act_round_nr - 1]
         if not isinstance(_round, Round):
-            return None
-        elif not _round.all_results:
-            msg_info = (
-                "Cannot perform apply round results, "
-                "because not all results are commited."
-            )
-            logging.info(msg=msg_info)
             return None
         # Move results of tables to player scores:
         for t_key in _round.tables:
@@ -121,14 +163,14 @@ class Turnament(object):
                     player.add_opponent(table.b_player)
                     player.refresh_possible_opponents(self._players)
                     player.add_result(table.result)
-                    player.round_done()
+                    player.round_done = True
                 if player.id == table.b_player:
                     player.points += 1.0 - table.result
                     player.progress += player.points
                     player.add_opponent(table.w_player)
                     player.refresh_possible_opponents(self._players)
                     player.add_result(1.0 - table.result)
-                    player.round_done()
+                    player.round_done = True
         if _round.pausing > 0:
             for player in self._players:
                 if player.id == _round.pausing:
