@@ -84,7 +84,6 @@ class Application:
     def dir_debug(self):
         """Debugging purpose only."""
         if self._cmd.check_cmd("debug"):
-            os.system("cls" if os.name == "nt" else "clear")
             if self._turnament:
                 self._turnament.add_player(
                     name="Jacob",
@@ -144,6 +143,7 @@ class Application:
                 )
                 msg_debug = "ROUND #1:"
                 logging.debug(msg=msg_debug)
+                self._turnament.set_system(system_id=1)
                 self._turnament.begin(rounds=6)
                 self._turnament.add_result(table_nr=1, result=1.0)
                 self._turnament.add_result(table_nr=2, result=1.0)
@@ -190,10 +190,10 @@ class Application:
                 self._turnament.next_round()
                 # logging.debug(msg=self._turnament.dump())
                 self._turnament.add_result(table_nr=1, result=0.5)
-                self._turnament.add_result(table_nr=2, result=-1.0)
+                self._turnament.add_result(table_nr=2, result=0.0)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # logging.debug(msg=self._turnament.dump_act_results())
+                logging.debug(msg=self._turnament.dump_act_results())
                 logging.debug(msg=self._turnament.dump_players_p_o())
 
                 msg_debug = "ROUND #6:"
