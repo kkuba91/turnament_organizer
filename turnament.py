@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 # Local package imports:
 from Organization import Player, Round
-from Systems import System, get_system
+from Systems import get_system
 from resources import SystemType, SystemNames
 
 

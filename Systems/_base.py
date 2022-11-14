@@ -1,16 +1,15 @@
 """_base.py
 
-    System class with calculation model, players organization and ranks estimation.
-    This class is strictly related with class Player, Round - must be.
+    Base System class with methods declaration.
 
 """
 # Global package imports:
 from abc import ABC, abstractmethod
-import numpy as np
 import logging
 
 # Local package imports:
 
+MSG_COMMON = "Uninitiated system type. Not allowed to invoke method "
 
 class System(ABC):
     @abstractmethod
@@ -21,10 +20,12 @@ class System(ABC):
 
     @abstractmethod
     def prepare_round(self, *args, **kwargs):
-        pass
+        msg_debug = MSG_COMMON + "'prepare_round'"
+        logging.debug(msg=msg_debug)
 
     def _sort_players(self, *args, **kwargs):
-        pass
+        msg_debug = MSG_COMMON + "'_sort_players'"
+        logging.debug(msg=msg_debug)
 
     def _get_player(self, _idnt):
         # Getter from a list of playing Players.
@@ -36,24 +37,31 @@ class System(ABC):
 
     def _sort_players(self, *args, **kwargs):
         # Sort Players by turnamnt order
-        pass
+        msg_debug = MSG_COMMON + "'_sort_players'"
+        logging.debug(msg=msg_debug)
 
     def _validate_sort(self, *args, **kwargs):
-        pass
+        msg_debug = MSG_COMMON + "'_validate_sort'"
+        logging.debug(msg=msg_debug)
 
     def _itrate_sort(self, *args, **kwargs):
-        pass
+        msg_debug = MSG_COMMON + "'_itrate_sort'"
+        logging.debug(msg=msg_debug)
 
     def _round_one(self, *args, **kwargs):
-        pass
+        msg_debug = MSG_COMMON + "'_round_one'"
+        logging.debug(msg=msg_debug)
 
     def _round_next(self, *args, **kwargs):
-        pass
+        msg_debug = MSG_COMMON + "'_round_next'"
+        logging.debug(msg=msg_debug)
 
     def _set_tables_1(self, *args, **kwargs):
         """[Optional] Some of systems have odd the first round pairing."""
-        pass
+        msg_debug = MSG_COMMON + "'_set_tables_1'"
+        logging.debug(msg=msg_debug)
 
     def _set_tables(self, *args, **kwargs):
         """Normal round pairing."""
-        pass
+        msg_debug = MSG_COMMON + "'_set_tables'"
+        logging.debug(msg=msg_debug)
