@@ -1,6 +1,7 @@
 """application.py
 
     Application class with initailization, run and ending.
+    Than layer suppose to handle main app machine state decisions.
 
 """
 # Global package imports:

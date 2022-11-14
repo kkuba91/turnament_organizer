@@ -17,3 +17,13 @@ Chess turnament organizer (short construct concept). It is my hobby app I want t
 - [optional] save data to text files (dump data)
 - [optional] load data from saved files
 - [optional] save data to excel with all rounds dump
+
+## Launch
+Main launcher in `runner.py`.
+``` bash
+$ python3 runner.py
+```
+or
+``` bash
+$ py -3 runner.py
+```
