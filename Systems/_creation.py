@@ -1,7 +1,6 @@
 """_creation.py
 
-    System class with calculation model, players organization and ranks estimation.
-    This class is strictly related with class Player, Round - must be.
+    System object 'factory' function.
 
 """
 # Global package imports:
