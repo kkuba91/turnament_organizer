@@ -5,7 +5,7 @@
 """
 # Global package imports:
 from datetime import date
-from typing import Union, List, Any, Optional
+from typing import Union, List, Any
 from pydantic import BaseModel, ValidationError, validator
 
 # Local package imports:
