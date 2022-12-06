@@ -116,7 +116,7 @@ class SystemSwiss(System):
         return _round
     
     def _validate_with_next_pairing_2(self, players_list: list, players_set: list, act_player, act_opponent):
-        """Deph 1 validation."""
+        """Deph 2 validation."""
         p_list = players_list.copy()
         p_set = players_set.copy()
         p_set.append(act_player.id)
