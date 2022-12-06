@@ -27,16 +27,18 @@ class ModelTable(BaseModel):
 
     @validator('w_player')
     def w_player_match(cls, val):
-        if not isinstance(val, int) or val < 0:
-            msg_error = f"Not valid white's id ({val})."
-            raise ValueError(msg_error)
+        if val != -1:
+            if not isinstance(val, int) or val < 0:
+                msg_error = f"Not valid white's id ({val})."
+                raise ValueError(msg_error)
         return val
 
     @validator('b_player')
     def b_player_match(cls, val):
-        if not isinstance(val, int) or val < 0:
-            msg_error = f"Not valid black's id ({val})."
-            raise ValueError(msg_error)
+        if val != -1:
+            if not isinstance(val, int) or val < 0:
+                msg_error = f"Not valid black's id ({val})."
+                raise ValueError(msg_error)
         return val
 
     @validator('result')

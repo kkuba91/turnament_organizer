@@ -83,7 +83,13 @@ class Application:
 
     @debug
     def dir_debug(self):
-        """Debugging purpose only."""
+        """Debugging purpose only.
+           This example holds simple swiss system simulation (one manual test case), but critical.
+           There are 6 rounds for 7 Players.
+           Remarks:
+            - Swiss system transform into circular.
+            - Pause must be every round counted.
+        """
         if self._cmd.check_cmd("debug"):
             if self._turnament:
                 self._turnament.add_player(
@@ -150,7 +156,7 @@ class Application:
                 self._turnament.add_result(table_nr=2, result=1.0)
                 self._turnament.add_result(table_nr=3, result=0.5)
                 self._turnament.apply_round_results()
-                # logging.debug(msg=self._turnament.dump_act_results())
+                logging.debug(msg=self._turnament.dump_act_results())
                 # logging.debug(msg=self._turnament.dump_players())
 
                 msg_debug = "ROUND #2:"
@@ -161,7 +167,7 @@ class Application:
                 self._turnament.add_result(table_nr=2, result=0.0)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # logging.debug(msg=self._turnament.dump_act_results())
+                logging.debug(msg=self._turnament.dump_act_results())
                 # logging.debug(msg=self._turnament.dump_players())
 
                 msg_debug = "ROUND #3:"
@@ -172,7 +178,7 @@ class Application:
                 self._turnament.add_result(table_nr=2, result=0.0)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # logging.debug(msg=self._turnament.dump_act_results())
+                logging.debug(msg=self._turnament.dump_act_results())
                 # logging.debug(msg=self._turnament.dump_players())
 
                 msg_debug = "ROUND #4:"
@@ -183,8 +189,8 @@ class Application:
                 self._turnament.add_result(table_nr=2, result=0.5)
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
-                # logging.debug(msg=self._turnament.dump_act_results())
-                # logging.debug(msg=self._turnament.dump_players())
+                logging.debug(msg=self._turnament.dump_act_results())
+                # # logging.debug(msg=self._turnament.dump_players())
 
                 msg_debug = "ROUND #5:"
                 logging.debug(msg=msg_debug)
@@ -195,7 +201,7 @@ class Application:
                 self._turnament.add_result(table_nr=3, result=1.0)
                 self._turnament.apply_round_results()
                 logging.debug(msg=self._turnament.dump_act_results())
-                logging.debug(msg=self._turnament.dump_players_p_o())
+                # logging.debug(msg=self._turnament.dump_players_p_o())
 
                 msg_debug = "ROUND #6:"
                 logging.debug(msg=msg_debug)
@@ -206,7 +212,7 @@ class Application:
                 self._turnament.add_result(table_nr=3, result=0.0)
                 self._turnament.apply_round_results()
                 logging.debug(msg=self._turnament.dump_act_results())
-                # logging.debug(msg=self._turnament.dump_players())
+                # # logging.debug(msg=self._turnament.dump_players())
             else:
                 msg_info = "No turnament file selected."
                 logging.info(msg=msg_info)

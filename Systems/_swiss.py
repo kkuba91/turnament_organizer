@@ -11,6 +11,7 @@ import logging
 from Organization import Round
 from Systems import System
 from resources import SystemType
+from Organization.player import Player
 
 
 class SystemSwiss(System):
@@ -76,7 +77,7 @@ class SystemSwiss(System):
                 if player.points == point:
                     scored_nums[point] += 1
 
-        # 2. Foreach for point perspective groups:
+        # 2. Foreach point perspective groups:
         reserved_player = None
         for point in np.arange(start=float(self._round - 1), stop=-0.5, step=-0.5):
 
@@ -113,8 +114,70 @@ class SystemSwiss(System):
                     player.paused = True
 
         return _round
+    
+    def _validate_with_next_pairing_2(self, players_list: list, players_set: list, act_player, act_opponent):
+        """Deph 1 validation."""
+        p_list = players_list.copy()
+        p_set = players_set.copy()
+        p_set.append(act_player.id)
+        p_set.append(act_opponent.id)
+
+        p_available = [player for player in p_list if (player.id not in p_set)]
+        p_available_qty = len(p_available)
+        covered = 0
+
+        for i in range(len(players_list)):
+            # 2. Simple iterable for next Player to play:
+            p_available = [player for player in p_list if (player.id not in p_set)]
+            for player in p_available:
+                # 2.1. List of available Opponents:
+                opponent_found = False
+                player.refresh_possible_opponents(players_list)
+                for opponent in player.possible_opponents:
+                    # 2.1.2 Set next free Opponent to Player
+                    if not opponent_found and opponent.id not in player.opponents:
+                        if player.id not in p_set and opponent.id not in p_set:
+                            # OK, current Player and free Opponent match:
+                            opponent_found = True  # Set flag, opponnent_found
+                            p_set.append(player.id)
+                            p_set.append(opponent.id)
+                            covered += 2
+                            player.refresh_possible_opponents(players_list)
+        return covered >= p_available_qty
+
+    def _validate_with_next_pairing(self, players_list: list, players_set: list, act_player, act_opponent):
+        """Deph 1 validation."""
+        p_list = players_list.copy()
+        p_set = players_set.copy()
+        p_set.append(act_player.id)
+        p_set.append(act_opponent.id)
+
+        p_available = [player for player in p_list if (player.id not in p_set)]
+        p_available_qty = len(p_available)
+        covered = 0
+
+        for i in range(len(players_list)):
+            # 2. Simple iterable for next Player to play:
+            p_available = [player for player in p_list if (player.id not in p_set)]
+            for player in p_available:
+                # 2.1. List of available Opponents:
+                opponent_found = False
+                player.refresh_possible_opponents(players_list)
+                for opponent in player.possible_opponents:
+                    # 2.1.2 Set next free Opponent to Player
+                    if not opponent_found and opponent.id not in player.opponents:
+                        if player.id not in p_set and opponent.id not in p_set:
+                            # OK, current Player and free Opponent match:
+                            if self._validate_with_next_pairing_2(p_list, p_set, player, opponent):
+                                opponent_found = True  # Set flag, opponnent_found
+                                p_set.append(player.id)
+                                p_set.append(opponent.id)
+                                covered += 2
+                                player.refresh_possible_opponents(players_list)
+        return covered >= p_available_qty
 
     def _set_tables(self, scored_players):
+        """Set round N, where N > 1)."""
         parity = 0
         _round = Round()
         _round.number = self._round
@@ -128,111 +191,44 @@ class SystemSwiss(System):
         for point in np.arange(start=float(self._round - 1), stop=-0.5, step=-0.5):
             for player in scored_players[point]:
                 players_list.append(player)
-
-        # 2. Simple iterable for next player:
+        # 1.1 Add optional Pauser (fantom opponent for pausing Player) to the end:
+        if len(players_list) % 2 == 1:
+            players_list.append(Player(pauser=True))
+        
+        # 1.2 Dump possible opponents:
         for player in players_list:
-            _no_pair_player = True
+            player.refresh_possible_opponents(players_list)
 
-            # 2.1. Check if player alrady set in the round
-            _played = False
-            if player.id in players_set:
-                _played = True
-
-            # 2.2. If player is free pair Him/Her with an Opponnent:
-            if not _played:
-                opponent_found = False
-                for opponent in players_list:
-
-                    # 2.2.1 Check if opponent alrady set in the round
-                    _oppo_played = False
-                    if opponent.id in players_set:
-                        _oppo_played = True
-                    if opponent == player:
-                        _oppo_played = True
-
-                    # 2.2.2 Set next free Opponent to Player
-                    if not opponent_found and not _oppo_played:
-                        if (
-                            # Check next free Opponent for player:
-                            not opponent_found
-                            # Check Opponent not yet played with Player:
-                            and opponent.id not in player.opponents
-                            # Simulate, that the rest of Players can be paired:
-                            # @ToDo
-                        ):
-                            # OK, current Player and free Opponent match:
+        # 2. Simple iterable for next Player to play:
+        p_available = [player for player in players_list if (player.id not in players_set)]
+        for player in p_available:
+            # 2.1. List of available Opponents:
+            opponent_found = False
+            player.refresh_possible_opponents(players_list)
+            for opponent in player.possible_opponents:
+                # 2.1.2 Set next free Opponent to Player
+                if not opponent_found and opponent.id not in player.opponents:
+                    if player.id not in players_set and opponent.id not in players_set:
+                        # OK, current Player and free Opponent match:
+                        if self._validate_with_next_pairing(players_list, players_set, player, opponent):
                             opponent_found = True  # Set flag, opponnent_found
-                            _no_pair_player = False
                             players_set.append(player.id)  # Add players to 'set' list
                             players_set.append(opponent.id)
                             # Add table with these two players:
                             table_nr = _round.add_table(
                                 player_w=player.id, player_b=opponent.id
                             )
+                            player.refresh_possible_opponents(players_list)
 
+                            # 2.1.3 Check if Opponent is not a Pauser:
                             parity += 1
+                            if opponent.id == -1:
+                                _round.pausing = player.id
+                                player.paused = True
+
                             # Swap order every odd table:
-                            if parity % 2 == 0:
+                            elif parity % 2 == 0:
                                 _round.tables[table_nr].swap_players()
 
-                # 2.2.3. For Player without Opponent set 'pause':
-                if _no_pair_player:
-                    _round.pausing = player.id
-
-        # 3. Check if pasuing is unique:
-        _paused_right = True
-        for player in players_list:
-            _paused = 0
-            for oppo in player.opponents:
-                if oppo == -1:
-                    _paused += 1
-            if player.id == _round.pausing:
-                _paused += 1
-            if _paused > 1:
-                _paused_right = False
-
-        if not _paused_right:  # DEBUG
-            msg_debug = f"Player {_round.pausing} has doubled pause!"
-            logging.debug(msg=msg_debug)
-
-        # 4. Find Player in the round, which can replace to pausing:
-        _replace_ok = False
-        _replace_pausing = _round.pausing
-        _replace_opponent = -1
-        # Get temporaty pausing Player:
-        _paused_player = self._get_player(_round.pausing)
-        if not _paused_right:
-            for player in reversed(players_list):
-                if (
-                    player.id != _round.pausing and not _replace_ok
-                ):  # Not the same player
-                    # Get temporary Opponent:
-                    _oppo_idnt = _round.get_opponent(player.id)
-                    _oppo = self._get_player(_oppo_idnt)
-                    # Check if temp pausing P did not play with Opponent
-                    # and check if Opponent did not pause:
-                    if _oppo_idnt not in _paused_player.opponents and not _oppo.paused:
-                        _replace_opponent = _oppo_idnt
-                        _replace_ok = True
-
-        # 5. Replace Pausing Player with other Player:
-        if not _paused_right and _replace_ok:  # DEBUG
-            msg_debug = f"Replace pausing {_replace_pausing} with {_replace_opponent}!"
-            logging.debug(msg=msg_debug)
-            _round.change_player(
-                player_old=_replace_opponent, player_new=_replace_pausing
-            )
-            _round.pausing = _replace_opponent
-        # 5.1. Set flag 'paused' for particular player
-        for player in self.players:
-            if player.id == _round.pausing:
-                player.paused = True
-
-        # 6. Check for recalculating round again:
-        if not _paused_right and _replace_ok:  # DEBUG
-            msg_debug = (
-                f"Round needs to be recalculated: {_round.pausing} cannot pause!"
-            )
-            logging.debug(msg=msg_debug)
-
+            p_available = [player for player in players_list if (player.id not in players_set)]
         return _round

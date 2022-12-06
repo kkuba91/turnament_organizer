@@ -15,7 +15,22 @@ from resources import CATEGORY
 class Player(ModelPlayer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.calculate_rank()
+        pauser = kwargs.get('pauser')
+        if pauser:
+            attr_val = kwargs.get('pauser')
+            if isinstance(attr_val, bool):
+                self.pauser = attr_val
+            else:
+                self.pauser = bool(attr_val)
+        if self.pauser:
+            self.id = -1
+            self.rank = 0
+            self.elo = 0
+            self.category = "bk"
+            self.name = ' -- '
+            self.surname = ' -- '
+        else:
+            self.calculate_rank()
 
     def __eq__(self, __o: object) -> bool:
         return self.id == __o.id
@@ -41,7 +56,11 @@ class Player(ModelPlayer):
         if self.elo > 0:
             self.rank = self.elo
         else:
-            self.rank = CATEGORY[self.sex][self.category]
+            try:
+                self.rank = CATEGORY[self.sex][self.category]
+            except KeyError as exc:
+                print(exc, self.sex, self.category)
+
         return self
 
     def exist(self, name, surname):
@@ -71,11 +90,17 @@ class Player(ModelPlayer):
 
     def refresh_possible_opponents(self, players):
         self.possible_opponents.clear()
+        # self.possible_opponents = [opponent for opponent in players if (opponent.id not in self.opponents) and (opponent not in self.possible_opponents) and (self.id != opponent.id)]
         for player in players:
-            if player.id != self.id and player.id not in self.opponents:
-                self.possible_opponents.append(player.id)
-        if not self.paused:
-            self.possible_opponents.append(-1)
+            if self.pauser:
+                if not player.paused and player.id != self.id:
+                    self.possible_opponents.append(player)
+            else:
+                if player.id != self.id and player.id not in self.opponents:
+                    self.possible_opponents.append(player)
+        # if self.paused:
+        #     self.possible_opponents.append(-1)
+        
 
     def dump(self):
         _dump = f"\nPLAYER (#{self.id}): {self.name} {self.surname}\n"

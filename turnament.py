@@ -48,10 +48,14 @@ class Turnament(object):
     def add_player(
         self, name="", surname="", sex="male", city="", category="bk", elo=0
     ):
+        # Validate Player add:
         _dont_add = False
         for p in self._players:
             if p.name == name and p.surname == surname:
                 _dont_add = True
+                msg_error_1 = "\nPlayer {} {} already set into turnament.".format(name, surname)
+                logging.error(msg=msg_error_1)
+        # Add Player:
         if not _dont_add:
             try:
                 player = Player(
@@ -107,7 +111,6 @@ class Turnament(object):
                 msg_error = "Please add more Players to the event."
                 logging.error(msg=msg_error)
 
-
     def _begin(self, rounds):
         self._rounds_num = rounds
         self._act_round_nr = 1
@@ -115,8 +118,9 @@ class Turnament(object):
         self._players.sort(key=lambda x: x.elo, reverse=True)
         ident = 1
         for player in self._players:
-            player.id = ident
-            ident += 1
+            if not player.pauser:
+                player.id = ident
+                ident += 1
         system = get_system(self._system)
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
         self._players = system.players
@@ -157,23 +161,21 @@ class Turnament(object):
             logging.debug(msg=table.dump())
 
             for player in self._players:
-                if player.id == table.w_player:
+                if player.id == table.w_player and player.id != _round.pausing:
                     player.points += table.result
                     player.progress += player.points
                     player.add_opponent(table.b_player)
-                    player.refresh_possible_opponents(self._players)
                     player.add_result(table.result)
                     player.round_done = True
-                if player.id == table.b_player:
+                if player.id == table.b_player and player.id != _round.pausing:
                     player.points += 1.0 - table.result
                     player.progress += player.points
                     player.add_opponent(table.w_player)
-                    player.refresh_possible_opponents(self._players)
                     player.add_result(1.0 - table.result)
                     player.round_done = True
         if _round.pausing > 0:
             for player in self._players:
-                if player.id == _round.pausing:
+                if player.id == _round.pausing and player.id > 0:
                     player.points += 1
                     player.progress += player.points
                     player.add_opponent(-1)
