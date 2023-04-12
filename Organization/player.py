@@ -5,11 +5,12 @@
 
 """
 # Global package imports:
+import logging
 from datetime import date
 
 # Local package imports:
 from Organization.Models import ModelPlayer
-from resources import CATEGORY
+from Resources import CATEGORY
 
 
 class Player(ModelPlayer):
@@ -59,8 +60,7 @@ class Player(ModelPlayer):
             try:
                 self.rank = CATEGORY[self.sex][self.category]
             except KeyError as exc:
-                print(exc, self.sex, self.category)
-
+                logging.error("{}, forkeys: sex='{}', category='{}'".format(exc, self.sex, self.category))
         return self
 
     def exist(self, name, surname):

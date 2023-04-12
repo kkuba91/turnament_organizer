@@ -1,9 +1,10 @@
-"""command.py
+"""__init__.py
 
     Commandline API class.
 
 """
 import logging
+import sys
 
 
 class Command:
@@ -18,9 +19,10 @@ class Command:
         self._cmd_msg = ""
         self._params = []
         try:
+            # msg = sys.stdin.readline()
             msg = input()
-        except KeyboardInterrupt:
-            msg_debug = "Keyboard interrupt detected. App closed."
+        except (KeyboardInterrupt, EOFError):
+            msg_debug = "[CLI] Keyboard interrupt detected. App closed."
             logging.debug(msg=msg_debug)
             msg = "End"
         self._interpret(msg)
@@ -54,6 +56,6 @@ class Command:
         if len(self._params) > 0:
             _result = True
         else:
-            msg_info = "Wrong/no parameters. "
+            msg_info = "[CLI] Wrong/no parameters. "
             logging.info(msg=msg_info)
         return _result

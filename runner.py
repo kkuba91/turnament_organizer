@@ -5,12 +5,13 @@
 """
 # Global package imports:
 # Local package imports:
-from application import Application
+from Application import Application
+from Resources import APPLICATION_NAME
 
 
 if __name__ == "__main__":
     # Application life handler
-    app = Application("Chess Organizer")
+    app = Application(APPLICATION_NAME)
     app.init()
     app.run()
     app.end()

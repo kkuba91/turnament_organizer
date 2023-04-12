@@ -1,3 +1,6 @@
 colorama
 numpy
 pydantic
+FastAPI
+fastapi_utils
+uvicorn[standard]

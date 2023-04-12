@@ -10,7 +10,7 @@ import logging
 # Local package imports:
 from Organization import Round
 from Systems import System
-from resources import SystemType
+from Resources import SystemType
 
 
 class SystemCircular(System):

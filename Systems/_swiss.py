@@ -9,9 +9,9 @@ import logging
 
 # Local package imports:
 from Organization import Round
-from Systems import System
-from resources import SystemType
 from Organization.player import Player
+from Systems import System
+from Resources import SystemType
 
 
 class SystemSwiss(System):

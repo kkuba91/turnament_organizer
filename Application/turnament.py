@@ -12,7 +12,7 @@ from pydantic import ValidationError
 # Local package imports:
 from Organization import Player, Round
 from Systems import get_system
-from resources import SystemType, SystemNames
+from Resources import SystemType, SystemNames
 
 
 class Turnament(object):
@@ -233,5 +233,9 @@ class Turnament(object):
         _dump += f" Players: {self._players_num}\n"
         _dump += f" Round actual: {self._act_round_nr}\n"
         _dump += f" Rounds: {self._rounds_num}\n"
-        _dump += self._rounds[self._act_round_nr - 1].dump()
+        if self._act_round_nr > 0:
+            _dump += self._rounds[self._act_round_nr - 1].dump()
         return _dump
+    
+    def __repr__(self) -> str:
+        return self.dump().replace('\n', ',')

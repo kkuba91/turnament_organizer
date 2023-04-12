@@ -9,7 +9,7 @@ from typing import Union, List, Any
 from pydantic import BaseModel, ValidationError, validator
 
 # Local package imports:
-from resources import CATEGORY
+from Resources import CATEGORY
 
 
 class ModelPlayer(BaseModel):

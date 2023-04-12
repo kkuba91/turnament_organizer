@@ -4,9 +4,10 @@
 
 """
 # Global package imports:
-import logging
 from colorama import init, Fore, Style
-
+from functools import wraps
+import inspect
+import logging
 
 init(autoreset=True)
 
@@ -68,7 +69,7 @@ def debug(func):
     return function_handler
 
 
-def set_logging(**kwargs) -> None:
+def set_logging(**kwargs):
     """Set logging configuration."""
     _debug = kwargs.pop("debug", None)
     logger = logging.getLogger()
@@ -85,3 +86,10 @@ def set_logging(**kwargs) -> None:
     if _debug:
         msg_debug = "Debugging is switched ON!"
         logging.debug(msg=msg_debug)
+
+    return logger
+
+
+def log_method(obj=object, func=None):
+    if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+        logging.debug("Call method: {}(), from {}". format(func.__name__, obj.__class__.__name__))
