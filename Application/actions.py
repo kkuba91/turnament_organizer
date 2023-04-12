@@ -11,7 +11,6 @@
 # Global package imports:
 import logging
 from functools import cache
-from tabulate import tabulate
 
 # Local package imports:
 from Application.browser import Browser
