@@ -150,4 +150,3 @@ class ApiData:
         logging.info('[API]: Remove Player: {} ..'.format(name))
         return self.app.actions.player_del(name=name,
                                            surname=surname)
-
