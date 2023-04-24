@@ -67,6 +67,59 @@ class Actions:
     def end(self):
         log_method(obj=self, func=self.end)
         self._end = True
+    
+    def turnament_start(self, system_type: str, rounds=0):
+        if system_type.lower() in "swiss":
+            s_type = Resources.SystemType.SWISS
+        elif system_type.lower() in "circullar":
+            s_type = Resources.SystemType.CIRCULAR
+            rounds = self._turnament.players_num - 1
+        elif system_type.lower() in "elimination":
+            s_type = Resources.SystemType.SINGLE_ELIMINATION
+        else:
+            logging.error("Wrong turnament system typed! {}".format(system_type))
+            return
+        self._turnament.set_system(system_id=s_type)
+        self._turnament.begin(rounds=rounds)
+        data = {'status': True, 'turnamnent': str(self._turnament)}
+        logging.info('Content data: \n{}'.format(data))
+        return data
+
+    def player_add(self,
+                   name="",
+                   surname="",
+                   sex="male",
+                   city="",
+                   category="bk",
+                   elo=0):
+        log_method(obj=self, func=self.player_add)
+        if not self._turnament:
+            logging.error("No turnament active. Please start turnament.")
+            data = {'status': False, 'player': None}
+        else:
+            self._turnament.add_player(name=name,
+                                       surname=surname,
+                                       sex=sex,
+                                       city=city,
+                                       category=category,
+                                       elo=elo)
+            data = {'status': True, 'player': str(self._turnament._players[-1])}
+        logging.info('Content data: \n{}'.format(data))
+        return data
+
+    def player_del(self,
+                   name="",
+                   surname=""):
+        log_method(obj=self, func=self.player_del)
+        if not self._turnament:
+            logging.error("No turnament active. Please start turnament.")
+            data = {'status': False}
+        else:
+            self._turnament.del_player(name=name, surname=surname)
+            data = {'status': True}
+        logging.info('Content data: \n{}'.format(data))
+        return data
+
 
     def debug_method(self):
         """Debugging purpose only.
@@ -77,128 +130,124 @@ class Actions:
             - Pause must be every round counted.
         """
         log_method(obj=self, func=self.debug_method)
-        if self._turnament:
-            self._turnament.add_player(
-                name="Jacob",
-                surname="K",
-                sex="male",
-                city="Bedzin",
-                category="III",
-                elo=0,
-            )
-            self._turnament.add_player(
-                name="Joannah",
-                surname="K",
-                sex="female",
-                city="Bedzin",
-                category="bk",
-                elo=0,
-            )
-            self._turnament.add_player(
-                name="Jaroslaw",
-                surname="Katchynsky",
-                sex="male",
-                city="Nowogrodzka",
-                category="bk",
-                elo=0,
-            )
-            self._turnament.add_player(
-                name="Mateush",
-                surname="Morawitz",
-                sex="male",
-                city="Warsaw",
-                category="IV",
-                elo=0,
-            )
-            self._turnament.add_player(
-                name="Adam",
-                surname="Malysh",
-                sex="male",
-                city="Wisla",
-                category="II",
-                elo=1755,
-            )
-            self._turnament.add_player(
-                name="Piotr",
-                surname="Zyla",
-                sex="male",
-                city="Zakopane",
-                category="V",
-                elo=0,
-            )
-            self._turnament.add_player(
-                name="Mario",
-                surname="Super",
-                sex="male",
-                city="Pilsudsky Square",
-                category="bk",
-                elo=1355,
-            )
-            msg_debug = "ROUND #1:"
-            logging.debug(msg=msg_debug)
-            self._turnament.set_system(system_id=1)
-            self._turnament.begin(rounds=6)
-            self._turnament.add_result(table_nr=1, result=1.0)
-            self._turnament.add_result(table_nr=2, result=1.0)
-            self._turnament.add_result(table_nr=3, result=0.5)
-            self._turnament.apply_round_results()
-            logging.debug(msg=self._turnament.dump_act_results())
-            # logging.debug(msg=self._turnament.dump_players())
+        self.player_add(
+            name="Jacob",
+            surname="K",
+            sex="male",
+            city="Bedzin",
+            category="III",
+            elo=0,
+        )
+        self.player_add(
+            name="Joannah",
+            surname="K",
+            sex="female",
+            city="Bedzin",
+            category="bk",
+            elo=0,
+        )
+        self.player_add(
+            name="Jaroslaw",
+            surname="Katchynsky",
+            sex="male",
+            city="Nowogrodzka",
+            category="bk",
+            elo=0,
+        )
+        self.player_add(
+            name="Mateush",
+            surname="Morawitz",
+            sex="male",
+            city="Warsaw",
+            category="IV",
+            elo=0,
+        )
+        self.player_add(
+            name="Adam",
+            surname="Malysh",
+            sex="male",
+            city="Wisla",
+            category="II",
+            elo=1755,
+        )
+        self.player_add(
+            name="Piotr",
+            surname="Zyla",
+            sex="male",
+            city="Zakopane",
+            category="V",
+            elo=0,
+        )
+        self.player_add(
+            name="Mario",
+            surname="Super",
+            sex="male",
+            city="Pilsudsky Square",
+            category="bk",
+            elo=1355,
+        )
+        msg_debug = "ROUND #1:"
+        logging.debug(msg=msg_debug)
+        self._turnament.set_system(system_id=Resources.SystemType.SWISS)
+        self._turnament.begin(rounds=6)
+        self._turnament.add_result(table_nr=1, result=1.0)
+        self._turnament.add_result(table_nr=2, result=1.0)
+        self._turnament.add_result(table_nr=3, result=0.5)
+        self._turnament.apply_round_results()
+        logging.debug(msg=self._turnament.dump_act_results())
+        # logging.debug(msg=self._turnament.dump_players())
 
-            msg_debug = "ROUND #2:"
-            logging.debug(msg=msg_debug)
-            self._turnament.next_round()
-            # logging.debug(msg=self._turnament.dump())
-            self._turnament.add_result(table_nr=1, result=0.5)
-            self._turnament.add_result(table_nr=2, result=0.0)
-            self._turnament.add_result(table_nr=3, result=1.0)
-            self._turnament.apply_round_results()
-            logging.debug(msg=self._turnament.dump_act_results())
-            # logging.debug(msg=self._turnament.dump_players())
+        msg_debug = "ROUND #2:"
+        logging.debug(msg=msg_debug)
+        self._turnament.next_round()
+        # logging.debug(msg=self._turnament.dump())
+        self._turnament.add_result(table_nr=1, result=0.5)
+        self._turnament.add_result(table_nr=2, result=0.0)
+        self._turnament.add_result(table_nr=3, result=1.0)
+        self._turnament.apply_round_results()
+        logging.debug(msg=self._turnament.dump_act_results())
+        # logging.debug(msg=self._turnament.dump_players())
 
-            msg_debug = "ROUND #3:"
-            logging.debug(msg=msg_debug)
-            self._turnament.next_round()
-            # logging.debug(msg=self._turnament.dump())
-            self._turnament.add_result(table_nr=1, result=0.5)
-            self._turnament.add_result(table_nr=2, result=0.0)
-            self._turnament.add_result(table_nr=3, result=1.0)
-            self._turnament.apply_round_results()
-            logging.debug(msg=self._turnament.dump_act_results())
-            # logging.debug(msg=self._turnament.dump_players())
+        msg_debug = "ROUND #3:"
+        logging.debug(msg=msg_debug)
+        self._turnament.next_round()
+        # logging.debug(msg=self._turnament.dump())
+        self._turnament.add_result(table_nr=1, result=0.5)
+        self._turnament.add_result(table_nr=2, result=0.0)
+        self._turnament.add_result(table_nr=3, result=1.0)
+        self._turnament.apply_round_results()
+        logging.debug(msg=self._turnament.dump_act_results())
+        # logging.debug(msg=self._turnament.dump_players())
 
-            msg_debug = "ROUND #4:"
-            logging.debug(msg=msg_debug)
-            self._turnament.next_round()
-            # logging.debug(msg=self._turnament.dump())
-            self._turnament.add_result(table_nr=1, result=0.5)
-            self._turnament.add_result(table_nr=2, result=0.5)
-            self._turnament.add_result(table_nr=3, result=1.0)
-            self._turnament.apply_round_results()
-            logging.debug(msg=self._turnament.dump_act_results())
-            # # logging.debug(msg=self._turnament.dump_players())
+        msg_debug = "ROUND #4:"
+        logging.debug(msg=msg_debug)
+        self._turnament.next_round()
+        # logging.debug(msg=self._turnament.dump())
+        self._turnament.add_result(table_nr=1, result=0.5)
+        self._turnament.add_result(table_nr=2, result=0.5)
+        self._turnament.add_result(table_nr=3, result=1.0)
+        self._turnament.apply_round_results()
+        logging.debug(msg=self._turnament.dump_act_results())
+        # # logging.debug(msg=self._turnament.dump_players())
 
-            msg_debug = "ROUND #5:"
-            logging.debug(msg=msg_debug)
-            self._turnament.next_round()
-            # logging.debug(msg=self._turnament.dump())
-            self._turnament.add_result(table_nr=1, result=0.5)
-            self._turnament.add_result(table_nr=2, result=0.0)
-            self._turnament.add_result(table_nr=3, result=1.0)
-            self._turnament.apply_round_results()
-            logging.debug(msg=self._turnament.dump_act_results())
-            # logging.debug(msg=self._turnament.dump_players_p_o())
+        msg_debug = "ROUND #5:"
+        logging.debug(msg=msg_debug)
+        self._turnament.next_round()
+        # logging.debug(msg=self._turnament.dump())
+        self._turnament.add_result(table_nr=1, result=0.5)
+        self._turnament.add_result(table_nr=2, result=0.0)
+        self._turnament.add_result(table_nr=3, result=1.0)
+        self._turnament.apply_round_results()
+        logging.debug(msg=self._turnament.dump_act_results())
+        # logging.debug(msg=self._turnament.dump_players_p_o())
 
-            msg_debug = "ROUND #6:"
-            logging.debug(msg=msg_debug)
-            self._turnament.next_round()
-            # logging.debug(msg=self._turnament.dump())
-            self._turnament.add_result(table_nr=1, result=0.5)
-            self._turnament.add_result(table_nr=2, result=0.0)
-            self._turnament.add_result(table_nr=3, result=0.0)
-            self._turnament.apply_round_results()
-            logging.debug(msg=self._turnament.dump_act_results())
-            # # logging.debug(msg=self._turnament.dump_players())
-        else:
-            msg_info = "No turnament file selected."
-            logging.info(msg=msg_info)
+        msg_debug = "ROUND #6:"
+        logging.debug(msg=msg_debug)
+        self._turnament.next_round()
+        # logging.debug(msg=self._turnament.dump())
+        self._turnament.add_result(table_nr=1, result=0.5)
+        self._turnament.add_result(table_nr=2, result=0.0)
+        self._turnament.add_result(table_nr=3, result=0.0)
+        self._turnament.apply_round_results()
+        logging.debug(msg=self._turnament.dump_act_results())
+        # # logging.debug(msg=self._turnament.dump_players())
