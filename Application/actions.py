@@ -4,7 +4,8 @@
     i.e. open, close, add player, modify, ...
 
     @WARNING:
-    Actions have one instance only over the app (singleton).
+    Actions have one instance only over the app (singleton)
+    and one layer before any API way (CLI, restAPI).
 
 """
 # noqa: F401
@@ -35,17 +36,20 @@ class Actions:
         logging.info(msg)
         self._browser = Browser()
 
+
     def app_status(self):
         log_method(obj=self, func=self.app_status)
         data = {'status': self._is_opened, 'turnamnent': str(self._turnament)}
         logging.info('Content data: \n{}'.format(data))
         return data
 
+
     def app_info(self):
         log_method(obj=self, func=self.app_info)
         data = {'name': Resources.APPLICATION_NAME, 'version': Resources.__version__}
         logging.info('Content data: \n{}'.format(data))
         return data
+
 
     def open(self, name: str, cmd: str):
         log_method(obj=self, func=self.open)
@@ -57,17 +61,20 @@ class Actions:
         data = {'status': self._is_opened, 'turnamnent': str(self._turnament)}
         logging.info('Content data: \n{}'.format(data))
         return data
-    
+
+
     def close(self):
         log_method(obj=self, func=self.close)
         self._browser.stop()
         self._turnament.delete_players()
         self._is_opened = False
 
+
     def end(self):
         log_method(obj=self, func=self.end)
         self._end = True
-    
+
+
     def turnament_start(self, system_type: str, rounds=0):
         if system_type.lower() in "swiss":
             s_type = Resources.SystemType.SWISS
@@ -84,6 +91,7 @@ class Actions:
         data = {'status': True, 'turnamnent': str(self._turnament)}
         logging.info('Content data: \n{}'.format(data))
         return data
+
 
     def player_add(self,
                    name="",
@@ -107,6 +115,7 @@ class Actions:
         logging.info('Content data: \n{}'.format(data))
         return data
 
+
     def player_del(self,
                    name="",
                    surname=""):
@@ -119,6 +128,32 @@ class Actions:
             data = {'status': True}
         logging.info('Content data: \n{}'.format(data))
         return data
+
+
+    def players_get(self,
+                    type="results"):
+        log_method(obj=self, func=self.players_get)
+        if not self._turnament:
+            logging.error("No turnament active. Please start turnament and add Players.")
+            data = {'status': False, 'players': None}
+        else:
+            data = {'status': True, 'players': str(self._turnament.get_players(type=type))}
+        logging.info('Content data: \n{}'.format(data))
+        return data
+
+
+    def turnament_results(self):
+        log_method(obj=self, func=self.players_get)
+        if not self._turnament:
+            logging.error("No turnament active. Please start turnament and add Players.")
+            data = {'status': False, 'round': None, 'players': None}
+        else:
+            data = {'status': True,
+                    'round': self._turnament._act_round_nr,
+                    'players': self.players_get(type='results')['players']}
+        logging.info('Content data: \n{}'.format(data))
+        return data
+            
 
 
     def debug_method(self):

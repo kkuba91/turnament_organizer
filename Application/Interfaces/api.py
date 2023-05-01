@@ -98,6 +98,16 @@ class ApiData:
                                         methods=["POST"],
                                         description="Remove Player",
                                         tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/players",
+                                        endpoint=self.turnament_players,
+                                        methods=["GET"],
+                                        description="Get Player list",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/results",
+                                        endpoint=self.turnament_results,
+                                        methods=["GET"],
+                                        description="Get results",
+                                        tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
 
     # Endpoint methods:
@@ -150,3 +160,15 @@ class ApiData:
         logging.info('[API]: Remove Player: {} ..'.format(name))
         return self.app.actions.player_del(name=name,
                                            surname=surname)
+    
+    async def turnament_players(self,
+                                type: str):
+        await asyncio.sleep(0.01)
+        logging.info(f'[API]: Get Player list for "{type}" ..')
+        return self.app.actions.players_get(type=type)
+
+
+    async def turnament_results(self):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Get results ..')
+        return self.app.actions.turnament_results()

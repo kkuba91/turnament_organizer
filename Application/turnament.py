@@ -203,6 +203,27 @@ class Turnament(object):
         if self._players:
             self._players.clear()
 
+    def get_players(self, type='results'):
+        data = {
+            'quntity': len(self._players),
+            'players': []
+        }
+        specific = []
+        if type == 'results':
+            specific = ['id', 'name', 'surname', 'cat', 'elo', 'result', 'progress', 'bucholz']
+        elif type == 'start':
+            specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex']
+        for player in self._players:
+            data["players"].append(player.get(specific=specific))
+        if type == 'start':
+            data["players"].sort(key=lambda x: x['id'], reverse=True)
+        else:
+            data["players"].sort(key=lambda x: x['bucholz'], reverse=True)
+            data["players"].sort(key=lambda x: x['progress'], reverse=True)
+            data["players"].sort(key=lambda x: x['result'], reverse=True)
+        return data
+
+
     def dump_act_results(self):
         _dump = f"RESULTS AFTER ROUND NR: #{self._act_round_nr}:\n\n"
         _dump1 = "#Id:  PLAYER: "
