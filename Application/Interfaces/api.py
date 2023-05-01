@@ -59,30 +59,55 @@ class ApiData:
         tag = self.Tags.app
         self.routers[tag] = APIRouter()
         self.routers[tag].add_api_route(path="/general_info",
-                                                  endpoint=self.app_info,
-                                                  methods=["GET"],
-                                                  description="Create new turnament base file",
-                                                  tags=[tag])
+                                        endpoint=self.app_info,
+                                        methods=["GET"],
+                                        description="Create new turnament base file",
+                                        tags=[tag])
         self.routers[tag].add_api_route(path="/get_status",
-                                                  endpoint=self.app_status,
-                                                  methods=["GET"],
-                                                  description="Get app status about turnamnent processing",
-                                                  tags=[tag])
+                                        endpoint=self.app_status,
+                                        methods=["GET"],
+                                        description="Get app status about turnamnent processing",
+                                        tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
         
         # Turnament:
         tag = self.Tags.turnament
         self.routers[tag] = APIRouter()
         self.routers[tag].add_api_route(path="/create",
-                                                        endpoint=self.create_turnament,
-                                                        methods=["POST"],
-                                                        description="Create new turnament base file",
-                                                        tags=[tag])
+                                        endpoint=self.create_turnament,
+                                        methods=["POST"],
+                                        description="Create new turnament base file",
+                                        tags=[tag])
         self.routers[tag].add_api_route(path="/open",
-                                                        endpoint=self.open_turnament,
-                                                        methods=["POST"],
-                                                        description="Open existing turnament base file",
-                                                        tags=[tag])
+                                        endpoint=self.open_turnament,
+                                        methods=["POST"],
+                                        description="Open existing turnament base file",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/start",
+                                        endpoint=self.start_turnament,
+                                        methods=["POST"],
+                                        description="Start first round",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/player/add",
+                                        endpoint=self.turnament_player_add,
+                                        methods=["POST"],
+                                        description="Add Player",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/player/del",
+                                        endpoint=self.turnament_player_del,
+                                        methods=["POST"],
+                                        description="Remove Player",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/players",
+                                        endpoint=self.turnament_players,
+                                        methods=["GET"],
+                                        description="Get Player list",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/results",
+                                        endpoint=self.turnament_results,
+                                        methods=["GET"],
+                                        description="Get results",
+                                        tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
 
     # Endpoint methods:
@@ -106,8 +131,44 @@ class ApiData:
         logging.info('[API]: Opening turnament with name: {} ..'.format(name))
         return self.app.actions.open(name=name, cmd="Open")
     
-    async def start_turnament(self, name: str):
+    async def start_turnament(self, rounds: int, system_type: str):
         await asyncio.sleep(0.01)
-        logging.info('[API]: Starting turnament with name: {} ..'.format(name))
-        
+        logging.info('[API]: Starting actual turnament. Rounds: {}. System: {} ..'
+                     .format(rounds, system_type))
+        return self.app.actions.turnament_start(rounds=rounds, system_type=system_type)
 
+    async def turnament_player_add(self,
+                                   name: str,
+                                   surname="",
+                                   sex="male",
+                                   city="",
+                                   category="bk",
+                                   elo=0):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Add Player: {} ..'.format(name))
+        return self.app.actions.player_add(name=name,
+                                           surname=surname,
+                                           sex=sex,
+                                           city=city,
+                                           category=category,
+                                           elo=elo)
+
+    async def turnament_player_del(self,
+                                   name: str,
+                                   surname=""):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Remove Player: {} ..'.format(name))
+        return self.app.actions.player_del(name=name,
+                                           surname=surname)
+    
+    async def turnament_players(self,
+                                type: str):
+        await asyncio.sleep(0.01)
+        logging.info(f'[API]: Get Player list for "{type}" ..')
+        return self.app.actions.players_get(type=type)
+
+
+    async def turnament_results(self):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Get results ..')
+        return self.app.actions.turnament_results()

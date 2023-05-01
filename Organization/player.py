@@ -102,6 +102,36 @@ class Player(ModelPlayer):
         #     self.possible_opponents.append(-1)
         
 
+    def get(self, specific=[]):
+        """Get JSON organized data
+        :returns: Player actual data
+        :rtype: dict
+        """
+        self.calculate_rank()
+        data = {
+                'id': self.id,
+                'name': self.name,
+                'surname': self.surname,
+                'sex': self.sex,
+                'city': self.city,
+                'club': self.club,
+                'elo': self.elo,
+                'rank': self.rank,
+                'cat': self.category,
+                'result': sum(self.results),
+                'progress': self.progress,
+                'bucholz': self.bucholz
+            }
+        if specific:
+            return_data = {}
+            for key in specific:
+                if key in data.keys():
+                    return_data[key] = data.get(key, None)
+            return return_data
+        else:
+            return data
+
+
     def dump(self):
         _dump = f"\nPLAYER (#{self.id}): {self.name} {self.surname}\n"
         _dump += f"Sex: {self.sex}\n"

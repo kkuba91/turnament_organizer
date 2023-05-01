@@ -1,3 +1,5 @@
+import logging
+
 # Local package imports:
 from Application.logger import debug
 from Application.Interfaces.Command import Command
@@ -23,21 +25,25 @@ class CLI:
     
     def dir_help(self):
         if self._cmd.check_cmd("help"):
-            print("SELECT ONE OF: New, Open, Close, End")
+            logging.info(f'[CLI]: SELECT ONE OF: New, Open, Close, End')
 
     def dir_open(self):
         if self._cmd.check_cmd("Open") or self._cmd.check_cmd("New"):
             if self._cmd.is_params():
-                self.app.actions.open(name=self._cmd.get_param(0), cmd=self._cmd.get_cmd())
+                _name = self._cmd.get_param(0)
+                self.app.actions.open(name=_name, cmd=self._cmd.get_cmd())
+                logging.info(f'[CLI]: Opening turnament with name: {_name} ..')
     
     def dir_end(self):
         if self._cmd.check_cmd("End"):
             self._end = True
             self.app.actions.end()
+            logging.info('[CLI]: App close')
     
     def dir_close(self):
         if self._cmd.check_cmd("Close"):
             self.app.actions.close()
+            logging.info('[CLI]: Close turnament')
     
     @debug
     def dir_debug(self):

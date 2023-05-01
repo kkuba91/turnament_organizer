@@ -8,6 +8,7 @@
 from datetime import date
 import logging
 from pydantic import ValidationError
+from tabulate import tabulate
 
 # Local package imports:
 from Organization import Player, Round
@@ -34,12 +35,16 @@ class Turnament(object):
         # Additional:
         self._place = ""
     
+    @property
+    def players_num(self):
+        self._players_num = len(self._players)
+        return self._players_num
+    
     def set_system(self, system_id: int):
         if self._act_round_nr == 0:
             msg_info = f"Set {SystemNames[system_id]} round pairing system."
             logging.info(msg=msg_info)
             self._system = system_id
-
 
     def set_date(self, start, end):
         self._date_start = start
@@ -71,7 +76,6 @@ class Turnament(object):
                 logging.error(msg=str(exc) + msg_error_2)
             else:
                 self._players.append(player)
-                self._players_num += 1
                 msg_info = f"Set Player: {player.name} {player.surname}, " + \
                         f"[elo: {player.elo}, cat: {player.category}] in turnament."
                 logging.info(msg=msg_info)
@@ -104,7 +108,7 @@ class Turnament(object):
             if self._system == SystemType.UNKNOWN:
                 msg_error = "Please set pairing system for turnament."
                 logging.error(msg=msg_error)
-            elif 0 < rounds < 23 and self._players_num > 1:
+            elif 0 < rounds < 23 and self.players_num > 1:
                 self.fine_to_begin = True
                 self._begin(rounds)
             else:
@@ -199,6 +203,27 @@ class Turnament(object):
         if self._players:
             self._players.clear()
 
+    def get_players(self, type='results'):
+        data = {
+            'quntity': len(self._players),
+            'players': []
+        }
+        specific = []
+        if type == 'results':
+            specific = ['id', 'name', 'surname', 'cat', 'elo', 'result', 'progress', 'bucholz']
+        elif type == 'start':
+            specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex']
+        for player in self._players:
+            data["players"].append(player.get(specific=specific))
+        if type == 'start':
+            data["players"].sort(key=lambda x: x['id'], reverse=True)
+        else:
+            data["players"].sort(key=lambda x: x['bucholz'], reverse=True)
+            data["players"].sort(key=lambda x: x['progress'], reverse=True)
+            data["players"].sort(key=lambda x: x['result'], reverse=True)
+        return data
+
+
     def dump_act_results(self):
         _dump = f"RESULTS AFTER ROUND NR: #{self._act_round_nr}:\n\n"
         _dump1 = "#Id:  PLAYER: "
@@ -230,7 +255,7 @@ class Turnament(object):
         _dump = f"TURNAMENT: {self._name}\n"
         _dump += f" Place: {self._place}\n"
         # _dump += f'Time: {self._date_start} to {self._date_end}\n\n'
-        _dump += f" Players: {self._players_num}\n"
+        _dump += f" Players: {self.players_num}\n"
         _dump += f" Round actual: {self._act_round_nr}\n"
         _dump += f" Rounds: {self._rounds_num}\n"
         if self._act_round_nr > 0:

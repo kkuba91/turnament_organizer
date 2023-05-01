@@ -48,8 +48,8 @@ class Command:
     def check_param(self, ident, param):
         return self._params[ident] == param
 
-    def check_cmd(self, cmd_msg):
-        return self._cmd_msg == cmd_msg
+    def check_cmd(self, cmd_msg: str):
+        return self._cmd_msg.lower() == cmd_msg.lower()
 
     def is_params(self):
         _result = False
