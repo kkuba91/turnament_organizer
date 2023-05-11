@@ -48,7 +48,6 @@ class Turnament(object):
             logging.info(msg=msg_info)
             self._system = system_id
 
-
     def set_date(self, start, end):
         self._date_start = start
         self._date_end = end
