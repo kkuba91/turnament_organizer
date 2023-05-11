@@ -34,12 +34,14 @@ class Turnament(object):
 
         # Additional:
         self._place = ""
-    
+
+
     @property
     def players_num(self):
         self._players_num = len(self._players)
         return self._players_num
-    
+
+
     def set_system(self, system_id: int):
         if self._act_round_nr == 0:
             msg_info = f"Set {SystemNames[system_id]} round pairing system."
@@ -49,6 +51,7 @@ class Turnament(object):
     def set_date(self, start, end):
         self._date_start = start
         self._date_end = end
+
 
     def add_player(
         self, name="", surname="", sex="male", city="", category="bk", elo=0
@@ -80,6 +83,7 @@ class Turnament(object):
                         f"[elo: {player.elo}, cat: {player.category}] in turnament."
                 logging.info(msg=msg_info)
 
+
     def del_player(self, name="", surname=""):
         for player in self._players:
             if player.exist(name=name, surname=surname):
@@ -90,6 +94,7 @@ class Turnament(object):
             else:
                 msg_info = f"No Player #{player.id} on turnament list."
                 logging.info(msg=msg_info)
+
 
     def add_result(self, table_nr, result):
         round_id = self._act_round_nr - 1
@@ -103,6 +108,7 @@ class Turnament(object):
             msg_error = f"Something is wrong, turnament did not start. System {SystemNames[self._system]}."
             logging.error(msg=msg_error)
 
+
     def begin(self, rounds):
         if isinstance(rounds, int):
             if self._system == SystemType.UNKNOWN:
@@ -114,6 +120,7 @@ class Turnament(object):
             else:
                 msg_error = "Please add more Players to the event."
                 logging.error(msg=msg_error)
+
 
     def _begin(self, rounds):
         self._rounds_num = rounds
@@ -129,6 +136,7 @@ class Turnament(object):
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
         self._players = system.players
 
+
     def next_round(self):
         _ret = None
         if self._act_round_nr < self._rounds_num:
@@ -142,6 +150,7 @@ class Turnament(object):
             msg_error = f"Maximum turnament round: {self._rounds_num}!!"
             logging.error(msg=msg_error)
         return _ret
+
 
     def apply_round_results(self):
         # Handle if wrong type passed
@@ -199,9 +208,11 @@ class Turnament(object):
         self._players.sort(key=lambda x: x.progress, reverse=True)
         self._players.sort(key=lambda x: x.points, reverse=True)
 
+
     def delete_players(self):
         if self._players:
             self._players.clear()
+
 
     def get_players(self, type='results'):
         data = {
@@ -209,13 +220,13 @@ class Turnament(object):
             'players': []
         }
         specific = []
-        if type == 'results':
+        if type.lower() in ('results', 'result'):
             specific = ['id', 'name', 'surname', 'cat', 'elo', 'result', 'progress', 'bucholz']
-        elif type == 'start':
+        elif type.lower() in ('start', 'init'):
             specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex']
         for player in self._players:
             data["players"].append(player.get(specific=specific))
-        if type == 'start':
+        if type in ('start', 'init'):
             data["players"].sort(key=lambda x: x['id'], reverse=True)
         else:
             data["players"].sort(key=lambda x: x['bucholz'], reverse=True)
@@ -238,6 +249,7 @@ class Turnament(object):
             _dump += "{0:<34}".format(_dump1) + _dump2
         return _dump
 
+
     def dump_players(self):
         _dump = "PLAYERS - LIST:"
         for player in self._players:
@@ -245,11 +257,23 @@ class Turnament(object):
             _dump += player.dump_opponents()
         return _dump
 
+
     def dump_players_p_o(self):
         _dump = "PLAYERS - POSSIBLE OPPONENTS:\n"
         for player in self._players:
             _dump += player.dump_possible_opponents()
         return _dump
+    
+
+    def get(self):
+        return {
+            'name': self._name,
+            'place': self._place,
+            'players': self.players_num,
+            'rounds': self._rounds_num,
+            'actual': self._act_round_nr
+        }
+
 
     def dump(self):
         _dump = f"TURNAMENT: {self._name}\n"
@@ -261,6 +285,7 @@ class Turnament(object):
         if self._act_round_nr > 0:
             _dump += self._rounds[self._act_round_nr - 1].dump()
         return _dump
-    
+
+
     def __repr__(self) -> str:
         return self.dump().replace('\n', ',')

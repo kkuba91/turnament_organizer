@@ -77,6 +77,9 @@ class Actions:
 
     def turnament_start(self, system_type: str, rounds=0):
         if system_type.lower() in "swiss":
+            if rounds == 0:
+                logging.error("Set number of rounds to play!")
+                return
             s_type = Resources.SystemType.SWISS
         elif system_type.lower() in "circullar":
             s_type = Resources.SystemType.CIRCULAR
@@ -88,7 +91,7 @@ class Actions:
             return
         self._turnament.set_system(system_id=s_type)
         self._turnament.begin(rounds=rounds)
-        data = {'status': True, 'turnamnent': str(self._turnament)}
+        data = {'status': True, 'turnamnent': self._turnament.get()}
         logging.info('Content data: \n{}'.format(data))
         return data
 
@@ -151,6 +154,17 @@ class Actions:
             data = {'status': True,
                     'round': self._turnament._act_round_nr,
                     'players': self.players_get(type='results')['players']}
+        logging.info('Content data: \n{}'.format(data))
+        return data
+
+
+    def turnament_round(self, nr=-1):
+        log_method(obj=self, func=self.turnament_tables)
+        if not self._turnament:
+            logging.error("No turnament active. Please start turnament with Players.")
+            data = {'status': False, 'round': None}
+        elif nr == -1 or nr in range(len(self._turnament._rounds)):
+            data = {'status': True, 'round': self._turnament._rounds[nr].get()}
         logging.info('Content data: \n{}'.format(data))
         return data
             

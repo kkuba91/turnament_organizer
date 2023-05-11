@@ -108,6 +108,11 @@ class ApiData:
                                         methods=["GET"],
                                         description="Get results",
                                         tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/round",
+                                        endpoint=self.turnament_results,
+                                        methods=["POST"],
+                                        description="Get round data",
+                                        tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
 
     # Endpoint methods:
@@ -172,3 +177,8 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Get results ..')
         return self.app.actions.turnament_results()
+    
+    async def turnament_round(self, nr=-1):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Get round data ..')
+        return self.app.actions.turnament_round(nr=nr)

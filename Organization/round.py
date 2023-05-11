@@ -31,9 +31,11 @@ class Round(ModelRound):
                 self.tables[next_nr] = buffer_table
         return next_nr
 
+
     def set_result(self, table_nr, result):
         self.tables[table_nr].result = result
         self.all_results = self._check_results()
+
 
     def _check_results(self):
         all_results = True
@@ -41,6 +43,7 @@ class Round(ModelRound):
             if table.result == -1.0:
                 all_results = False
         return all_results
+
 
     def get_opponent(self, _idnt):
         _ret = None
@@ -50,6 +53,7 @@ class Round(ModelRound):
             if table.b_player == _idnt:
                 _ret = table.w_player
         return _ret
+
 
     def change_player(self, player_old, player_new):
         _n_replaced = True
@@ -61,6 +65,17 @@ class Round(ModelRound):
                 if table.b_player == player_old:
                     table.b_player = player_new
                     _n_replaced = False
+
+
+    def get(self):
+        data = {
+            'nr': self.number,
+            'tables': [],
+            'pauser': self.pausing
+        }
+        for table_nr in range(1, len(self.tables) + 1):
+            data['tables'].append(self.tables[table_nr].get())
+
 
     def dump(self):
         _str = f"Round nr: {self.number}\n"
