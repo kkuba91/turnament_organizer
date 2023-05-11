@@ -40,6 +40,16 @@ class Table(ModelTable):
         elif self.result == 1.0:
             _str = "1.0/0.0"
         return _str
+    
+    def get(self):
+        return {
+            'nr': self.number,
+            'white': self.w_player,
+            'black': self.b_player,
+            'result': self._dump_result()
+        }
+
+
 
     def dump(self):
         _str = f"Table: #{self.number}  --  result: {self._dump_result()}"
