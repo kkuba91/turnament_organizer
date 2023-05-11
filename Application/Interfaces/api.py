@@ -27,7 +27,6 @@ class ApiData:
         turnament = "Turnamnent"
 
     def __init__(self, **kwargs) -> None:
-        
         self.routers = {}
         self.api = api
         if hasattr(kwargs, "debug"):
