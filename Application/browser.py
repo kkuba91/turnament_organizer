@@ -7,6 +7,9 @@ import os
 import errno
 import logging
 
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+
 
 class File(object):
     def __init__(self) -> None:
@@ -106,7 +109,8 @@ class Browser(object):
         self._file = File()
         self._file_handler = None
 
-    def set_file(self, path, filename) -> bool:
+    def set_file(self, filename) -> bool:
+        path = os.path.expanduser('~')
         if not self.is_file_opened():
             self._file.set_path(path).set_name(filename)
             return self._file.verify()
@@ -153,14 +157,17 @@ class Browser(object):
 
     def _create_file(self):
         _success = False
-        _full_file_name = self._file.path + "\\" + self._file.name + ".dbc"
+        _full_file_name = os.path.expanduser('~') + "\\" + self._file.name + ".dbc"
         try:
             self._file_handler = open(_full_file_name, "w+", encoding="utf-8")
-            _success = True
         except (FileExistsError, PermissionError, FileNotFoundError) as exc:
             msg_error = f"Failed to create new file {_full_file_name}.. ({str(exc)}) "
             logging.error(msg=msg_error)
             _success = False
+        _success = os.path.isfile(_full_file_name)
+        self._file_handler.close()
+        self.engine = create_engine(f'sqlite:///{_full_file_name}', echo=True)
+        self.engine.connect()
         return _success
 
     def _get_file(self):

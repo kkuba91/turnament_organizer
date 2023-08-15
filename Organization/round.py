@@ -75,6 +75,7 @@ class Round(ModelRound):
         }
         for table_nr in range(1, len(self.tables) + 1):
             data['tables'].append(self.tables[table_nr].get())
+        return data
 
 
     def dump(self):

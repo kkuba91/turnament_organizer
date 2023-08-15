@@ -220,10 +220,15 @@ class Turnament(object):
             'players': []
         }
         specific = []
-        if type.lower() in ('results', 'result'):
+        _type = type.lower()
+        if _type in ('results', 'result'):
             specific = ['id', 'name', 'surname', 'cat', 'elo', 'result', 'progress', 'bucholz']
-        elif type.lower() in ('start', 'init'):
+        elif _type in ('start', 'init'):
             specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex']
+        elif _type in ('name', 'names', 'fullname', 'fullnames'):
+            specific = ['id', 'name', 'surname']
+        else:
+            return {'error': 'Please use one of followinf types: "results", "init", "names"'}
         for player in self._players:
             data["players"].append(player.get(specific=specific))
         if type in ('start', 'init'):
