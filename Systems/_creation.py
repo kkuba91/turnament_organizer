@@ -8,7 +8,7 @@ import logging
 
 # Local package imports:
 from Systems import SystemCircular, SystemSingleElimination, SystemSwiss
-from Resources import SystemType
+from resources import SystemType
 
 
 def get_system(system_type: int):

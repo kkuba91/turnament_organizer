@@ -1,14 +1,15 @@
 """browser.py
 
-    Browser class with with additional File class.
+    Browser class with additional File class.
 
 """
 import os
 import errno
 import logging
+import sys
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.ext.declarative import declarative_base
 
 
 class File(object):
@@ -72,10 +73,11 @@ class File(object):
 
             _, self._path = os.path.splitdrive(self._path)
 
-            root_dirname = os.environ.get("HOMEDRIVE", "C:")
-            assert os.path.isdir(root_dirname)
+            root_dirname = os.environ.get("HOMEDRIVE", "C:") if "win" in sys.platform \
+                else ""
 
             root_dirname = root_dirname.rstrip(os.path.sep) + os.path.sep
+            logging.debug(f"is_path_valid - root_dirname: {self._path}")
 
             for pathname_part in self._path.split(os.path.sep):
                 try:
@@ -98,19 +100,22 @@ class File(object):
             return True
 
     def __repr__(self):
-        return str(f"File object of {self._name} inside dirctory {self._path} .")
+        return str(f"File object of {self._name} inside directory {self._path} .")
 
 
 class Browser(object):
     def __init__(self) -> None:
+        logging.getLogger("uvicorn")
         self._file_opened = False
         self._option = ""
         self._success = False
         self._file = File()
         self._file_handler = None
+        self.engine = None
 
     def set_file(self, filename) -> bool:
         path = os.path.expanduser('~')
+        logging.debug(f"set_file path: {path}, with filename: {filename}")
         if not self.is_file_opened():
             self._file.set_path(path).set_name(filename)
             return self._file.verify()
@@ -132,7 +137,6 @@ class Browser(object):
                 if self._success and option:
                     self._file_opened = True
                     logging.info(msg=_log)
-                _ret = self._file_handler
         else:
             self._option = ""
             msg_error = "Wrong file coordinates."
@@ -143,7 +147,7 @@ class Browser(object):
         self._option = ""
         _log = f'Closed db "{self._file.name}". '
         if self._file_opened:
-            self._file_handler.close()
+            # self._file_handler.close()
             self._file_opened = False
             self._file.init()
             logging.info(msg=_log)
@@ -157,24 +161,33 @@ class Browser(object):
 
     def _create_file(self):
         _success = False
-        _full_file_name = os.path.expanduser('~') + "\\" + self._file.name + ".dbc"
+        _user_path = os.path.expanduser('~') if "/root" != os.path.expanduser('~') else ""
+        _full_file_name = _user_path + os.path.sep + self._file.name + ".db"
+        logging.debug(f"Trying to create turnament db file: {_full_file_name}")
         try:
-            self._file_handler = open(_full_file_name, "w+", encoding="utf-8")
+            if not os.path.isfile(_full_file_name):
+                self._file_handler = open(_full_file_name, "w+", encoding="utf-8")
+                self._file_handler.close()
+            _success = os.path.isfile(_full_file_name)
         except (FileExistsError, PermissionError, FileNotFoundError) as exc:
             msg_error = f"Failed to create new file {_full_file_name}.. ({str(exc)}) "
             logging.error(msg=msg_error)
             _success = False
-        _success = os.path.isfile(_full_file_name)
-        self._file_handler.close()
-        self.engine = create_engine(f'sqlite:///{_full_file_name}', echo=True)
-        self.engine.connect()
+
+        if _success:
+            # self._file_handler.close()
+            self.engine = create_engine(f'sqlite:///{_full_file_name}',
+                                        echo=False,
+                                        echo_pool=False)
+            self.engine.connect()
+            logging.debug(f"Connected to db file: {self.engine.url}")
         return _success
 
     def _get_file(self):
         _success = False
-        _full_file_name = self._file.path + "\\" + self._file.name + ".dbc"
+        _full_file_name = self._file.path + os.path.sep + self._file.name + ".db"
         try:
-            self._file_handler = open(_full_file_name, "r+", encoding="utf-8")
+            # self._file_handler = open(_full_file_name, "w+", encoding="utf-8")
             _success = True
         except (FileExistsError, PermissionError, FileNotFoundError) as exc:
             msg_error = f"Failed to create/open the file {_full_file_name}.. ({str(exc)}) "

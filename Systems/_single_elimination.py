@@ -4,20 +4,17 @@
 
 """
 # Global package imports:
-import numpy as np
-import logging
 
 # Local package imports:
-from Organization import Round
 from Systems import System
-from Resources import SystemType
+from resources import SystemType
 
 
 class SystemSingleElimination(System):
     def __init__(self):
         self._round = 0
         self._type = SystemType.SINGLE_ELIMINATION
-        self.players: list
+        self.players = []
 
     def prepare_round(self, players: list, round_nr: int):
         self.players = players

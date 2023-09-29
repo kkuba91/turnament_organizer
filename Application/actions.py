@@ -17,7 +17,7 @@ from functools import cache
 from Application.browser import Browser
 from Application.logger import log_method
 from Application.turnament import Turnament
-import Resources
+import resources
 
 
 @cache
@@ -27,74 +27,67 @@ class Actions:
     def __init__(self, name):
         self._name = name
         self._end = False
-        self._is_db_opened = False
         self._is_browser_opened = False
         self._is_opened = False
         self._cmd = None
-        self._turnament = None
+        self.turnament = None
+        self.sql_engine = None
         msg = f'Starting actions core for "{name}" application.. '
         logging.info(msg)
-        self._browser = Browser()
-
+        self.browser = Browser()
 
     def app_status(self):
         log_method(obj=self, func=self.app_status)
-        data = {'status': self._is_opened, 'turnament': str(self._turnament)}
+        data = {'status': self._is_opened, 'turnament': str(self.turnament)}
         logging.info('App status. Content data: \n{}'.format(data))
         return data
 
-
     def app_info(self):
         log_method(obj=self, func=self.app_info)
-        data = {'name': Resources.APPLICATION_NAME, 'version': Resources.__version__}
+        data = {'name': resources.APPLICATION_NAME, 'version': resources.__version__}
         logging.info('App info. Content data: \n{}'.format(data))
         return data
-
 
     def open(self, name: str, cmd: str):
         log_method(obj=self, func=self.open)
         if name:
-            self._browser.set_file(filename=name)
-            self._browser.get_file(option=cmd)
-            self._turnament = Turnament(name=name)
+            self.browser.set_file(filename=name)
+            self.browser.get_file(option=cmd)
+            self.turnament = Turnament(name=name, engine=self.browser.engine)
             self._is_opened = True
-        data = {'status': self._is_opened, 'turnament': str(self._turnament)}
+        data = {'status': self._is_opened, 'turnament': str(self.turnament)}
         logging.info('Opened turnament. Content data: \n{}'.format(data))
         return data
 
-
     def close(self):
         log_method(obj=self, func=self.close)
-        self._browser.stop()
-        self._turnament.delete_players()
+        self.browser.stop()
+        self.turnament.delete_players()
         self._is_opened = False
-
 
     def end(self):
         log_method(obj=self, func=self.end)
         self._end = True
-
 
     def turnament_start(self, system_type: str, rounds=0):
         if system_type.lower() in "swiss":
             if rounds == 0:
                 logging.error("Set number of rounds to play!")
                 return
-            s_type = Resources.SystemType.SWISS
+            s_type = resources.SystemType.SWISS
         elif system_type.lower() in "circullar":
-            s_type = Resources.SystemType.CIRCULAR
-            rounds = self._turnament.players_num - 1
+            s_type = resources.SystemType.CIRCULAR
+            rounds = self.turnament.players_num - 1
         elif system_type.lower() in "elimination":
-            s_type = Resources.SystemType.SINGLE_ELIMINATION
+            s_type = resources.SystemType.SINGLE_ELIMINATION
         else:
             logging.error("Wrong turnament system typed! {}".format(system_type))
             return
-        self._turnament.set_system(system_id=s_type)
-        self._turnament.begin(rounds=rounds)
-        data = {'status': True, 'turnament': self._turnament.get()}
+        self.turnament.set_system(system_id=s_type)
+        self.turnament.begin(rounds=rounds)
+        data = {'status': True, 'turnament': self.turnament.get()}
         logging.info('Turnament begun. Content data: \n{}'.format(data))
         return data
-
 
     def player_add(self,
                    name="",
@@ -104,81 +97,76 @@ class Actions:
                    category="bk",
                    elo=0):
         log_method(obj=self, func=self.player_add)
-        if not self._turnament:
+        if not self.turnament:
             logging.error("No turnament active. Please start turnament.")
             data = {'status': False, 'player': None}
         else:
-            self._turnament.add_player(name=name,
-                                       surname=surname,
-                                       sex=sex,
-                                       city=city,
-                                       category=category,
-                                       elo=elo)
-            data = {'status': True, 'player': str(self._turnament._players[-1])}
+            self.turnament.add_player(name=name,
+                                      surname=surname,
+                                      sex=sex,
+                                      city=city,
+                                      category=category,
+                                      elo=elo)
+            data = {'status': True, 'player': str(self.turnament._players[-1])}
         logging.info('Player added. Content data: \n{}'.format(data))
         return data
-
 
     def player_del(self,
                    name="",
                    surname=""):
         log_method(obj=self, func=self.player_del)
-        if not self._turnament:
+        if not self.turnament:
             logging.error("No turnament active. Please start turnament.")
             data = {'status': False}
         else:
-            self._turnament.del_player(name=name, surname=surname)
+            self.turnament.del_player(name=name, surname=surname)
             data = {'status': True}
         logging.info('Player deleted. Content data: \n{}'.format(data))
         return data
-
 
     def players_get(self,
                     type="results",
                     log_action=True):
         log_method(obj=self, func=self.players_get)
-        if not self._turnament:
+        if not self.turnament:
             logging.error("No turnament active. Please start turnament and add Players.")
             data = {'status': False, 'players': None}
         else:
-            data = {'status': True, 'players': str(self._turnament.get_players(type=type))}
+            data = {'status': True, 'players': str(self.turnament.get_players(type=type))}
         if log_action:
             logging.info('Players content data: \n{}'.format(data))
         return data
 
-
     def turnament_results(self):
         log_method(obj=self, func=self.turnament_results)
-        if not self._turnament:
+        if not self.turnament:
             logging.error("No turnament active. Please start turnament and add Players.")
             data = {'status': False, 'round': None, 'players': None}
         else:
             data = {'status': True,
-                    'round': self._turnament._act_round_nr,
+                    'round': self.turnament._act_round_nr,
                     'players': self.players_get(type='results', log_action=False)['players']}
         logging.info('Results content data: \n{}'.format(data))
         return data
 
-
     def turnament_round(self, nr=0):
         log_method(obj=self, func=self.turnament_round)
         nr = int(nr) - 1
-        if not self._turnament:
+        if not self.turnament:
             logging.error("No turnament active. Please start turnament with Players.")
             data = {'status': False, 'round': None}
-        elif nr == -1 or nr in range(len(self._turnament._rounds)):
-            data = {'status': True, 'round': self._turnament._rounds[nr].get()}
-            logging.debug('Rounds: \n{}'.format(self._turnament._rounds))
+        elif nr == -1 or nr in range(len(self.turnament._rounds)):
+            data = {'status': True, 'round': self.turnament._rounds[nr].get()}
+            logging.debug('Rounds: \n{}'.format(self.turnament._rounds))
         else:
             logging.error("Wrong round number.")
             data = {'status': False, 'round': None}
         logging.info('Round content data: \n{}'.format(data))
         return data
-    
 
     def set_round_result(self, table_nr: int, result: int):
         log_method(obj=self, func=self.set_round_result)
-        if not self._turnament:
+        if not self.turnament:
             logging.error("No turnament active. Please start turnament and add Players.")
             data = {'status': False}
         else:
@@ -186,7 +174,6 @@ class Actions:
             self.set_round_result(table_nr, result)
         logging.info('Table {} result ({}) changed: \n{}'.format(table_nr, result))
         return data
-
 
     def debug_method(self):
         """Debugging purpose only.
@@ -255,66 +242,66 @@ class Actions:
         )
         msg_debug = "ROUND #1:"
         logging.debug(msg=msg_debug)
-        self._turnament.set_system(system_id=Resources.SystemType.SWISS)
-        self._turnament.begin(rounds=6)
-        self._turnament.add_result(table_nr=1, result=1.0)
-        self._turnament.add_result(table_nr=2, result=1.0)
-        self._turnament.add_result(table_nr=3, result=0.5)
-        self._turnament.apply_round_results()
-        logging.debug(msg=self._turnament.dump_act_results())
-        # logging.debug(msg=self._turnament.dump_players())
+        self.turnament.set_system(system_id=resources.SystemType.SWISS)
+        self.turnament.begin(rounds=6)
+        self.turnament.add_result(table_nr=1, result=1.0)
+        self.turnament.add_result(table_nr=2, result=1.0)
+        self.turnament.add_result(table_nr=3, result=0.5)
+        self.turnament.apply_round_results()
+        logging.debug(msg=self.turnament.dump_act_results())
+        # logging.debug(msg=self.turnament.dump_players())
 
         msg_debug = "ROUND #2:"
         logging.debug(msg=msg_debug)
-        self._turnament.next_round()
-        # logging.debug(msg=self._turnament.dump())
-        self._turnament.add_result(table_nr=1, result=0.5)
-        self._turnament.add_result(table_nr=2, result=0.0)
-        self._turnament.add_result(table_nr=3, result=1.0)
-        self._turnament.apply_round_results()
-        logging.debug(msg=self._turnament.dump_act_results())
-        # logging.debug(msg=self._turnament.dump_players())
+        self.turnament.next_round()
+        # logging.debug(msg=self.turnament.dump())
+        self.turnament.add_result(table_nr=1, result=0.5)
+        self.turnament.add_result(table_nr=2, result=0.0)
+        self.turnament.add_result(table_nr=3, result=1.0)
+        self.turnament.apply_round_results()
+        logging.debug(msg=self.turnament.dump_act_results())
+        # logging.debug(msg=self.turnament.dump_players())
 
         msg_debug = "ROUND #3:"
         logging.debug(msg=msg_debug)
-        self._turnament.next_round()
-        # logging.debug(msg=self._turnament.dump())
-        self._turnament.add_result(table_nr=1, result=0.5)
-        self._turnament.add_result(table_nr=2, result=0.0)
-        self._turnament.add_result(table_nr=3, result=1.0)
-        self._turnament.apply_round_results()
-        logging.debug(msg=self._turnament.dump_act_results())
-        # logging.debug(msg=self._turnament.dump_players())
+        self.turnament.next_round()
+        # logging.debug(msg=self.turnament.dump())
+        self.turnament.add_result(table_nr=1, result=0.5)
+        self.turnament.add_result(table_nr=2, result=0.0)
+        self.turnament.add_result(table_nr=3, result=1.0)
+        self.turnament.apply_round_results()
+        logging.debug(msg=self.turnament.dump_act_results())
+        # logging.debug(msg=self.turnament.dump_players())
 
         msg_debug = "ROUND #4:"
         logging.debug(msg=msg_debug)
-        self._turnament.next_round()
-        # logging.debug(msg=self._turnament.dump())
-        self._turnament.add_result(table_nr=1, result=0.5)
-        self._turnament.add_result(table_nr=2, result=0.5)
-        self._turnament.add_result(table_nr=3, result=1.0)
-        self._turnament.apply_round_results()
-        logging.debug(msg=self._turnament.dump_act_results())
-        # # logging.debug(msg=self._turnament.dump_players())
+        self.turnament.next_round()
+        # logging.debug(msg=self.turnament.dump())
+        self.turnament.add_result(table_nr=1, result=0.5)
+        self.turnament.add_result(table_nr=2, result=0.5)
+        self.turnament.add_result(table_nr=3, result=1.0)
+        self.turnament.apply_round_results()
+        logging.debug(msg=self.turnament.dump_act_results())
+        # # logging.debug(msg=self.turnament.dump_players())
 
         msg_debug = "ROUND #5:"
         logging.debug(msg=msg_debug)
-        self._turnament.next_round()
-        # logging.debug(msg=self._turnament.dump())
-        self._turnament.add_result(table_nr=1, result=0.5)
-        self._turnament.add_result(table_nr=2, result=0.0)
-        self._turnament.add_result(table_nr=3, result=1.0)
-        self._turnament.apply_round_results()
-        logging.debug(msg=self._turnament.dump_act_results())
-        # logging.debug(msg=self._turnament.dump_players_p_o())
+        self.turnament.next_round()
+        # logging.debug(msg=self.turnament.dump())
+        self.turnament.add_result(table_nr=1, result=0.5)
+        self.turnament.add_result(table_nr=2, result=0.0)
+        self.turnament.add_result(table_nr=3, result=1.0)
+        self.turnament.apply_round_results()
+        logging.debug(msg=self.turnament.dump_act_results())
+        # logging.debug(msg=self.turnament.dump_players_p_o())
 
         msg_debug = "ROUND #6:"
         logging.debug(msg=msg_debug)
-        self._turnament.next_round()
-        # logging.debug(msg=self._turnament.dump())
-        self._turnament.add_result(table_nr=1, result=0.5)
-        self._turnament.add_result(table_nr=2, result=0.0)
-        self._turnament.add_result(table_nr=3, result=0.0)
-        self._turnament.apply_round_results()
-        logging.debug(msg=self._turnament.dump_act_results())
-        # # logging.debug(msg=self._turnament.dump_players())
+        self.turnament.next_round()
+        # logging.debug(msg=self.turnament.dump())
+        self.turnament.add_result(table_nr=1, result=0.5)
+        self.turnament.add_result(table_nr=2, result=0.0)
+        self.turnament.add_result(table_nr=3, result=0.0)
+        self.turnament.apply_round_results()
+        logging.debug(msg=self.turnament.dump_act_results())
+        # # logging.debug(msg=self.turnament.dump_players())

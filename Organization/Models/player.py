@@ -6,10 +6,10 @@
 # Global package imports:
 from datetime import date
 from typing import Union, List, Any
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, validator
 
 # Local package imports:
-from Resources import CATEGORY
+from resources import CATEGORY
 
 
 class ModelPlayer(BaseModel):
