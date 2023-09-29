@@ -18,13 +18,14 @@ class ModelTable(BaseModel):
     b_player: int = 0
     result: float = -1.0
 
-
+    @classmethod
     @validator('number')
     def number_match(cls, val):
         if not isinstance(val, int) or val <= 0:
             raise ValueError(f'Not valid table nr. ({val})')
         return val
 
+    @classmethod
     @validator('w_player')
     def w_player_match(cls, val):
         if val != -1:
@@ -33,6 +34,7 @@ class ModelTable(BaseModel):
                 raise ValueError(msg_error)
         return val
 
+    @classmethod
     @validator('b_player')
     def b_player_match(cls, val):
         if val != -1:
@@ -41,6 +43,7 @@ class ModelTable(BaseModel):
                 raise ValueError(msg_error)
         return val
 
+    @classmethod
     @validator('result')
     def result_match(cls, val):
         _val = 0.0

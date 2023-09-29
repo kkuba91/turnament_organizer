@@ -9,7 +9,7 @@ from enum import Enum
 import logging
 
 # Local package imports:
-from Resources import __version__, APPLICATION_NAME
+from resources import __version__, APPLICATION_NAME
 
 # Third Party packages:
 from fastapi import FastAPI, APIRouter
@@ -18,6 +18,7 @@ import uvicorn
 api = FastAPI(title="Chess turnament manager",
               description="Swiss, single elimination, circular systems",
               version=__version__)
+
 
 class ApiData:
 
@@ -40,7 +41,6 @@ class ApiData:
         uvicorn_logger = logging.getLogger("uvicorn")
         uvicorn_logger.propagate = False
         self._init_endpoints()
-        
 
     def run_api(self):
         """
@@ -53,11 +53,11 @@ class ApiData:
         }
         uvicorn.run(**kwargs)
 
-    @api.get("/", include_in_schema=False)
+    @staticmethod
+    @api.get(path="/", include_in_schema=False)
     async def init() -> dict:
         data = {'name': APPLICATION_NAME, 'version': __version__}
         return data
-        
 
     def _init_endpoints(self):
         # App general:
@@ -226,7 +226,6 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info(f'[API]: Get Player list for "{type}" ..')
         return self.app.actions.players_get(type=type)
-
 
     async def turnament_results(self):
         await asyncio.sleep(0.01)

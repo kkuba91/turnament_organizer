@@ -5,7 +5,7 @@
 """
 # Global package imports:
 from typing import Union, Dict, Optional
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, validator
 
 # Local package imports:
 

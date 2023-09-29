@@ -5,6 +5,7 @@
 """
 from enum import IntEnum
 
+
 class SystemType(IntEnum):
 
     """System Types (Enum)."""
@@ -13,6 +14,7 @@ class SystemType(IntEnum):
     SWISS = 1
     CIRCULAR = 2
     SINGLE_ELIMINATION = 3
+
 
 SystemNames = {
     SystemType.UNKNOWN: "Unknown",

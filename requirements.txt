@@ -1,6 +1,8 @@
-colorama
-numpy
-pydantic
-FastAPI
+colorama~=0.4.6
+numpy~=1.26.0
+pydantic~=1.10.12
+FastAPI~=0.103.1
 fastapi_utils
-uvicorn[standard]
+tabulate
+uvicorn[standard]~=0.23.2
+SQLAlchemy~=1.4.49

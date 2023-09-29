@@ -11,6 +11,7 @@ import logging
 
 MSG_COMMON = "Uninitiated system type. Not allowed to invoke method "
 
+
 class System(ABC):
     @abstractmethod
     def __init__(self, sys_type: int):
@@ -21,10 +22,6 @@ class System(ABC):
     @abstractmethod
     def prepare_round(self, *args, **kwargs):
         msg_debug = MSG_COMMON + "'prepare_round'"
-        logging.debug(msg=msg_debug)
-
-    def _sort_players(self, *args, **kwargs):
-        msg_debug = MSG_COMMON + "'_sort_players'"
         logging.debug(msg=msg_debug)
 
     def _get_player(self, _idnt):
@@ -57,7 +54,7 @@ class System(ABC):
         logging.debug(msg=msg_debug)
 
     def _set_tables_1(self, *args, **kwargs):
-        """[Optional] Some of systems have odd the first round pairing."""
+        """[Optional] Some systems have odd the first round pairing."""
         msg_debug = MSG_COMMON + "'_set_tables_1'"
         logging.debug(msg=msg_debug)
 

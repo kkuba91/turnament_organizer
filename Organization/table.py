@@ -6,10 +6,11 @@
 
 """
 # Global package imports:
-from pydantic import ValidationError
 
 # Local package imports:
 from Organization.Models import ModelTable
+
+
 class Table(ModelTable):
 
     """Table with chessboard score class."""

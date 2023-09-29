@@ -4,13 +4,10 @@
 
 """
 # Global package imports:
-import numpy as np
-import logging
 
 # Local package imports:
-from Organization import Round
 from Systems import System
-from Resources import SystemType
+from resources import SystemType
 
 
 class SystemCircular(System):

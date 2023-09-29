@@ -6,11 +6,10 @@
 """
 # Global package imports:
 import logging
-from datetime import date
 
 # Local package imports:
 from Organization.Models import ModelPlayer
-from Resources import CATEGORY
+from resources import CATEGORY
 
 
 class Player(ModelPlayer):

@@ -11,7 +11,7 @@ import logging
 from Organization import Round
 from Organization.player import Player
 from Systems import System
-from Resources import SystemType
+from resources import SystemType
 
 
 class SystemSwiss(System):
@@ -21,7 +21,7 @@ class SystemSwiss(System):
     def __init__(self):
         self._round = 0
         self._type = SystemType.SWISS
-        self.players: list
+        self.players = []
 
     def prepare_round(self, players: list, round_nr: int):
         self.players = players

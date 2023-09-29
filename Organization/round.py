@@ -1,6 +1,6 @@
 """round.py
 
-    Turnament round with all data about playing sets and resuts.
+    Turnament round with all data about playing sets and results.
 
 """
 from Organization.table import Table
