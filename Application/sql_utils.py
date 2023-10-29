@@ -103,10 +103,10 @@ class SqlUtils(object):
         if self.connection.execute(select([self.db.turnament])).fetchall():
             stmt = self.db.turnament.update().where(self.db.turnament.c._Id == 1). \
                 values(bind_data)
-            logging.debug("Updating table")
+            logging.debug(f"Updating table \"{table_name}\"")
         else:
             stmt = self.db.turnament.insert()
-            logging.debug("Inserting into table")
+            logging.debug(f"Inserting into table \"{table_name}\"")
         self.engine.execute(stmt, [data, ])
 
     def players_init(self):
@@ -115,6 +115,78 @@ class SqlUtils(object):
         self.db.players = \
             self._sql_init_table_or_get_existing(table_name=table_name,
                                                  table_cols=PLAYERS_TABLE_COLS)
+
+    def get_players_info(self):
+        table_name = "Players"
+        log_method(self, self.get_players_info)
+        self.db.players = self._get_table_info(table_name=table_name,
+                                               db_table=self.db.players)
+
+    def update_player_info(self, **kwargs):
+        table_name = "Players"
+        name = kwargs.get("name")
+        surname = kwargs.get("surname")
+        log_method(self, self.update_player_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        data = {}
+        bind_data = {}
+        logging.debug(f"kwargs: {kwargs}")
+        for col in PLAYERS_TABLE_COLS:
+            if not col.primary_key and kwargs.get(str(col.key).lower()):
+                data[str(col.key)] = kwargs[str(col.key).lower()]
+                bind_data[str(col.key)] = bindparam(str(col.key))
+        logging.debug(f"data: {data}")
+
+        # Check table is empty
+        if self.connection.execute(select([self.db.players])).fetchall():
+            stmt = self.db.players.update().where(self.db.players.c.Name == name). \
+                where(self.db.players.c.Surname == surname).values(bind_data)
+            logging.debug(f"Updating player {name} {surname}")
+            self.engine.execute(stmt, [data, ])
+        else:
+            raise Exception("No players added yet!")
+
+    def remove_player_info(self, **kwargs):
+        table_name = "Players"
+        name = kwargs.get("name")
+        surname = kwargs.get("surname")
+        log_method(self, self.update_player_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        data = {}
+
+        # Check table is empty
+        if self.connection.execute(select([self.db.players])).fetchall():
+            stmt = self.db.players.delete().where(self.db.players.c.Name == name). \
+                where(self.db.players.c.Surname == surname)
+            logging.debug(f"Deleting player {name} {surname}")
+            self.engine.execute(stmt)
+        else:
+            raise Exception("No players added yet!")
+
+    def insert_player_info(self, **kwargs):
+        table_name = "Players"
+        name = kwargs.get("name")
+        surname = kwargs.get("surname")
+        log_method(self, self.insert_player_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        data = {}
+        bind_data = {}
+        logging.debug(f"kwargs: {kwargs}")
+        for col in PLAYERS_TABLE_COLS:
+            if not col.primary_key and kwargs.get(str(col.key).lower()):
+                data[str(col.key)] = kwargs[str(col.key).lower()]
+                bind_data[str(col.key)] = bindparam(str(col.key))
+        logging.debug(f"data: {data}")
+
+        stmt = self.db.players.insert()
+        logging.debug(f"Inserting {name} {surname} into table \"{table_name}\"")
+        self.engine.execute(stmt, [data, ])
 
     def _sql_init_table_or_get_existing(self,
                                         table_name: str,

@@ -68,7 +68,7 @@ class Turnament(object):
         for p in self._players:
             if p.name == name and p.surname == surname:
                 _dont_add = True
-                msg_error_1 = "\nPlayer {} {} already set into turnament.".format(name, surname)
+                msg_error_1 = f"\nPlayer {name} {surname} already set into turnament."
                 logging.error(msg=msg_error_1)
         # Add Player:
         if not _dont_add:
@@ -82,10 +82,16 @@ class Turnament(object):
                     elo=elo
                 )
             except ValidationError as exc:
-                msg_error_2 = "\nCannot add Player with invalid data."
+                msg_error_2 = f"\nCannot add Player {name} {surname} with invalid data."
                 logging.error(msg=str(exc) + msg_error_2)
             else:
                 self._players.append(player)
+                self.sql.insert_player_info(name=name,
+                                            surname=surname,
+                                            sex=sex,
+                                            city=city,
+                                            category=category,
+                                            elo=elo)
                 msg_info = f"Set Player: {player.name} {player.surname}, " + \
                            f"[elo: {player.elo}, cat: {player.category}] in turnament."
                 logging.info(msg=msg_info)
@@ -97,6 +103,8 @@ class Turnament(object):
                            f"{player.surname} from turnament."
                 logging.info(msg=msg_info)
                 self._players.pop(player)
+                self.sql.remove_player_info(name=name,
+                                            surname=surname)
             else:
                 msg_info = f"No Player #{player.id} on turnament list."
                 logging.info(msg=msg_info)
@@ -136,6 +144,9 @@ class Turnament(object):
         for player in self._players:
             if not player.pauser:
                 player.id = ident
+                self.sql.update_player_info(name=player.name,
+                                            surname=player.surname,
+                                            nr=player.id)
                 ident += 1
         system = get_system(self._system)
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
