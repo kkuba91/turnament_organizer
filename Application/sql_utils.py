@@ -76,27 +76,10 @@ class SqlUtils(object):
         data = {'_Id': 1}
         bind_data = {}
         logging.debug(f"kwargs: {kwargs}")
-        if kwargs.get('name'):
-            data['Name'] = kwargs['name']
-            bind_data['Name'] = bindparam('Name')
-        if kwargs.get('place'):
-            data['Place'] = kwargs['place']
-            bind_data['Place'] = bindparam('Place')
-        if kwargs.get('round_actual'):
-            data['RoundActual'] = kwargs['round_actual']
-            bind_data['RoundActual'] = bindparam('RoundActual')
-        if kwargs.get('rounds'):
-            data['Rounds'] = kwargs['rounds']
-            bind_data['Rounds'] = bindparam('Rounds')
-        if kwargs.get('date_start'):
-            data['DateStart'] = kwargs['date_start']
-            bind_data['DateStart'] = bindparam('DateStart')
-        if kwargs.get('date_end'):
-            data['DateEnd'] = kwargs['date_end']
-            bind_data['DateEnd'] = bindparam('DateEnd')
-        if kwargs.get('system'):
-            data['System'] = kwargs['system']
-            bind_data['System'] = bindparam('System')
+        for col in TURNAMENT_TABLE_COLS:
+            if not col.primary_key and kwargs.get(str(col.key).lower()):
+                data[str(col.key)] = kwargs[str(col.key).lower()]
+                bind_data[str(col.key)] = bindparam(str(col.key))
         logging.debug(f"data: {data}")
 
         # Check table is empty
@@ -108,6 +91,18 @@ class SqlUtils(object):
             stmt = self.db.turnament.insert()
             logging.debug(f"Inserting into table \"{table_name}\"")
         self.engine.execute(stmt, [data, ])
+
+    def read_turnament_info(self, **kwargs):
+        table_name = "Turnament"
+        log_method(self, self.read_turnament_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        results = self._get_table_data(table_name=table_name,
+                                       db_table=self.db.turnament,
+                                       table_cols=TURNAMENT_TABLE_COLS)
+        logging.debug(f"Reading general info from table \"{table_name}\":\n{results}")
+        return results
 
     def players_init(self):
         table_name = "Players"
@@ -156,7 +151,6 @@ class SqlUtils(object):
         if table_name not in inspect(self.engine).get_table_names():
             logging.error(f"No table \"{table_name}\"!")
             return {}
-        data = {}
 
         # Check table is empty
         if self.connection.execute(select([self.db.players])).fetchall():
@@ -188,6 +182,18 @@ class SqlUtils(object):
         logging.debug(f"Inserting {name} {surname} into table \"{table_name}\"")
         self.engine.execute(stmt, [data, ])
 
+    def read_players_info(self, **kwargs):
+        table_name = "Players"
+        log_method(self, self.read_players_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        results = self._get_table_data(table_name=table_name,
+                                       db_table=self.db.players,
+                                       table_cols=PLAYERS_TABLE_COLS)
+        logging.debug(f"Reading Players from table \"{table_name}\":\n{results}")
+        return results
+
     def _sql_init_table_or_get_existing(self,
                                         table_name: str,
                                         table_cols: list):
@@ -214,3 +220,19 @@ class SqlUtils(object):
         result = self.connection.execute(select([db_table]))
         logging.debug(f"result: {result.fetchall()}")
         return db_table
+
+    def _get_table_data(self, table_name, db_table, table_cols):
+        log_method(self, self._get_table_data)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        result = self.connection.execute(select([db_table])).fetchall()
+        data_rows = []
+        for row_tuple in result:
+            row = {}
+            col_nr = 0
+            for col in table_cols:
+                row[str(col.key).lower()] = row_tuple[col_nr]
+                col_nr += 1
+            data_rows.append(row)
+        return data_rows
