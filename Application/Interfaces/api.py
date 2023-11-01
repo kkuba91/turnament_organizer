@@ -241,4 +241,4 @@ class ApiData:
     async def set_round_result(self, table_nr: int, result: int):
         await asyncio.sleep(0.01)
         logging.info('[API]: Set round result ..')
-        return self.app.actions.turnament_round(table_nr=table_nr, result=result)
+        return self.app.actions.set_round_result(table_nr=table_nr, result=result)

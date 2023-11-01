@@ -171,7 +171,7 @@ class Actions:
             data = {'status': False}
         else:
             data = {'status': True}
-            self.set_round_result(table_nr, result)
+            self.turnament.add_result(table_nr=table_nr, result=result)
         logging.info('Table {} result ({}) changed: \n{}'.format(table_nr, result))
         return data
 

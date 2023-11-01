@@ -42,6 +42,7 @@ class Turnament(object):
 
     def initialize_data_from_db(self):
         """Read existing data from DB"""
+        # @ToDo: Divide into methods
         # Initialize turnament table data:
         self.sql.turnament_init()
         self.sql.update_turnament_info(name=self._name,
@@ -72,7 +73,6 @@ class Turnament(object):
         # @ToDo: Implement rounds data loading
         # sql.read_rounds_info()
         self.load_rounds()
-
 
     @property
     def players_num(self):
@@ -151,6 +151,13 @@ class Turnament(object):
         if self.fine_to_begin:
             try:
                 self._rounds[round_id].set_result(table_nr, result)
+                player_w = self._rounds[round_id].tables[table_nr - 1].w_player
+                player_b = self._rounds[round_id].tables[table_nr - 1].b_player
+                self.sql.insert_result(round=self._act_round_nr,
+                                       table=table_nr,
+                                       player_w=player_w,
+                                       player_b=player_b,
+                                       result=result)
             except KeyError as exc:
                 msg_error = f"Used values: round_id={round_id}, table_nr={table_nr}. ({exc})"
                 logging.error(msg=msg_error)
@@ -192,6 +199,8 @@ class Turnament(object):
     def load_rounds(self):
         # @ToDo: Add loading to Rounds here
         system = get_system(self._system)
+        if self._act_round_nr > 0:
+            pass
         # self._players = system.players
 
     def next_round(self):

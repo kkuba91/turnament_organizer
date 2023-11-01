@@ -8,7 +8,7 @@
 import logging
 from dataclasses import dataclass
 from sqlalchemy import (MetaData, Table, Column, Integer, String, Date, inspect,
-                        bindparam, select)
+                        bindparam, select, Float)
 
 # Local package imports:
 from Application.logger import log_method
@@ -39,13 +39,22 @@ PLAYERS_TABLE_COLS = [
     Column('Elo_blitz', Integer)
 ]
 
+RESULTS_TABLE_COLS = [
+    Column('_Id', Integer, primary_key=True, nullable=False),
+    Column('Round', Integer),
+    Column('Table', Integer),
+    Column('Player_w', Integer),
+    Column('Player_b', Integer),
+    Column('Result', Float)
+]
+
 
 class SqlUtils(object):
     @dataclass
     class DbElements:
         turnament = None
         players = None
-        rounds = None
+        results = None
 
     def __init__(self, engine) -> None:
         self.engine = engine
@@ -60,6 +69,7 @@ class SqlUtils(object):
             self._sql_init_table_or_get_existing(table_name=table_name,
                                                  table_cols=TURNAMENT_TABLE_COLS)
         self.players_init()
+        self.results_init()
 
     def get_turnament_info(self):
         table_name = "Turnament"
@@ -188,10 +198,47 @@ class SqlUtils(object):
         if table_name not in inspect(self.engine).get_table_names():
             logging.error(f"No table \"{table_name}\"!")
             return {}
-        results = self._get_table_data(table_name=table_name,
+        players = self._get_table_data(table_name=table_name,
                                        db_table=self.db.players,
                                        table_cols=PLAYERS_TABLE_COLS)
-        logging.debug(f"Reading Players from table \"{table_name}\":\n{results}")
+        logging.debug(f"Reading Players from table \"{table_name}\":\n{players}")
+        return players
+
+    def results_init(self):
+        table_name = "Results"
+        log_method(self, self.results_init)
+        self.db.results = \
+            self._sql_init_table_or_get_existing(table_name=table_name,
+                                                 table_cols=RESULTS_TABLE_COLS)
+
+    def insert_result(self, **kwargs):
+        table_name = "Results"
+        log_method(self, self.insert_result)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        data = {}
+        logging.debug(f"kwargs: {kwargs}")
+        data['Round'] = kwargs.get("round")
+        data['Table'] = kwargs.get("table")
+        data['Player_w'] = kwargs.get("player_w")
+        data['Player_b'] = kwargs.get("player_b")
+        data['Result'] = kwargs.get("result")
+
+        stmt = self.db.results.insert()
+        logging.debug(f"Inserting {kwargs} into table \"{table_name}\"")
+        self.engine.execute(stmt, [data, ])
+
+    def read_results_info(self, **kwargs):
+        table_name = "Results"
+        log_method(self, self.read_results_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f"No table \"{table_name}\"!")
+            return {}
+        results = self._get_table_data(table_name=table_name,
+                                       db_table=self.db.results,
+                                       table_cols=RESULTS_TABLE_COLS)
+        logging.debug(f"Reading Results from table \"{table_name}\":\n{results}")
         return results
 
     def _sql_init_table_or_get_existing(self,
