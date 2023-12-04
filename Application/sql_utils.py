@@ -7,7 +7,7 @@
 # Global package imports:
 import logging
 from dataclasses import dataclass
-from sqlalchemy import (MetaData, Table, Column, Integer, String, Date, inspect,
+from sqlalchemy import (MetaData, Table, Column, Integer, String, Date, inspect, Boolean,
                         bindparam, select, Float)
 
 # Local package imports:
@@ -18,10 +18,12 @@ TURNAMENT_TABLE_COLS = [
     Column('Name', String),
     Column('Place', String),
     Column('RoundActual', Integer),
+    Column('RoundFinished', Integer),
     Column('Rounds', Integer),
     Column('DateStart', Date),
     Column('DateEnd', Date),
-    Column('System', Integer)
+    Column('System', Integer),
+    Column('Finished', Boolean)
 ]
 
 PLAYERS_TABLE_COLS = [
