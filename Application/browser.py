@@ -113,8 +113,9 @@ class Browser(object):
         self._file_handler = None
         self.engine = None
 
-    def set_file(self, filename) -> bool:
-        path = os.path.expanduser('~')
+    def set_file(self, filename, path="") -> bool:
+        if not path:
+            path = os.path.expanduser('~')
         logging.debug(f"set_file path: {path}, with filename: {filename}")
         if not self.is_file_opened():
             self._file.set_path(path).set_name(filename)
@@ -122,7 +123,7 @@ class Browser(object):
         else:
             return False
 
-    def get_file(self, option):
+    def get_file(self, option, path=""):
         _log = ""
         _ret = None
         if self._file.valid:

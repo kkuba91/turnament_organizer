@@ -31,7 +31,7 @@ class Application:
 
     def init(self):
         self.cli = CLI(app=self)
-        self.api = ApiData(app=self)
+        self.api = ApiData(app=self, logger=self._logger)
 
     def run(self):
         self._run_api()

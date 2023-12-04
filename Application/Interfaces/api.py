@@ -5,10 +5,10 @@
 """
 # Global package imports:
 import asyncio
-from enum import Enum
 import logging
 
 # Local package imports:
+from Application.logger import set_fastapi_logging
 from resources import __version__, APPLICATION_NAME
 
 # Third Party packages:
@@ -40,6 +40,7 @@ class ApiData:
             raise TypeError("No APP object for API.")
         uvicorn_logger = logging.getLogger("uvicorn")
         uvicorn_logger.propagate = False
+        set_fastapi_logging(debug=bool(self.api.debug))
         self._init_endpoints()
 
     def run_api(self):
@@ -138,15 +139,20 @@ class ApiData:
         # Round:
         tag = self.Tags.rounds
         self.routers[tag] = APIRouter()
-        self.routers[tag].add_api_route(path="/turnament/round",
+        self.routers[tag].add_api_route(path="/turnament/round/get_results",
                                         endpoint=self.turnament_round,
                                         methods=["GET"],
                                         description="Get round data",
                                         tags=[tag])
-        self.routers[tag].add_api_route(path="/turnament/round/set",
+        self.routers[tag].add_api_route(path="/turnament/round/set_result",
                                         endpoint=self.set_round_result,
                                         methods=["POST"],
                                         description="Set round result",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/round/apply_resuts",
+                                        endpoint=self.apply_round,
+                                        methods=["POST"],
+                                        description="Apply round results",
                                         tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
 
@@ -161,15 +167,15 @@ class ApiData:
         return self.app.actions.app_status()
 
     # @TAG: "Turnament"
-    async def create_turnament(self, name: str):
+    async def create_turnament(self, name: str, path: str = ""):
         await asyncio.sleep(0.01)
         logging.info('[API]: Creating turnament with name: {} ..'.format(name))
-        return self.app.actions.open(name=name, cmd="New")
+        return self.app.actions.open(name=name, cmd="New", path=path)
 
-    async def open_turnament(self, name: str):
+    async def open_turnament(self, name: str, path: str = ""):
         await asyncio.sleep(0.01)
         logging.info('[API]: Opening turnament with name: {} ..'.format(name))
-        return self.app.actions.open(name=name, cmd="Open")
+        return self.app.actions.open(name=name, cmd="Open", path=path)
     
     async def start_turnament(self, rounds: int, system_type: str):
         await asyncio.sleep(0.01)
@@ -241,4 +247,9 @@ class ApiData:
     async def set_round_result(self, table_nr: int, result: int):
         await asyncio.sleep(0.01)
         logging.info('[API]: Set round result ..')
-        return self.app.actions.turnament_round(table_nr=table_nr, result=result)
+        return self.app.actions.set_round_result(table_nr=table_nr, result=result)
+
+    async def apply_round(self):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Apply round result ..')
+        return self.app.actions.apply_round()

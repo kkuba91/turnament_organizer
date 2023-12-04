@@ -7,6 +7,8 @@
 from colorama import init, Fore, Style
 import logging
 
+from fastapi.logger import logger as fastapi_logger
+
 init(autoreset=True)
 
 
@@ -70,7 +72,10 @@ def debug(func):
 def set_logging(**kwargs):
     """Set logging configuration."""
     _debug = kwargs.pop("debug", None)
-    logger = logging.getLogger()
+    if 'logger_name' in kwargs:
+        logger = logging.getLogger(kwargs['logger_name'])
+    else:
+        logger = logging.getLogger()
     stdout_handler = logging.StreamHandler()
     if _debug:
         logger.setLevel(level=logging.DEBUG)
@@ -85,6 +90,25 @@ def set_logging(**kwargs):
         msg_debug = "Debugging is switched ON!"
         logging.debug(msg=msg_debug)
 
+    return logger
+
+
+def set_fastapi_logging(**kwargs):
+    """Set logging configuration."""
+    _debug = kwargs.pop("debug", None)
+    logger = fastapi_logger
+    stdout_handler = logging.StreamHandler()
+    if _debug:
+        logger.setLevel(level=logging.DEBUG)
+        stdout_handler.setLevel(level=logging.DEBUG)
+    else:
+        logger.setLevel(level=logging.INFO)
+        stdout_handler.setLevel(level=logging.INFO)
+    stdout_handler.setFormatter(CustomFormatter())
+    logger.addHandler(stdout_handler)
+    if _debug:
+        msg_debug = "Debugging is switched ON!"
+        logging.debug(msg=msg_debug)
     return logger
 
 

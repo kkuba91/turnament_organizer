@@ -22,23 +22,59 @@ class Turnament(object):
         self._name = name
         self._date_start = date.today()
         self._date_end = None
+        self._finished = False
         self._players_num = 0
         self._mean_rank = 0
         self._mean_age = 0
         self._rounds_num = 0
         self._act_round_nr = 0
+        self._finished_round_nr = 0
+        self._place = ""
         self.fine_to_begin = False
         self._system = SystemType.UNKNOWN
         self._players = []
         self._rounds = []
         self.sql = SqlUtils(engine)
+
+        # Additional:
+        self._place = ""
+
+        # Post init:
+        self.initialize_data_from_db()
+
+    def initialize_data_from_db(self):
+        """Read existing data from DB"""
+        # @ToDo: Divide into methods
+        # Initialize turnament table data:
         self.sql.turnament_init()
         self.sql.update_turnament_info(name=self._name,
                                        date_start=self._date_start,
                                        system=self._system)
-
-        # Additional:
-        self._place = ""
+        info = self.sql.read_turnament_info()[0]
+        self._rounds_num = info.get("rounds") if info.get("rounds") else 0
+        self._date_start = info.get("datestart")
+        self._date_end = info.get("dateend")
+        self._act_round_nr = info.get("roundactual") if info.get("roundactual") else 0
+        self._finished_round_nr = info.get("roundfinished") if info.get("roundfinished") else 0
+        self._place = info.get("place")
+        self._system = info.get("system") if info.get("system") else SystemType.UNKNOWN
+        self._finished = info.get("finished") if info.get("finished") else False
+        # Initialize Players data from db:
+        players = self.sql.read_players_info()
+        players.sort(key=lambda x: x.get("nr") if x.get("nr") else 0, reverse=False)
+        for player in players:
+            self.add_player(
+                _id=player.get("nr"),
+                name=player.get("name"),
+                surname=player.get("surname"),
+                sex=player.get("sex"),
+                city=player.get("city"),
+                category=player.get("category"),
+                elo=player.get("elo"),
+                insert_to_db=False
+            )
+        # Initialize results of Rounds from db:
+        self.load_results()
 
     @property
     def players_num(self):
@@ -61,14 +97,14 @@ class Turnament(object):
         self.sql.update_turnament_info(date_end=self._date_end)
 
     def add_player(
-        self, name="", surname="", sex="male", city="", category="bk", elo=0
+        self, name="", surname="", sex="male", city="", category="bk", elo=0, _id=None, insert_to_db=True
     ):
         # Validate Player add:
         _dont_add = False
         for p in self._players:
             if p.name == name and p.surname == surname:
                 _dont_add = True
-                msg_error_1 = "\nPlayer {} {} already set into turnament.".format(name, surname)
+                msg_error_1 = f"\nPlayer {name} {surname} already set into turnament."
                 logging.error(msg=msg_error_1)
         # Add Player:
         if not _dont_add:
@@ -82,10 +118,19 @@ class Turnament(object):
                     elo=elo
                 )
             except ValidationError as exc:
-                msg_error_2 = "\nCannot add Player with invalid data."
+                msg_error_2 = f"\nCannot add Player {name} {surname} with invalid data."
                 logging.error(msg=str(exc) + msg_error_2)
             else:
+                if _id:
+                    player.id = _id
                 self._players.append(player)
+                if insert_to_db:
+                    self.sql.insert_player_info(name=name,
+                                                surname=surname,
+                                                sex=sex,
+                                                city=city,
+                                                category=category,
+                                                elo=elo)
                 msg_info = f"Set Player: {player.name} {player.surname}, " + \
                            f"[elo: {player.elo}, cat: {player.category}] in turnament."
                 logging.info(msg=msg_info)
@@ -97,6 +142,8 @@ class Turnament(object):
                            f"{player.surname} from turnament."
                 logging.info(msg=msg_info)
                 self._players.pop(player)
+                self.sql.remove_player_info(name=name,
+                                            surname=surname)
             else:
                 msg_info = f"No Player #{player.id} on turnament list."
                 logging.info(msg=msg_info)
@@ -104,10 +151,21 @@ class Turnament(object):
     def add_result(self, table_nr, result):
         round_id = self._act_round_nr - 1
         if self.fine_to_begin:
+            step = 1
             try:
                 self._rounds[round_id].set_result(table_nr, result)
+                step += 1
+                logging.debug(f"self._rounds={self._rounds}")
+                player_w = self._rounds[round_id].tables[table_nr].w_player
+                player_b = self._rounds[round_id].tables[table_nr].b_player
+                step += 1
+                self.sql.insert_result(round=self._act_round_nr,
+                                       table=table_nr,
+                                       player_w=player_w,
+                                       player_b=player_b,
+                                       result=result)
             except KeyError as exc:
-                msg_error = f"Used values: round_id={round_id}, table_nr={table_nr}. ({exc})"
+                msg_error = f"Used values: round_id={round_id}, table_nr={table_nr}. (step={step}; \n {exc})"
                 logging.error(msg=msg_error)
         else:
             msg_error = f"Something is wrong, turnament did not start. System {SystemNames[self._system]}."
@@ -128,31 +186,75 @@ class Turnament(object):
 
     def _begin(self, rounds):
         self._rounds_num = rounds
-        self.sql.update_turnament_info(rounds=rounds)
         self._act_round_nr = 1
+        self.sql.update_turnament_info(rounds=rounds, roundactual=self._act_round_nr)
         self._players.sort(key=lambda x: x.rank, reverse=True)
         self._players.sort(key=lambda x: x.elo, reverse=True)
         ident = 1
         for player in self._players:
             if not player.pauser:
                 player.id = ident
+                self.sql.update_player_info(name=player.name,
+                                            surname=player.surname,
+                                            nr=player.id)
                 ident += 1
         system = get_system(self._system)
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
         self._players = system.players
 
+    def load_results(self):
+        # Load "Results" list and apply them creating rounds besides
+        results_loaded = 0
+        system = get_system(self._system)
+        if self._act_round_nr > 0:
+            self.fine_to_begin = True
+            data = self.sql.read_results_info()
+            logging.debug(f"Loaded results data consists info:\n"
+                          f" - actual round nr:  {self._act_round_nr}\n"
+                          f" - turnament rounds: {self._rounds_num}\n"
+                          f" - games:            {len(data)}\n"
+                          f" Raw results data: \n{data}")
+            if self._act_round_nr > 0:
+                try_to_load_rounds = self._act_round_nr
+                self._act_round_nr = 1
+                for r in range(1, try_to_load_rounds + 1):
+                    if len(self._rounds) >= r:
+                        _round = self._rounds[r - 1]
+                    else:
+                        _round = system.prepare_round(self._players, r)
+                    _results = [result for result in data if result.get('round') == r]
+                    logging.debug(f"From results={_results}.")
+                    for result in _results:
+                        logging.debug(f"Loaded result={result}.")
+                        _round.set_result(table_nr=result['table'], result=result['result'])
+                        results_loaded += 1
+                    if len(self._rounds) >= r:
+                        self._rounds[r - 1] = _round
+                    else:
+                        self._rounds.append(_round)
+                    if _round.all_results and (len(data) > results_loaded or self._finished):
+                        self.apply_round_results()
+                        self.next_round()
+
     def next_round(self):
         _ret = None
         if self._act_round_nr < self._rounds_num:
             self._act_round_nr += 1
+            self._finished_round_nr = self._act_round_nr - 1
             system = get_system(self._system)
             self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
             self._players = system.players
             _ret = None
         else:
             _ret = -1
-            msg_error = f"Maximum turnament round: {self._rounds_num}!!"
-            logging.error(msg=msg_error)
+            self._finished_round_nr = self._act_round_nr
+            self._finished = True
+            self.sql.update_turnament_info(finished=self._finished)
+            msg_error = (f"Maximum turnament round: {self._rounds_num}!!"
+                         " *** Turnament finished ***")
+            logging.info(msg=msg_error)
+        self.sql.update_turnament_info(roundactual=self._act_round_nr,
+                                       roundfinished=self._finished_round_nr)
         return _ret
 
     def apply_round_results(self):
@@ -168,6 +270,9 @@ class Turnament(object):
         _round = self._rounds[self._act_round_nr - 1]
         if not isinstance(_round, Round):
             return None
+        # Finish turnament flag:
+        if self._act_round_nr == self._rounds_num:
+            self._finished = True
         # Move results of tables to player scores:
         for t_key in _round.tables:
             table = _round.tables[t_key]
@@ -273,7 +378,8 @@ class Turnament(object):
             'place': self._place,
             'players': self.players_num,
             'rounds': self._rounds_num,
-            'actual': self._act_round_nr
+            'actual': self._act_round_nr,
+            'system': SystemNames[self._system]
         }
 
     def dump(self):
@@ -281,9 +387,10 @@ class Turnament(object):
         _dump += f" Place: {self._place}\n"
         # _dump += f'Time: {self._date_start} to {self._date_end}\n\n'
         _dump += f" Players: {self.players_num}\n"
+        _dump += f" System: {SystemNames[self._system]}\n"
         _dump += f" Round actual: {self._act_round_nr}\n"
         _dump += f" Rounds: {self._rounds_num}\n"
-        if self._act_round_nr > 0:
+        if self._act_round_nr and len(self._rounds):
             _dump += self._rounds[self._act_round_nr - 1].dump()
         return _dump
 

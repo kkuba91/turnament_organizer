@@ -38,7 +38,8 @@ class Actions:
 
     def app_status(self):
         log_method(obj=self, func=self.app_status)
-        data = {'status': self._is_opened, 'turnament': str(self.turnament)}
+        turnament = self.turnament.get() if self.turnament else None
+        data = {'status': self._is_opened, 'turnament': turnament}
         logging.info('App status. Content data: \n{}'.format(data))
         return data
 
@@ -48,14 +49,15 @@ class Actions:
         logging.info('App info. Content data: \n{}'.format(data))
         return data
 
-    def open(self, name: str, cmd: str):
+    def open(self, name: str, cmd: str, path: str = ""):
         log_method(obj=self, func=self.open)
         if name:
-            self.browser.set_file(filename=name)
-            self.browser.get_file(option=cmd)
+            if cmd == "New":
+                self.browser.set_file(filename=name, path=path)
+            self.browser.get_file(option=cmd, path=path)
             self.turnament = Turnament(name=name, engine=self.browser.engine)
             self._is_opened = True
-        data = {'status': self._is_opened, 'turnament': str(self.turnament)}
+        data = {'status': self._is_opened, 'turnament': self.turnament.get()}
         logging.info('Opened turnament. Content data: \n{}'.format(data))
         return data
 
@@ -75,7 +77,7 @@ class Actions:
                 logging.error("Set number of rounds to play!")
                 return
             s_type = resources.SystemType.SWISS
-        elif system_type.lower() in "circullar":
+        elif system_type.lower() in "circular":
             s_type = resources.SystemType.CIRCULAR
             rounds = self.turnament.players_num - 1
         elif system_type.lower() in "elimination":
@@ -171,9 +173,21 @@ class Actions:
             data = {'status': False}
         else:
             data = {'status': True}
-            self.set_round_result(table_nr, result)
-        logging.info('Table {} result ({}) changed: \n{}'.format(table_nr, result))
+            self.turnament.add_result(table_nr=table_nr, result=result)
+        logging.info(f'Table {table_nr} result ({result}) changed.')
         return data
+
+    def apply_round(self):
+        log_method(obj=self, func=self.apply_round)
+        round_nr = len(self.turnament._rounds)
+        if self.turnament._rounds[round_nr - 1].all_results:
+            logging.info(f'Round {round_nr} applied.')
+            self.turnament.apply_round_results()
+            self.turnament.next_round()
+            return True
+        else:
+            logging.error(f'Round {round_nr} NOT applied. Still awaiting results!')
+            return False
 
     def debug_method(self):
         """Debugging purpose only.
