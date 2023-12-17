@@ -7,7 +7,7 @@
 
 # Local package imports:
 from Systems import System
-from resources import SystemType
+from Resources import SystemType
 
 
 class SystemSingleElimination(System):

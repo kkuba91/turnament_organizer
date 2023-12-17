@@ -7,6 +7,7 @@
 from pydantic import BaseModel, validator
 
 # Local package imports:
+from Organization.Models import ModelPlayer
 
 
 class ModelTable(BaseModel):
@@ -14,8 +15,8 @@ class ModelTable(BaseModel):
     """Table data model."""
 
     number: int = 1
-    w_player: int = 0
-    b_player: int = 0
+    w_player: ModelPlayer = 0
+    b_player: ModelPlayer = 0
     result: float = -1.0
 
     @classmethod

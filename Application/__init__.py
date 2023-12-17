@@ -15,7 +15,7 @@ from Application.Interfaces.Command.cli import CLI
 from Application.logger import set_logging
 
 # Third party packages:
-from resources import __version__
+from Resources import __version__
 
 DEBUG = True
 

@@ -4,7 +4,6 @@
 
 """
 import logging
-import sys
 
 
 class Command:

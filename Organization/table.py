@@ -20,15 +20,15 @@ class Table(ModelTable):
             self.result = result
 
     def set_white_player(self, id_w):
-        self.w_player = id_w
+        self.w_player.id = id_w
 
     def set_black_player(self, id_b):
-        self.w_player = id_b
+        self.w_player.id = id_b
 
     def swap_players(self):
-        id_w = self.w_player
+        buffer_w = self.w_player
         self.w_player = self.b_player
-        self.b_player = id_w
+        self.b_player = buffer_w
 
     def _dump_result(self):
         _str = "No results"
@@ -42,13 +42,21 @@ class Table(ModelTable):
             _str = "1.0/0.0"
         return _str
     
-    def get(self):
-        return {
-            'nr': self.number,
-            'white': self.w_player,
-            'black': self.b_player,
-            'result': self._dump_result()
-        }
+    def get(self, full=True):
+        if full:
+            return {
+                'nr': self.number,
+                'white': self.w_player.get_repr(),
+                'black': self.b_player.get_repr(),
+                'result': self._dump_result()
+            }
+        else:
+            return {
+                'nr': self.number,
+                'white': self.w_player,
+                'black': self.b_player,
+                'result': self._dump_result()
+            }
 
 
 

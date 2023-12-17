@@ -19,13 +19,13 @@ class Round(ModelRound):
             )
         self.tables[next_nr] = table
         # Pausing option:
-        if player_w == -1:
+        if player_w.id == -1:
             self.set_result(table_nr=next_nr, result=0.0)
-        elif player_b == -1:
+        elif player_b.id == -1:
             self.set_result(table_nr=next_nr, result=1.0)
         # If Previous table has Parser, swap tables (Parser table must be las one):
         if next_nr > 1:
-            if self.tables[next_nr-1].w_player == -1 or self.tables[next_nr-1].b_player == -1:
+            if self.tables[next_nr-1].w_player.id == -1 or self.tables[next_nr-1].b_player.id == -1:
                 buffer_table = self.tables[next_nr-1]
                 self.tables[next_nr-1] = self.tables[next_nr]
                 self.tables[next_nr] = buffer_table
@@ -62,14 +62,14 @@ class Round(ModelRound):
                     table.b_player = player_new
                     _n_replaced = False
 
-    def get(self):
+    def get(self, full=True):
         data = {
             'nr': self.number,
             'tables': [],
             'pauser': self.pausing
         }
         for table_nr in range(1, len(self.tables) + 1):
-            data['tables'].append(self.tables[table_nr].get())
+            data['tables'].append(self.tables[table_nr].get(full=full))
         return data
 
     def dump(self):
