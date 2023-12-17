@@ -11,7 +11,7 @@ import logging
 from Organization import Round
 from Organization.player import Player
 from Systems import System
-from resources import SystemType
+from Resources import SystemType
 
 
 class SystemSwiss(System):
@@ -98,8 +98,8 @@ class SystemSwiss(System):
             scored_half_num = int(scored_nums[point] / 2)
             for i in range(0, scored_half_num):
                 nr = _round.add_table(
-                    player_w=scored_players[point][i].id,
-                    player_b=scored_players[point][i + scored_half_num].id,
+                    player_w=scored_players[point][i],
+                    player_b=scored_players[point][i + scored_half_num],
                 )
                 parity += 1
                 if parity % 2 == 0:
@@ -216,7 +216,7 @@ class SystemSwiss(System):
                             players_set.append(opponent.id)
                             # Add table with these two players:
                             table_nr = _round.add_table(
-                                player_w=player.id, player_b=opponent.id
+                                player_w=player, player_b=opponent
                             )
                             player.refresh_possible_opponents(players_list)
 

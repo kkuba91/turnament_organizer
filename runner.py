@@ -6,7 +6,7 @@
 # Global package imports:
 # Local package imports:
 from Application import Application
-from resources import APPLICATION_NAME
+from Resources import APPLICATION_NAME
 
 
 if __name__ == "__main__":

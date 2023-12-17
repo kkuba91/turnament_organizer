@@ -9,7 +9,7 @@ import logging
 
 # Local package imports:
 from Application.logger import set_fastapi_logging
-from resources import __version__, APPLICATION_NAME
+from Resources import __version__, APPLICATION_NAME
 
 # Third Party packages:
 from fastapi import FastAPI, APIRouter
@@ -239,10 +239,10 @@ class ApiData:
         return self.app.actions.turnament_results()
 
     # @TAG: "Round"
-    async def turnament_round(self, nr=0):
+    async def turnament_round(self, nr=0, full=True):
         await asyncio.sleep(0.01)
         logging.info('[API]: Get round data ..')
-        return self.app.actions.turnament_round(nr=nr)
+        return self.app.actions.turnament_round(nr=nr, full=True)
     
     async def set_round_result(self, table_nr: int, result: int):
         await asyncio.sleep(0.01)

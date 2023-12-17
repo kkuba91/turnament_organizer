@@ -17,7 +17,7 @@ from functools import cache
 from Application.browser import Browser
 from Application.logger import log_method
 from Application.turnament import Turnament
-import resources
+import Resources
 
 
 @cache
@@ -45,7 +45,7 @@ class Actions:
 
     def app_info(self):
         log_method(obj=self, func=self.app_info)
-        data = {'name': resources.APPLICATION_NAME, 'version': resources.__version__}
+        data = {'name': Resources.APPLICATION_NAME, 'version': Resources.__version__}
         logging.info('App info. Content data: \n{}'.format(data))
         return data
 
@@ -76,12 +76,12 @@ class Actions:
             if rounds == 0:
                 logging.error("Set number of rounds to play!")
                 return
-            s_type = resources.SystemType.SWISS
+            s_type = Resources.SystemType.SWISS
         elif system_type.lower() in "circular":
-            s_type = resources.SystemType.CIRCULAR
+            s_type = Resources.SystemType.CIRCULAR
             rounds = self.turnament.players_num - 1
         elif system_type.lower() in "elimination":
-            s_type = resources.SystemType.SINGLE_ELIMINATION
+            s_type = Resources.SystemType.SINGLE_ELIMINATION
         else:
             logging.error("Wrong turnament system typed! {}".format(system_type))
             return
@@ -151,14 +151,14 @@ class Actions:
         logging.info('Results content data: \n{}'.format(data))
         return data
 
-    def turnament_round(self, nr=0):
+    def turnament_round(self, nr=0, full=True):
         log_method(obj=self, func=self.turnament_round)
         nr = int(nr) - 1
         if not self.turnament:
             logging.error("No turnament active. Please start turnament with Players.")
             data = {'status': False, 'round': None}
         elif nr == -1 or nr in range(len(self.turnament._rounds)):
-            data = {'status': True, 'round': self.turnament._rounds[nr].get()}
+            data = {'status': True, 'round': self.turnament._rounds[nr].get(full=full)}
             logging.debug('Rounds: \n{}'.format(self.turnament._rounds))
         else:
             logging.error("Wrong round number.")
@@ -256,7 +256,7 @@ class Actions:
         )
         msg_debug = "ROUND #1:"
         logging.debug(msg=msg_debug)
-        self.turnament.set_system(system_id=resources.SystemType.SWISS)
+        self.turnament.set_system(system_id=Resources.SystemType.SWISS)
         self.turnament.begin(rounds=6)
         self.turnament.add_result(table_nr=1, result=1.0)
         self.turnament.add_result(table_nr=2, result=1.0)

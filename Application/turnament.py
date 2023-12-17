@@ -12,7 +12,7 @@ from pydantic import ValidationError
 # Local package imports:
 from Organization import Player, Round
 from Systems import get_system
-from resources import SystemType, SystemNames
+from Resources import SystemType, SystemNames
 from Application.sql_utils import SqlUtils
 
 
@@ -156,8 +156,8 @@ class Turnament(object):
                 self._rounds[round_id].set_result(table_nr, result)
                 step += 1
                 logging.debug(f"self._rounds={self._rounds}")
-                player_w = self._rounds[round_id].tables[table_nr].w_player
-                player_b = self._rounds[round_id].tables[table_nr].b_player
+                player_w = self._rounds[round_id].tables[table_nr].w_player.id
+                player_b = self._rounds[round_id].tables[table_nr].b_player.id
                 step += 1
                 self.sql.insert_result(round=self._act_round_nr,
                                        table=table_nr,
@@ -282,16 +282,16 @@ class Turnament(object):
             logging.debug(msg=table.dump())
 
             for player in self._players:
-                if player.id == table.w_player and player.id != _round.pausing:
+                if player.id == table.w_player.id and player.id != _round.pausing:
                     player.points += table.result
                     player.progress += player.points
-                    player.add_opponent(table.b_player)
+                    player.add_opponent(table.b_player.id)
                     player.add_result(table.result)
                     player.round_done = True
-                if player.id == table.b_player and player.id != _round.pausing:
+                if player.id == table.b_player.id and player.id != _round.pausing:
                     player.points += 1.0 - table.result
                     player.progress += player.points
-                    player.add_opponent(table.w_player)
+                    player.add_opponent(table.w_player.id)
                     player.add_result(1.0 - table.result)
                     player.round_done = True
         if _round.pausing > 0:

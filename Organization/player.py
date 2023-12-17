@@ -9,7 +9,7 @@ import logging
 
 # Local package imports:
 from Organization.Models import ModelPlayer
-from resources import CATEGORY
+from Resources import CATEGORY
 
 
 class Player(ModelPlayer):
@@ -48,9 +48,12 @@ class Player(ModelPlayer):
 
     def get_by_ident(self, ident):
         if ident == self.id:
-            return f"{self.surname} {self.name}"
+            return self.get_repr()
         else:
             return None
+        
+    def get_repr(self):
+        return f"({self.id}) {self.surname.title()} {self.name.title()}"
 
     def calculate_rank(self):
         if self.elo > 0:
