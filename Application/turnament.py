@@ -67,10 +67,10 @@ class Turnament(object):
                 _id=player.get("nr"),
                 name=player.get("name"),
                 surname=player.get("surname"),
-                sex=player.get("sex"),
-                city=player.get("city"),
-                category=player.get("category"),
-                elo=player.get("elo"),
+                sex=player.get("sex", "male"),
+                city=player.get("city", ""),
+                category=player.get("category", "wc"),
+                elo=player.get("elo", 0),
                 insert_to_db=False
             )
         # Initialize results of Rounds from db:
@@ -97,7 +97,7 @@ class Turnament(object):
         self.sql.update_turnament_info(date_end=self._date_end)
 
     def add_player(
-        self, name="", surname="", sex="male", city="", category="bk", elo=0, _id=None, insert_to_db=True
+        self, name="", surname="", sex="male", city="", category="wc", elo=0, _id=None, insert_to_db=True
     ):
         # Validate Player add:
         _dont_add = False
@@ -112,9 +112,9 @@ class Turnament(object):
                 player = Player(
                     name=name,
                     surname=surname,
-                    sex=sex,
+                    sex=sex or "male",
                     city=city,
-                    category=category,
+                    category=str(category),
                     elo=elo
                 )
             except ValidationError as exc:
@@ -136,17 +136,21 @@ class Turnament(object):
                 logging.info(msg=msg_info)
 
     def del_player(self, name="", surname=""):
+        list_index = 0
         for player in self._players:
             if player.exist(name=name, surname=surname):
                 msg_info = f"Remove: {player.name} " + \
                            f"{player.surname} from turnament."
                 logging.info(msg=msg_info)
-                self._players.pop(player)
+                self._players.pop(list_index)
                 self.sql.remove_player_info(name=name,
                                             surname=surname)
-            else:
-                msg_info = f"No Player #{player.id} on turnament list."
-                logging.info(msg=msg_info)
+                logging.debug(f"Last players: {self._players}")
+                return True
+            list_index += 1
+        msg_info = f"No Player #{player.id} on turnament list."
+        logging.error(msg=msg_info)
+        return False
 
     def add_result(self, table_nr, result):
         round_id = self._act_round_nr - 1
@@ -223,16 +227,19 @@ class Turnament(object):
                     else:
                         _round = system.prepare_round(self._players, r)
                     _results = [result for result in data if result.get('round') == r]
-                    logging.debug(f"From results={_results}.")
+                    logging.debug(f"Round #{r} results={_results}.")
                     for result in _results:
                         logging.debug(f"Loaded result={result}.")
+                        # @ToDo: Finish loading results!!!!
+                        # _round.add_table(player_w=result['player_w'], player_b=result['player_b'])
                         _round.set_result(table_nr=result['table'], result=result['result'])
                         results_loaded += 1
                     if len(self._rounds) >= r:
                         self._rounds[r - 1] = _round
                     else:
                         self._rounds.append(_round)
-                    if _round.all_results and (len(data) > results_loaded or self._finished):
+                    # if _round.all_results and (len(data) > results_loaded or self._finished):
+                    if _round.all_results or self._finished:
                         self.apply_round_results()
                         self.next_round()
 
@@ -328,9 +335,9 @@ class Turnament(object):
         specific = []
         _type = type.lower()
         if _type in ('results', 'result'):
-            specific = ['id', 'name', 'surname', 'cat', 'elo', 'result', 'progress', 'bucholz']
+            specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex', 'rank', 'result', 'progress', 'bucholz']
         elif _type in ('start', 'init'):
-            specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex']
+            specific = ['id', 'name', 'surname', 'cat', 'elo', 'club', 'city', 'sex', 'rank']
         elif _type in ('name', 'names', 'fullname', 'fullnames'):
             specific = ['id', 'name', 'surname']
         else:
@@ -339,9 +346,15 @@ class Turnament(object):
             data["players"].append(player.get(specific=specific))
         if type in ('start', 'init'):
             data["players"].sort(key=lambda x: x['id'], reverse=True)
+            data["players"].sort(key=lambda x: x['rank'], reverse=True)
+            data["players"].sort(key=lambda x: x['elo'], reverse=True)
+            _nr = 1
+            for player in data["players"]:
+                player["nr"] = _nr
+                _nr += 1
         else:
-            data["players"].sort(key=lambda x: x['bucholz'], reverse=True)
             data["players"].sort(key=lambda x: x['progress'], reverse=True)
+            data["players"].sort(key=lambda x: x['bucholz'], reverse=True)
             data["players"].sort(key=lambda x: x['result'], reverse=True)
         return data
 
@@ -379,6 +392,7 @@ class Turnament(object):
             'players': self.players_num,
             'rounds': self._rounds_num,
             'actual': self._act_round_nr,
+            'finished': self._finished,
             'system': SystemNames[self._system]
         }
 

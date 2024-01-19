@@ -35,6 +35,7 @@ class SystemSwiss(System):
             _round = self._set_tables(scored_players)
         msg_info = f"Prepare round #{self._round}."
         logging.info(msg=msg_info)
+        # _round.correct_table_order()
         return _round
 
     def _sort_players(self):
@@ -48,8 +49,8 @@ class SystemSwiss(System):
         for point in np.arange(start=float(self._round), stop=-0.5, step=-0.5):
             scored_players[point].sort(key=lambda x: x.rank, reverse=True)
             scored_players[point].sort(key=lambda x: x.elo, reverse=True)
-            scored_players[point].sort(key=lambda x: x.bucholz, reverse=True)
             scored_players[point].sort(key=lambda x: x.progress, reverse=True)
+            scored_players[point].sort(key=lambda x: x.bucholz, reverse=True)
         return scored_players
 
     def _validate_sort(self, scored_players):
@@ -227,7 +228,7 @@ class SystemSwiss(System):
                                 player.paused = True
 
                             # Swap order every odd table:
-                            elif parity % 2 == 0:
+                            elif (parity + self._round - 1) % 2 == 0:
                                 _round.tables[table_nr].swap_players()
 
             p_available = [player for player in players_list if (player.id not in players_set)]

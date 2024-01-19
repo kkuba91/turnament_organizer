@@ -1,22 +1,29 @@
 # Turnament Organizer
-Chess turnament organizer (short construct concept). It is my hobby app I want to write to support lightweight tool for smart round matching in swiss system.
+Chess turnament organizer (construct concept).
 
-## Actual Status
-- it is just a beginning  ``ALWAYS``
-- only command line API  ``IN PROGRESS``
-- ~~only first round for swiss system (under debug/deployment)~~  ``INITIAL VERSION``
-- no target time - hobby in my free time ``ALWAYS``
+Lightweight tool for smart player pairing in swiss system.
+
+## Generals
+- target: ``weekend project``
 - layer structured application with builder pattern :rage3:
 
+## Actual Status
+- it is on stage  ``PROOF OF CONCEPT``
+- simple pairing order: ``1) points`` ``2) bucholz`` ``3) progress``
+- command line API  ``DEPRICATED``
+- REST API  ``Fast API``
+- platforms  ``Linux`` ``Windows``
+- logging ``DEBUG (forced)`` ``console``
+
 ## Targets
-- [must have] support swiss system matching for all rounds of defined with all rules [✔ / 🚧 ]
-- [need have] swiss systm should match players that They have as similar opponent ranks as it is possible [✔]
-- [need to have] single elimination and circular systems [ ]
-- [must have] results sort with dynamic defined preferences [ ]
-- [optional] gui layer with some third party module used or REST API [ ]
-- [optional] save data to text files (dump data) [ ]
-- [optional] load data from saved files [ ]
-- [optional] save data to excel with all rounds dump [ ]
+- [must have] support swiss system matching for all rounds of defined with all rules - ✔
+- [need have] swiss system should match players that they have as similar opponent ranks as it is possible - ✔
+- [need to have] single elimination (round Robin) and circular systems - x
+- [must have] results sort with dynamic defined preferences - x
+- [optional] gui layer with some third party module used or REST API - ✔
+- [optional] save data to db/text files (save data) - ✔
+- [optional] load data from saved files - ✔
+- [optional] save data to excel with all rounds dump - x
 
 ## Launch
 Main launcher in `runner.py`.

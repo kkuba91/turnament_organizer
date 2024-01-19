@@ -1,0 +1,340 @@
+<html>
+<title>Turnament Ogranizer</title>
+<!-- <link rel="stylesheet" href="/bulma.min.css"> -->
+<link rel="stylesheet" href="https://bulma.io/css/bulma-docs.min.css">
+<link rel="stylesheet" href="https://bulma.io/vendor/fontawesome-free-5.15.2-web/css/all.min.css">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="modals.js"></script>
+
+<body style="background-color: #383838; color: #cacaca; overflow-y: hidden; overflow-x: hidden;">
+    <!-- HEADER WITH VERSION -->
+    <section class="hero is-small is-dark" style="padding: 5px;">
+        <div class="tags has-addons">
+            <span class="tag is-link is-light is-normal"><strong>Turnament Organizer</strong></span>
+            <span class="tag is-info is-dark is-normal">0.2.0</span>
+        </div>
+    </section>
+    <!-- SUB-PANEL -->
+    <section class="hero is-small is-dark" style="padding-left: 0.5%;">
+        <div class="columns" style="padding-top: 0.2%; padding-bottom: 0.2%;">
+            <div class="column is-3">
+                <div class="tags has-addons">
+                    <span class="tag is-link is-light"><strong>Event</strong></span>
+                    <span id="turnament_status" class="tag is-light">INACTIVE</span>
+                    <span id="turnament_started" class="tag is-light">UNSTARTED</span>
+                </div>
+            </div>
+            <div class="column is-2">
+                <div class="tags has-addons">
+                    <span class="tag is-link is-light"><strong>Players</strong></span>
+                    <span id="indicator_players" class="tag is-info is-light">0</span>
+                </div>
+            </div>
+            <div class="column is-2">
+                <div class="tags has-addons">
+                    <span class="tag is-link is-light"><strong>Rounds</strong></span>
+                    <span id="indicator_rounds" class="tag is-info is-light">0 / 0</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- APPLICATION -->
+    <div id="app" class="columns" style="height: 98%;">
+        <div style="margin-bottom: 15px; padding: 20px;" class="column is-2">
+            <div class="box" style="margin: 2%; background-color: #484848">
+                <div id="action_start" class="block">
+                    <button class="js-modal-trigger button is-success is-fullwidth is-responsive" id="action-start" data-target="popup_create_open" @click="getFiles">OPEN</button>
+                </div>
+                <div id="action_end" class="block">
+                    <button class="button is-danger is-fullwidth is-responsive" id="action-end" @click="closeTurnament">CLOSE</button>
+                </div>
+            </div>
+            <div id="in_progress" class="box" style="margin: 2%; background-color: #484848; visibility: hidden;">
+                <div id="action_results" class="block">
+                    <button class="button is-dark is-fullwidth" id="action-results is-responsive" @click="getPlayersResults">Results</button>
+                </div>
+                <div id="action_rounds" class="block is-responsive">
+                    <button class="button is-dark is-fullwidth" id="action-rounds">Round 1</button>
+                    <button class="button is-dark is-fullwidth" id="action-rounds">Round 2</button>
+                </div>
+            </div>
+        </div>
+        <div class="column">
+            <!-- MAIN VIEW -->
+            <div class="box" style="height: 83%; margin: 1%; background-color: #484848">
+                <!-- VIEW: WELCOME -->
+                <div id="block_welcome" class="block" style="color: #cacaca; display: block;">
+                    <h1 class="title" style="color: #cacaca;">Welcome in.. <strong>Turnament organizer</strong> 💥💖✨🏆🏈</h1>
+                    <h2 class="subtitle" style="color: #cacaca;">App was created to deliver simple way of pairing players for games like chess. It is for non-professional use.</h2>
+                    <article class="message is-warning is-small">
+                        <div class="message-header is-small"><p>.*★°*.☆: NOTE :*.☆°★*。</p></div>
+                        <div class="message-body is-small">
+                            <p><strong>KEEP IN MIND: </strong>In the actual stage application is highly incomplete, suppose to deliver simple swiss-system pairing only!
+                                Maybe in the future versions functionality is going to be enlarged.</p>
+                            <p><strong>WARNING: </strong>App is <strong>not</strong> secured in any of kind (availability, integrity, authentication), that is why use it is for non commercial (professional)!</p>
+                            <p><strong>THE MOST IMPORTANT:</strong>If app worked as You expected 😅, please, have fun in Your private tournaments!</p>
+                        </div>
+                    </article>
+                    <article class="message is-info is-small">
+                        <div class="message-header is-small"><p>.*★°*.☆: INFO :*.☆°★*。</p></div>
+                        <div class="message-body is-small">
+                            <p><strong>Quick manual:</strong></p>
+                            <p>To begin please select Your tournament. Click <button class="js-modal-trigger tag is-success is-small" id="action-start" data-target="popup_create_open" @click="getFiles" style="border-style: none;">OPEN</button> and.. </p>
+                            <li>choose existing file name to continue (or just read) written tournament</li>
+                            <li>type new file name to begin another tournament</li>
+                            <p>Than add Players which are going to parcitipate and compete for championship 🏆. If the list includes all Players, start the tournament.</p>
+                            <p>Do not forget to select presumed round quantity and right system. <strong>Actual supported is pairing system is swiss!</strong></p>
+                            <p>Every round can be viewed (with onging - with/without results) and every table in actual round can be set (with results:<span class="tag is-success is-light">1</span>, <span class="tag is-warning is-light">½</span>, <span class="tag is-danger is-light">0</span>).</p>
+                            <p>Any time You need to close the application, You can just do it. To switch between tournaments, there is a need to close actual one by <button class="tag is-danger" style="border-style: none;" disabled>CLOSE</button> and open interested one.</p>
+                            <p>When tournament reach last round, the next one will not be paired. All the results may be read in view "Results".</p>
+                        </div>
+                    </article>
+                </div>
+                <!-- VIEW: INITIAL PLAYER LIST (BEFORE START) -->
+                <div id="block_initial_player_list" class="block" style="color: #cacaca; display: none;">
+                    <h1 class="subtitle" style="color: #cacaca;">Table of Players:</h1>
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                        <thead>
+                          <tr><th>Nr</th><th>Name</th><th>Surname</th><th>Gender</th><th>City</th><th>Club</th><th>Cat.</th><th>Elo</th><th></th></tr>
+                        </thead>
+                        <tbody id="table_rows_players_init" style="font-size: small;">
+                          <tr><th>1</th><th>Garri</th><th>Kasparov</th><th>Male</th><th>Katowice</th><th>Ksz Hetman K-ce</th><th>GM</th><th>2712</th><th><button class="button is-danger is-rounded">-</button></th></tr>
+                        </tbody>
+                    </table>
+                    <div class="block">
+                        <button class="js-modal-trigger button is-info is-small is-rounded" id="add-player" data-target="popup_add_player"><i class="fa fa-plus-square" aria-hidden="true"></i></button>
+                    </div>
+                    <div class="block">
+                        <button class="js-modal-trigger button is-link is-normal" id="start-tournament" data-target="popup_start_tournament"><i class="fa fa-play-circle" aria-hidden="true"></i>&emsp;&ensp;START TOURNAMENT</button>
+                    </div>
+                </div>
+                <!-- VIEW: ROUND -->
+                <div id="block_round" class="block" style="color: #cacaca; display: none;">
+                    <h1 id="view_round_val" class="subtitle" style="color: #cacaca;">Round ##:</h1>
+                    <table class="table is-fullwidth is-small">
+                        <thead><tr>
+                            <td><strong>Table No:</strong></td>
+                            <td><span class="tag is-light">⬜</span><span class="tag is-light"><strong>White pieces</strong></span><span class="tag is-light">⬜</span></td>
+                            <td></td>
+                            <td><span class="tag is-light">⬛</span><span class="tag is-light"><strong>Black pieces</strong></span><span class="tag is-light">⬛</span></td>
+                            <td><strong>Result:</strong></td>
+                            <td></td>
+                        </tr></thead>
+                        <tbody id="table_rows_round">
+                            <tr>
+                            <td><span class="tag is-light">1</span></td>
+                            <td><span class="tag is-light">#1</span> <span class="tag is-warning">GM</span> <span class="tag is-light"><strong>Garri Kasparov</strong></span> <span class="tag is-light">2756</span></td>
+                            <td>vs.</td>
+                            <td><span class="tag is-light">#2</span> <span class="tag is-warning">GM</span> <span class="tag is-light"><strong>Bobby Fisher</strong></span> <span class="tag is-light">2796</span></td>
+                            <td><span class="tag is-light"><i class="fa fa-question" aria-hidden="true"></i></span></td>
+                            <td>-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p id="view_pauser"></p>
+                    <div id="buttons_act_round" class="block" style="margin-top: 3%;">
+                        <button class="button is-success" @click="nextRound">Next round</button>
+                    </div>
+                </div>
+                <!-- VIEW: RESULTS -->
+                <div id="block_results" class="block" style="color: #cacaca; display: none;">
+                    <h1 class="subtitle" style="color: #cacaca;">Results:</h1>
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                        <thead>
+                          <tr><th>Place</th><th>Nr</th><th>Name</th><th>Surname</th><th>Gender</th><th>City</th><th>Club</th><th>Cat.</th><th>Elo</th><th>Points</th><th>Bucholz</th><th>Progress</th></tr>
+                        </thead>
+                        <tbody id="table_rows_players_result" style="font-size: small;">
+                          <tr><th>1</th><th>3</th><th>Garri</th><th>Kasparov</th><th>Male</th><th>Katowice</th><th>Ksz Hetman K-ce</th><th>GM</th><th>2712</th><th>7.5</th><th>44.0</th><th>15</th></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODALS (POPUPS) -->
+        <!-- [popup] add player -->
+        <div id="popup_add_player" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                <p class="modal-card-title">Add new Player</p>
+                <button class="delete" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="field">
+                        <label class="label">Name</label>
+                        <div class="control has-icons-left">
+                            <input class="input is-small is-info" id="add_p_name" placeholder="e.g. Garri">
+                            <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Surname</label>
+                        <div class="control has-icons-left">
+                            <input class="input is-small is-info" id="add_p_surname" placeholder="e.g. Kasparow">
+                            <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label"><i class="fa fa-venus-mars"></i></label>
+                                <div class="select is-info is-small">
+                                    <select id="add_p_sex">
+                                        <option>male</option>
+                                        <option>female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Category</label>
+                                <div class="select is-info is-small">
+                                    <select id="add_p_category">
+                                    <option>wc</option>
+                                    <option>V</option>
+                                    <option>IV</option>
+                                    <option>III</option>
+                                    <option>II</option>
+                                    <option>II+</option>
+                                    <option>I</option>
+                                    <option>I+</option>
+                                    <option>CM</option>
+                                    <option>FM</option>
+                                    <option>GM</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Elo rating</label>
+                                <div class="control has-icons-left">
+                                <input class="input is-small is-info" id="add_p_elo" value="0">
+                                <span class="icon is-small is-left"><i class="fa fa-tachometer"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">City</label>
+                        <div class="control has-icons-left">
+                        <input class="input is-small is-info" id="add_p_city" placeholder="e.g. New York">
+                        <span class="icon is-small is-left"><i class="fa fa-building"></i></span>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                <button class="button is-success" @click="addPlayer">Add</button>
+                <button class="button">Cancel</button>
+                </footer>
+            </div>
+        </div>
+        <!-- [popup] start-tournament -->
+        <div id="popup_start_tournament" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                <p class="modal-card-title">Start tournament</p>
+                <button class="delete" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="field">
+                        <label class="label">Rounds quantity</label>
+                        <div class="control">
+                            <input class="input is-small is-info" id="start_t_rounds" placeholder="7">
+                            <p class="help">Value must be integer and greater than 0</p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label"><i class="fa fa-calculator"></i>&emsp;System</label>
+                        <div class="select is-info is-small">
+                            <select id="start_t_system">
+                                <option>swiss</option>
+                                <option>circular</option>
+                                <option>elimination</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                <button class="button is-success" @click="startTournament">START</button>
+                <button class="button">Cancel</button>
+                </footer>
+            </div>
+        </div>
+        <!-- [popup] open or create tournament file -->
+        <div id="popup_create_open" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                <p class="modal-card-title">Create or open existing file</p>
+                </header>
+                <section class="modal-card-body">
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                        <thead>
+                          <tr><th>Existing files:</th></tr>
+                        </thead>
+                        <tbody id="table_rows_files" style="font-size: small;">
+                          <tr><th>1</th></tr>
+                        </tbody>
+                    </table>
+                    <div class="field">
+                        <label class="label">Set tournament name:</label>
+                        <div class="control">
+                            <div id="action_open">
+                                <input class="input is-info is-small" type="text" id="turnament_file" cols="30" rows="1" placeholder="e.g. file_name"></input>
+                                <p class="help">Skip ".db", just put name of file as for turnament</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                <button class="button is-success" @click="setFile" id="set-file">Set Tournament File</button>
+                <button class="button">Cancel</button>
+                </footer>
+            </div>
+        </div>
+        <!-- [popup] set result -->
+        <div id="popup_set_result" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                <p class="modal-card-title">Set result</p>
+                </header>
+                <section class="modal-card-body">
+                    <div class="field">
+                        <label class="label">Round:<span id="popup_set_result_round"></span>, Table:<span id="popup_set_result_table"></span></label>
+                        <label class="label" style="text-align: center;"><span id="popup_set_result_wh"></span> vs <span id="popup_set_result_bl"></span></label>
+
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                <div class="buttons has-addons" style="padding-left: 10%;">
+                    <button class="button" @click="setWin">⬜ wins</button>
+                    <button class="button" @click="setDraw">½--½</button>
+                    <button class="button" @click="setLoose">⬛ wins</button>
+                </div>
+                <div class="buttons has-addons" style="padding-left: 20%;">
+                    <button class="button" @click="setNothing">No result</button>
+                </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script src="vue_logic.js"></script>
+</body>
+<footer class="hero is-small is-dark" style="position: fixed; bottom: 0; width: 100%;">
+    <div class="content has-text-centered" style="margin-top: auto;">
+      <p>
+        <strong>Turnament Ogranizer</strong> by <a href="https://github.com/kkuba91/turnament_organizer"><span class="icon-text"><span class="icon"><i class="fa fa-github"></i></span><span>kkuba91</span></span></a>. The source code is licensed
+        <strong>MIT</strong>. The website content styled with <a href="https://bulma.io/"><strong><i class="fa fa-copyright" aria-hidden="true"></i> bulma</strong></a></i> MIT licensed.
+      </p>
+    </div>
+</footer>
+
+</html>

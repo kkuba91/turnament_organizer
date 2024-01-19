@@ -42,6 +42,22 @@ class Round(ModelRound):
                 all_results = False
         return all_results
 
+    def correct_table_order(self):
+        table_pauser = None
+        nr = 1
+        tables = {}
+        for _, table in self.tables.items():
+            if table.is_pauser():
+                table_pauser = table
+            else:
+                print(f"TABLE: {nr} - {table.w_player.id} vs {table.b_player.id}")
+                tables[nr] = table
+                nr += 1
+        if table_pauser:
+            print(f"TABLE: {nr} - {table.w_player.id} vs {table.b_player.id} (PAUSER)")
+            tables[nr] = table_pauser
+        self.tables = tables
+
     def get_opponent(self, _idnt):
         _ret = None
         for _, table in self.tables.items():
@@ -63,13 +79,21 @@ class Round(ModelRound):
                     _n_replaced = False
 
     def get(self, full=True):
+        pauser_id = -1
         data = {
             'nr': self.number,
             'tables': [],
             'pauser': self.pausing
         }
-        for table_nr in range(1, len(self.tables) + 1):
-            data['tables'].append(self.tables[table_nr].get(full=full))
+        # self.correct_table_order()
+        table_nr = 1
+        for _ in range(1, len(self.tables) + 1):
+            specific = ["id", "name", "surname", "cat", "elo", "result"]
+            table = self.tables[table_nr].get(full=full, specific=specific)
+            table["nr"] = table_nr
+            if pauser_id != table['white']['id'] and pauser_id != table['black']['id']:
+                data['tables'].append(table)
+                table_nr += 1
         return data
 
     def dump(self):

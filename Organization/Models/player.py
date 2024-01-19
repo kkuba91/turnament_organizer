@@ -20,7 +20,7 @@ class ModelPlayer(BaseModel):
     sex: str = ""
     birth_date: Union[date, str, None] = None
     city: str = ""
-    category: str = "bk"
+    category: str = "wc"
     elo: int = 0
     rank: int = 0
     club: str = ""

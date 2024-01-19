@@ -6,14 +6,19 @@
 # Global package imports:
 import asyncio
 import logging
+import os
 
 # Local package imports:
 from Application.logger import set_fastapi_logging
 from Resources import __version__, APPLICATION_NAME
 
 # Third Party packages:
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import uvicorn
+
+templates = Jinja2Templates(directory="Templates") 
 
 api = FastAPI(title="Chess turnament manager",
               description="Swiss, single elimination, circular systems",
@@ -56,9 +61,9 @@ class ApiData:
 
     @staticmethod
     @api.get(path="/", include_in_schema=False)
-    async def init() -> dict:
-        data = {'name': APPLICATION_NAME, 'version': __version__}
-        return data
+    async def init(request: Request):
+        api.mount("/", StaticFiles(directory=f"{os.getcwd()}{os.sep}Templates{os.sep}Styles"), name="static")
+        return templates.TemplateResponse("home.html", {"request": request})
 
     def _init_endpoints(self):
         # App general:
@@ -68,7 +73,8 @@ class ApiData:
                                         endpoint=self.app_info,
                                         methods=["GET"],
                                         description="Get application version",
-                                        tags=[tag])
+                                        tags=[tag],
+                                        )
         self.routers[tag].add_api_route(path="/get_status",
                                         endpoint=self.app_status,
                                         methods=["GET"],
@@ -84,10 +90,15 @@ class ApiData:
                                         methods=["POST"],
                                         description="Create new turnament file and open the instance",
                                         tags=[tag])
-        self.routers[tag].add_api_route(path="/open",
-                                        endpoint=self.open_turnament,
+        self.routers[tag].add_api_route(path="/get_files",
+                                        endpoint=self.get_files,
                                         methods=["POST"],
-                                        description="Open existing turnament instance from file",
+                                        description="Get tournament files list",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/close",
+                                        endpoint=self.close_turnament,
+                                        methods=["POST"],
+                                        description="Close actual turnament instance",
                                         tags=[tag])
         self.routers[tag].add_api_route(path="/turnament/start",
                                         endpoint=self.start_turnament,
@@ -108,11 +119,6 @@ class ApiData:
                                         endpoint=self.finish_turnament,
                                         methods=["POST"],
                                         description="Finish actual turnament at current round",
-                                        tags=[tag])
-        self.routers[tag].add_api_route(path="/turnament/close",
-                                        endpoint=self.close_turnament,
-                                        methods=["POST"],
-                                        description="Close actual turnament instance",
                                         tags=[tag])
         self.routers[tag].add_api_route(path="/turnament/player/add",
                                         endpoint=self.turnament_player_add,
@@ -149,7 +155,7 @@ class ApiData:
                                         methods=["POST"],
                                         description="Set round result",
                                         tags=[tag])
-        self.routers[tag].add_api_route(path="/turnament/round/apply_resuts",
+        self.routers[tag].add_api_route(path="/turnament/round/apply_results",
                                         endpoint=self.apply_round,
                                         methods=["POST"],
                                         description="Apply round results",
@@ -171,11 +177,16 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Creating turnament with name: {} ..'.format(name))
         return self.app.actions.open(name=name, cmd="New", path=path)
-
-    async def open_turnament(self, name: str, path: str = ""):
+    
+    async def close_turnament(self):
         await asyncio.sleep(0.01)
-        logging.info('[API]: Opening turnament with name: {} ..'.format(name))
-        return self.app.actions.open(name=name, cmd="Open", path=path)
+        logging.info('[API]: Closing turnament ..')
+        return self.app.actions.close()
+
+    async def get_files(self, path: str = ""):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Get tournament files: ..')
+        return self.app.actions.get_files(path=path)
     
     async def start_turnament(self, rounds: int, system_type: str):
         await asyncio.sleep(0.01)
@@ -197,18 +208,13 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Finishing actual turnament ..')
         raise NotImplementedError
-    
-    async def close_turnament(self):
-        await asyncio.sleep(0.01)
-        logging.info('[API]: Closing actual turnament instance ..')
-        raise NotImplementedError
 
     async def turnament_player_add(self,
                                    name: str,
                                    surname: str,
                                    sex="male",
                                    city="",
-                                   category="bk",
+                                   category="wc",
                                    elo=0):
         await asyncio.sleep(0.01)
         logging.info('[API]: Add Player: {} ..'.format(name))
@@ -242,9 +248,9 @@ class ApiData:
     async def turnament_round(self, nr=0, full=True):
         await asyncio.sleep(0.01)
         logging.info('[API]: Get round data ..')
-        return self.app.actions.turnament_round(nr=nr, full=True)
+        return self.app.actions.turnament_round(nr=nr, full=full)
     
-    async def set_round_result(self, table_nr: int, result: int):
+    async def set_round_result(self, table_nr: int, result: float):
         await asyncio.sleep(0.01)
         logging.info('[API]: Set round result ..')
         return self.app.actions.set_round_result(table_nr=table_nr, result=result)
