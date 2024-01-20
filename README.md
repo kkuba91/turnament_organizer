@@ -57,6 +57,10 @@ To begin click `OPEN`. Select existing file (just point and click right one on t
 
 ![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/CreateOpenFile.png)
 
+- Tournament files are stored as sqlite3 db data
+- Storing directory on linux: ```~/.turnament_organizer/```.
+- Storing directory on windows: ```C:/Users/<user>/.turnament_organizer/```
+
 Now it is a moment to add players who are going to play in the tournament. Note, that tournament indicator in the top-left cornr changed. Add players one-by-one by `[+]` and than apply to start clicking `START TOURNAMENT`.
 
 ![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/AddPlayerTable.png)
