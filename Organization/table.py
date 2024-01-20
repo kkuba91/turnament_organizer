@@ -30,6 +30,9 @@ class Table(ModelTable):
         self.w_player = self.b_player
         self.b_player = buffer_w
 
+    def is_pauser(self):
+        return self.w_player.id == -1 or self.b_player.id == -1
+
     def _dump_result(self):
         _str = "No results"
         if self.result == -1.0:
@@ -42,19 +45,19 @@ class Table(ModelTable):
             _str = "1.0/0.0"
         return _str
     
-    def get(self, full=True):
+    def get(self, full=True, specific=[]):
         if full:
             return {
                 'nr': self.number,
-                'white': self.w_player.get_repr(),
-                'black': self.b_player.get_repr(),
+                'white': self.w_player.get(specific=specific),
+                'black': self.b_player.get(specific=specific),
                 'result': self._dump_result()
             }
         else:
             return {
                 'nr': self.number,
-                'white': self.w_player,
-                'black': self.b_player,
+                'white': self.w_player.get_repr(),
+                'black': self.b_player.get_repr(),
                 'result': self._dump_result()
             }
 

@@ -58,7 +58,13 @@ class Actions:
             self.turnament = Turnament(name=name, engine=self.browser.engine)
             self._is_opened = True
         data = {'status': self._is_opened, 'turnament': self.turnament.get()}
-        logging.info('Opened turnament. Content data: \n{}'.format(data))
+        logging.info(f'Opened turnament "{name}". Content data: \n{data}')
+        return data
+    
+    def get_files(self, path: str = ""):
+        log_method(obj=self, func=self.get_files)
+        data = self.browser.get_file_list(path=path)
+        logging.debug(f'Tournament files list: \n{data}')
         return data
 
     def close(self):
@@ -66,6 +72,7 @@ class Actions:
         self.browser.stop()
         self.turnament.delete_players()
         self._is_opened = False
+        self.turnament = None
 
     def end(self):
         log_method(obj=self, func=self.end)
@@ -96,7 +103,7 @@ class Actions:
                    surname="",
                    sex="male",
                    city="",
-                   category="bk",
+                   category="wc",
                    elo=0):
         log_method(obj=self, func=self.player_add)
         if not self.turnament:
@@ -121,8 +128,7 @@ class Actions:
             logging.error("No turnament active. Please start turnament.")
             data = {'status': False}
         else:
-            self.turnament.del_player(name=name, surname=surname)
-            data = {'status': True}
+            data = {'status': self.turnament.del_player(name=name, surname=surname)}
         logging.info('Player deleted. Content data: \n{}'.format(data))
         return data
 
@@ -134,7 +140,7 @@ class Actions:
             logging.error("No turnament active. Please start turnament and add Players.")
             data = {'status': False, 'players': None}
         else:
-            data = {'status': True, 'players': str(self.turnament.get_players(type=type))}
+            data = {'status': True, 'players': self.turnament.get_players(type=type)}
         if log_action:
             logging.info('Players content data: \n{}'.format(data))
         return data
@@ -159,6 +165,11 @@ class Actions:
             data = {'status': False, 'round': None}
         elif nr == -1 or nr in range(len(self.turnament._rounds)):
             data = {'status': True, 'round': self.turnament._rounds[nr].get(full=full)}
+            if 'pauser' in data['round'] and data['round']['pauser'] > 0:
+                p_id = data['round']['pauser']
+                for player in self.turnament._players:
+                    if player.id == p_id:
+                        data['round']['pauser'] = player.get(specific=["id", "name", "surname", "cat", "elo"])
             logging.debug('Rounds: \n{}'.format(self.turnament._rounds))
         else:
             logging.error("Wrong round number.")
@@ -166,7 +177,7 @@ class Actions:
         logging.info('Round content data: \n{}'.format(data))
         return data
 
-    def set_round_result(self, table_nr: int, result: int):
+    def set_round_result(self, table_nr: int, result: float):
         log_method(obj=self, func=self.set_round_result)
         if not self.turnament:
             logging.error("No turnament active. Please start turnament and add Players.")

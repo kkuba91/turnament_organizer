@@ -6,3 +6,4 @@ fastapi_utils
 tabulate
 uvicorn[standard]~=0.23.2
 SQLAlchemy~=1.4.49
+jinja2

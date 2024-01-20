@@ -26,7 +26,7 @@ class Player(ModelPlayer):
             self.id = -1
             self.rank = 0
             self.elo = 0
-            self.category = "bk"
+            self.category = "wc"
             self.name = ' -- '
             self.surname = ' -- '
         else:
@@ -62,16 +62,11 @@ class Player(ModelPlayer):
             try:
                 self.rank = CATEGORY[self.sex][self.category]
             except KeyError as exc:
-                logging.error("{}, forkeys: sex='{}', category='{}'".format(exc, self.sex, self.category))
+                logging.error("{}, for keys: sex='{}', category='{}'".format(exc, self.sex, self.category))
         return self
 
     def exist(self, name, surname):
-        _exist = False
-        if self.name == name and self.surname == surname:
-            _exist = True
-        else:
-            _exist = False
-        return _exist
+        return self.name == name and self.surname == surname
 
     def set_round(self, round_nr, opponent_idnt, result=-1.0):
         while len(self.opponents) < round_nr:
@@ -109,7 +104,8 @@ class Player(ModelPlayer):
         :returns: Player actual data
         :rtype: dict
         """
-        self.calculate_rank()
+        if not self.pauser:
+            self.calculate_rank()
         data = {
                 'id': self.id,
                 'name': self.name,

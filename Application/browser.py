@@ -130,7 +130,7 @@ class Browser(object):
             self._option = option
             if self._option in ("Open", "New"):
                 if option == "New":
-                    self._success = self._create_file()
+                    self._success = self._create_file(path=path)
                     _log = f'Opened new db "{self._file.name}". '
                 elif option == "Open":
                     self._success = self._get_file()
@@ -159,10 +159,16 @@ class Browser(object):
 
     def is_file_opened(self):
         return self._file_opened
+    
+    def get_file_list(self, path="") -> list:
+        file_type = "db"
+        _user_path = self._get_user_path(path=path)
+        return [f for f in os.listdir(_user_path) if os.path.isfile(os.path.join(_user_path, f)) and f".{file_type}" in f]
 
-    def _create_file(self):
+
+    def _create_file(self, path=""):
         _success = False
-        _user_path = os.path.expanduser('~') if "/root" != os.path.expanduser('~') else ""
+        _user_path = self._get_user_path(path=path)
         _full_file_name = _user_path + os.path.sep + self._file.name + ".db"
         logging.debug(f"Trying to create turnament db file: {_full_file_name}")
         try:
@@ -183,6 +189,14 @@ class Browser(object):
             self.engine.connect()
             logging.debug(f"Connected to db file: {self.engine.url}")
         return _success
+    
+    def _get_user_path(self, path=""):
+        _user_path = os.path.expanduser('~') if "/root" != os.path.expanduser('~') else ""
+        _user_path += os.path.sep + path if path else os.path.sep + ".turnament_organizer"
+        if not os.path.exists(_user_path):
+            logging.debug(f"Dir: {_user_path} does not exist.. make a dir..")
+            os.makedirs(_user_path)
+        return _user_path
 
     def _get_file(self):
         _success = False

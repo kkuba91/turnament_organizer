@@ -1,0 +1,5 @@
+# git ignore for frontend resources
+__pycache__/
+
+# For standalone versions
+bulma.min.css
