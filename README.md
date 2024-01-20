@@ -12,7 +12,7 @@ Lightweight tool for smart player pairing in swiss system.
 - free and simple
 
 ## Actual Status
-- it is on stage  ``PROOF OF CONCEPT`` ``0.2.0``
+- it is on stage  ``PROOF OF CONCEPT 👷``
 - simple pairing order: ``1) points`` ``2) bucholz`` ``3) progress``
 - command line API  ``DEPRICATED``
 - REST API  ``Fast API``
