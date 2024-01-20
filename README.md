@@ -18,6 +18,7 @@ Lightweight tool for smart player pairing in swiss system.
 - REST API  ``Fast API``
 - platforms  ``Linux`` ``Windows``
 - logging ``DEBUG (forced)`` ``console``
+- bugs 🐛 aggregation ``high 😔``
 
 ## Targets
 - [must have] support swiss system matching for all rounds of defined with all rules - ✔
@@ -41,7 +42,7 @@ On Linux:
 ``` bash
 $ python3 runner.py
 ```
-or on Windows:
+On Windows:
 ``` bash
 $ py -3 runner.py
 ```
@@ -57,7 +58,7 @@ To begin click `OPEN`. Select existing file (just point and click right one on t
 
 ![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/CreateOpenFile.png)
 
-- Tournament files are stored as sqlite3 db data
+- Tournament files are stored as sqlite3 db data files.
 - Storing directory on linux: ```~/.turnament_organizer/```.
 - Storing directory on windows: ```C:/Users/<user>/.turnament_organizer/```
 
@@ -67,7 +68,7 @@ Now it is a moment to add players who are going to play in the tournament. Note,
 
 In showed popup set quantity of rounds to play and pairing system.
 > [!WARNING]\
-> Actual version supports only swiss systm!
+> Actual version supports only swiss system!
 
 ![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/StartTournamentPopup.png)
 
