@@ -9,6 +9,7 @@ Lightweight tool for smart player pairing in swiss system.
 ## Generals
 - in two words ``weekend project``
 - layer structured application with builder pattern :rage3:
+- free and simple
 
 ## Actual Status
 - it is on stage  ``PROOF OF CONCEPT`` ``0.2.0``
@@ -29,11 +30,18 @@ Lightweight tool for smart player pairing in swiss system.
 - [optional] save data to excel with all rounds dump - x
 
 ## Launch
-Main launcher in `runner.py`.
+Update pip packages:
+``` bash
+$ pip install -r ./requirements.txt
+```
+
+Main launcher is `runner.py`.
+
+On Linux:
 ``` bash
 $ python3 runner.py
 ```
-or (on Windows):
+or on Windows:
 ``` bash
 $ py -3 runner.py
 ```
@@ -67,7 +75,10 @@ When the last round is about to end and the last result is filled, also approve 
 
 ![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/ResultsFinished.png)
 
+### Rest API
+If interested only in rest api visit: `http://127.0.0.1:8000/docs` - openapi endpoint webpage (SmartBear© free swagger page).
+
 ## Third Party packages
-- Fast API for rest api - [![Fast API](https://img.shields.io/badge/-Fast%20API-grey?logo=github)](https://github.com/tiangolo/fastapi)
-- Bulma for frontend CSS style standard - [![Bulma](https://img.shields.io/badge/-Bulma-grey?logo=github)](https://github.com/jgthms/bulma)
+- Fast API for rest api - [![Fast API](https://img.shields.io/badge/-Fast%20API-grey?logo=github)](https://github.com/tiangolo/fastapi) ![GitHub License](https://img.shields.io/github/license/tiangolo/fastapi)
+- Bulma for frontend CSS style standard - [![Bulma](https://img.shields.io/badge/-Bulma-grey?logo=github)](https://github.com/jgthms/bulma) ![GitHub License](https://img.shields.io/github/license/jgthms/bulma)
 
