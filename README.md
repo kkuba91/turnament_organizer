@@ -51,29 +51,29 @@ After the `Launch` run in cmd/bash console, open web browser on location: `http:
 
 In the window suppose to load a welcomepage:
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/WelcomeView.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/WelcomeView.png)
 
 To begin click `OPEN`. Select existing file (just point and click right one on the list) or type new one name. Than click `Set Tournament File`. As on presented below screenshot.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/CreateOpenFile.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/CreateOpenFile.png)
 
 Now it is a moment to add players who are going to play in the tournament. Note, that tournament indicator in the top-left cornr changed. Add players one-by-one by `[+]` and than apply to start clicking `START TOURNAMENT`.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/AddPlayerTable.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/AddPlayerTable.png)
 
 In showed popup set quantity of rounds to play and pairing system.
 > [!WARNING]\
 > Actual version supports only swiss systm!
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/StartTournamentPopup.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/StartTournamentPopup.png)
 
 When tournament is started, simply fill up results of right tables. To approve round result, click `Next Round`.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/SettingResults.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/SettingResults.png)
 
 When the last round is about to end and the last result is filled, also approve round by `Next Round`. Than final results table will show.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/frontend/.screenshots/0.2.0/ResultsFinished.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/ResultsFinished.png)
 
 ### Rest API
 If interested only in rest api visit: `http://127.0.0.1:8000/docs` - openapi endpoint webpage (SmartBear© free swagger page).
