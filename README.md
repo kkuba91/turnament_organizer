@@ -1,6 +1,5 @@
 [![Version: 0.2.1](https://img.shields.io/badge/version-0.2.1-blue)](https://github.com/kkuba91/turnament_organizer)
 [![Platform: win / linux](https://img.shields.io/badge/platform-win/linux-orange)](https://github.com/kkuba91/turnament_organizer?tab=readme-ov-file)
-![GitHub License](https://github.com/kkuba91/turnament_organizer?tab=MIT-1-ov-file)
 
 
 # Turnament Organizer
