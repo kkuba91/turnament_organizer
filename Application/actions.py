@@ -14,10 +14,14 @@ import logging
 from functools import cache
 
 # Local package imports:
+import Resources
 from Application.browser import Browser
 from Application.logger import log_method
 from Application.turnament import Turnament
-import Resources
+from Templates.round import RoundView
+
+# Third party imports:
+from starlette.responses import FileResponse
 
 
 @cache
@@ -60,12 +64,18 @@ class Actions:
         data = {'status': self._is_opened, 'turnament': self.turnament.get()}
         logging.info(f'Opened turnament "{name}". Content data: \n{data}')
         return data
-    
+
     def get_files(self, path: str = ""):
         log_method(obj=self, func=self.get_files)
         data = self.browser.get_file_list(path=path)
         logging.debug(f'Tournament files list: \n{data}')
         return data
+
+    def remove_files(self, tournament_name: str = ""):
+        log_method(obj=self, func=self.remove_files)
+        self.browser.remove_tournament_from_list(tournament_name)
+        logging.info(f'Tournament "{tournament_name}" files removed')
+        return True
 
     def close(self):
         log_method(obj=self, func=self.close)
@@ -176,6 +186,15 @@ class Actions:
             data = {'status': False, 'round': None}
         logging.info('Round content data: \n{}'.format(data))
         return data
+
+    def turnament_round_to_html(self, nr=0, full=True):
+        log_method(obj=self, func=self.turnament_round_to_html)
+        data = self.turnament_round(nr=nr, full=full)
+        web = RoundView(data=data)
+        web.update()
+        location, file_name = self.browser.add_or_update_extra_file(filename=web.destination_name,
+                                                                    content=web._template)
+        return FileResponse(location, media_type='application/octet-stream', filename=file_name)
 
     def set_round_result(self, table_nr: int, result: float):
         log_method(obj=self, func=self.set_round_result)

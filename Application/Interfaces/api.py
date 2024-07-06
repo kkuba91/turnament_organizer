@@ -9,8 +9,8 @@ import logging
 import os
 
 # Local package imports:
-from Application.logger import set_fastapi_logging
-from Resources import __version__, APPLICATION_NAME
+from Application.logger import CustomFormatter, set_fastapi_logging
+from Resources import __version__
 
 # Third Party packages:
 from fastapi import FastAPI, APIRouter, Request
@@ -18,11 +18,18 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
 
-templates = Jinja2Templates(directory="Templates") 
+templates = Jinja2Templates(directory="Templates")
 
 api = FastAPI(title="Chess turnament manager",
               description="Swiss, single elimination, circular systems",
               version=__version__)
+
+
+@api.on_event("startup")
+async def startup_event():
+    logger = logging.getLogger("uvicorn.access")
+    for handler in logger.handlers:
+        handler.setFormatter(CustomFormatter())
 
 
 class ApiData:
@@ -35,9 +42,9 @@ class ApiData:
 
     def __init__(self, **kwargs) -> None:
         self.routers = {}
+        self.port = kwargs.get("port", 8000)
         self.api = api
-        if hasattr(kwargs, "debug"):
-            self.api.debug = kwargs.get("debug")
+        self.api.debug = kwargs.get("debug", False)
         if not isinstance(self.api, FastAPI):
             raise TypeError("No API (FastAPI) object.")
         self.app = kwargs.get('app')
@@ -54,7 +61,7 @@ class ApiData:
         """
         kwargs = {
             'app': self.api,
-            'port': 8000,
+            'port': self.port,
             'loop': 'asyncio'
         }
         uvicorn.run(**kwargs)
@@ -81,7 +88,7 @@ class ApiData:
                                         description="Get app status about turnament processing",
                                         tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
-        
+
         # Turnament:
         tag = self.Tags.turnament
         self.routers[tag] = APIRouter()
@@ -94,6 +101,11 @@ class ApiData:
                                         endpoint=self.get_files,
                                         methods=["POST"],
                                         description="Get tournament files list",
+                                        tags=[tag])
+        self.routers[tag].add_api_route(path="/remove_file",
+                                        endpoint=self.remove_files,
+                                        methods=["POST"],
+                                        description="Remove selected tournament files",
                                         tags=[tag])
         self.routers[tag].add_api_route(path="/close",
                                         endpoint=self.close_turnament,
@@ -150,6 +162,11 @@ class ApiData:
                                         methods=["GET"],
                                         description="Get round data",
                                         tags=[tag])
+        self.routers[tag].add_api_route(path="/turnament/round/get_results/html",
+                                        endpoint=self.turnament_round_html,
+                                        methods=["GET"],
+                                        description="Get round data in static html",
+                                        tags=[tag])
         self.routers[tag].add_api_route(path="/turnament/round/set_result",
                                         endpoint=self.set_round_result,
                                         methods=["POST"],
@@ -177,7 +194,7 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Creating turnament with name: {} ..'.format(name))
         return self.app.actions.open(name=name, cmd="New", path=path)
-    
+
     async def close_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Closing turnament ..')
@@ -187,23 +204,28 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Get tournament files: ..')
         return self.app.actions.get_files(path=path)
-    
+
+    async def remove_files(self, tournament_name: str = ""):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Remove tournament files: ..')
+        return self.app.actions.remove_files(tournament_name=tournament_name)
+
     async def start_turnament(self, rounds: int, system_type: str):
         await asyncio.sleep(0.01)
         logging.info('[API]: Starting actual turnament. Rounds: {}. System: {} ..'
                      .format(rounds, system_type))
         return self.app.actions.turnament_start(rounds=rounds, system_type=system_type)
-    
+
     async def save_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Saving state of actual turnament ..')
         raise NotImplementedError
-    
+
     async def load_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Loading last state of actual turnament ..')
         raise NotImplementedError
-    
+
     async def finish_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Finishing actual turnament ..')
@@ -232,7 +254,7 @@ class ApiData:
         logging.info('[API]: Remove Player: {} ..'.format(name))
         return self.app.actions.player_del(name=name,
                                            surname=surname)
-    
+
     async def turnament_players(self,
                                 type: str):
         await asyncio.sleep(0.01)
@@ -249,7 +271,12 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Get round data ..')
         return self.app.actions.turnament_round(nr=nr, full=full)
-    
+
+    async def turnament_round_html(self, nr=0, full=True):
+        await asyncio.sleep(0.01)
+        logging.info('[API]: Get round data in html ..')
+        return self.app.actions.turnament_round_to_html(nr=nr, full=full)
+
     async def set_round_result(self, table_nr: int, result: float):
         await asyncio.sleep(0.01)
         logging.info('[API]: Set round result ..')

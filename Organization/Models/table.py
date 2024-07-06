@@ -51,7 +51,7 @@ class ModelTable(BaseModel):
         try:
             _val = float(val)
         except (FloatingPointError, ValueError) as exc:
-            msg_error = f"Not result data ({val})."
+            msg_error = f"Not result data ({val}). {exc}"
             raise ValueError(msg_error)
         if _val not in (-1.0, 0.0, 0.5, 1.0):
             msg_error = f"Wrong result value ({val})."

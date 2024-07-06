@@ -31,7 +31,7 @@ class ModelRound(BaseModel):
         if not isinstance(val, int) and val < 0:
             raise ValueError(f'Players quantity wrong. ({val})')
         return val
-    
+
     @validator('tables_qty')
     def tables_num_match(cls, val):
         if not isinstance(val, int) and val < 0:

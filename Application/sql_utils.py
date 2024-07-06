@@ -206,7 +206,7 @@ class SqlUtils(object):
         self._replace_None(list_of_dicts=players, key_names=['city', 'club'], replace_to="")
         logging.debug(f"Reading Players from table \"{table_name}\":\n{players}")
         return players
-    
+
     @staticmethod
     def _replace_None(list_of_dicts: list, key_names: list, replace_to: any) -> list:
         for element in list_of_dicts:
@@ -214,7 +214,6 @@ class SqlUtils(object):
                 if key_name in element:
                     element[key_name] = replace_to
         return list_of_dicts
-
 
     def results_init(self):
         table_name = "Results"
@@ -237,9 +236,18 @@ class SqlUtils(object):
         data['Player_b'] = kwargs.get("player_b")
         data['Result'] = kwargs.get("result")
 
-        stmt = self.db.results.insert()
-        logging.debug(f"Inserting {kwargs} into table \"{table_name}\"")
-        self.engine.execute(stmt, [data, ])
+        act_results = self._get_table_data(table_name=table_name,
+                                           db_table=self.db.results,
+                                           table_cols=RESULTS_TABLE_COLS)
+        if any([data["Round"] == act["round"] and data["Table"] == act["table"] for act in act_results]):
+            stmt_update = self.db.results.update().where(self.db.results.c.Round == data['Round']). \
+                where(self.db.results.c.Table == data['Table']).values(data)
+            self.engine.execute(stmt_update, [data, ])
+            logging.debug(f"Updateing {kwargs} into table \"{table_name}\"")
+        else:
+            stmt_insert = self.db.results.insert()
+            self.engine.execute(stmt_insert, [data, ])
+            logging.debug(f"Inserting {kwargs} into table \"{table_name}\"")
 
     def read_results_info(self, **kwargs):
         table_name = "Results"
