@@ -237,9 +237,18 @@ class SqlUtils(object):
         data['Player_b'] = kwargs.get("player_b")
         data['Result'] = kwargs.get("result")
 
-        stmt = self.db.results.insert()
-        logging.debug(f"Inserting {kwargs} into table \"{table_name}\"")
-        self.engine.execute(stmt, [data, ])
+        act_results = self._get_table_data(table_name=table_name,
+                                           db_table=self.db.results,
+                                           table_cols=RESULTS_TABLE_COLS)
+        if any([data["Round"] == act["round"] and data["Table"] == act["table"] for act in act_results]):
+            stmt_update = self.db.results.update().where(self.db.results.c.Round == data['Round']). \
+                where(self.db.results.c.Table == data['Table']).values(data)
+            self.engine.execute(stmt_update, [data, ])
+            logging.debug(f"Updateing {kwargs} into table \"{table_name}\"")
+        else:
+            stmt_insert = self.db.results.insert()
+            self.engine.execute(stmt_insert, [data, ])
+            logging.debug(f"Inserting {kwargs} into table \"{table_name}\"")
 
     def read_results_info(self, **kwargs):
         table_name = "Results"

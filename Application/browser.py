@@ -3,13 +3,13 @@
     Browser class with additional File class.
 
 """
+import shutil
 import os
 import errno
 import logging
 import sys
 
 from sqlalchemy import create_engine
-# from sqlalchemy.ext.declarative import declarative_base
 
 
 class File(object):
@@ -57,17 +57,17 @@ class File(object):
     def _is_name_valid(self) -> bool:
         _valid = False
         if isinstance(self._name, str):
-            if self._name.isalpha():
+            if self._name.replace("_", "").isalnum():
                 _valid = True
             else:
-                msg_error = "Wrong filename.. "
+                msg_error = f"Wrong filename.. ({self._name})"
                 logging.error(msg=msg_error)
         return _valid
 
     def _is_path_valid(self) -> bool:
         try:
             if not isinstance(self._path, str) or not self._path:
-                msg_error = "Wrong path type.. "
+                msg_error = f"Wrong path type.. ({self._path})"
                 logging.error(msg=msg_error)
                 return False
 
@@ -106,6 +106,8 @@ class File(object):
 class Browser(object):
     def __init__(self) -> None:
         logging.getLogger("uvicorn")
+        self.dir_path = ""
+        self.filename = ""
         self._file_opened = False
         self._option = ""
         self._success = False
@@ -115,13 +117,29 @@ class Browser(object):
 
     def set_file(self, filename, path="") -> bool:
         if not path:
-            path = os.path.expanduser('~')
+            path = os.path.expanduser('~') + os.sep + ".turnament_organizer" + os.sep + filename
         logging.debug(f"set_file path: {path}, with filename: {filename}")
+        self.dir_path = path
+        self.filename = filename
         if not self.is_file_opened():
             self._file.set_path(path).set_name(filename)
             return self._file.verify()
         else:
             return False
+    
+    def remove_tournament_from_list(self, tournament_name, path=""):
+        if tournament_name:
+            if not path:
+                path = os.path.expanduser('~') + os.sep + ".turnament_organizer" + os.sep + tournament_name
+            print(f"tournament_name={tournament_name}, path={path}")
+            if os.path.exists(path=path):
+                logging.debug(f"Remove tournament '{tournament_name}' files in path={path}")
+                try:
+                    shutil.rmtree(path=path)
+                except Exception as exc:
+                    logging.error(f"Cannot remove files in {path}, because of error: {exc}")
+                else:
+                    return True
 
     def get_file(self, option, path=""):
         _log = ""
@@ -161,10 +179,8 @@ class Browser(object):
         return self._file_opened
     
     def get_file_list(self, path="") -> list:
-        file_type = "db"
         _user_path = self._get_user_path(path=path)
-        return [f for f in os.listdir(_user_path) if os.path.isfile(os.path.join(_user_path, f)) and f".{file_type}" in f]
-
+        return [d for d in os.listdir(_user_path) if os.path.isdir(os.path.join(_user_path, d))]
 
     def _create_file(self, path=""):
         _success = False
@@ -182,7 +198,6 @@ class Browser(object):
             _success = False
 
         if _success:
-            # self._file_handler.close()
             self.engine = create_engine(f'sqlite:///{_full_file_name}',
                                         echo=False,
                                         echo_pool=False)
@@ -190,9 +205,16 @@ class Browser(object):
             logging.debug(f"Connected to db file: {self.engine.url}")
         return _success
     
+    def add_or_update_extra_file(self, filename, content):
+        _user_path = self._get_user_path()
+        _full_file_name = _user_path + os.path.sep + filename
+        with open(_full_file_name, "w+", encoding="utf-8") as file_handler:
+            file_handler.write(content)
+        return (_full_file_name, filename) if os.path.isfile(_full_file_name) else ("", "")
+    
     def _get_user_path(self, path=""):
         _user_path = os.path.expanduser('~') if "/root" != os.path.expanduser('~') else ""
-        _user_path += os.path.sep + path if path else os.path.sep + ".turnament_organizer"
+        _user_path += os.path.sep + path if path else os.path.sep + ".turnament_organizer" + os.path.sep + self._file.name
         if not os.path.exists(_user_path):
             logging.debug(f"Dir: {_user_path} does not exist.. make a dir..")
             os.makedirs(_user_path)
@@ -202,7 +224,6 @@ class Browser(object):
         _success = False
         _full_file_name = self._file.path + os.path.sep + self._file.name + ".db"
         try:
-            # self._file_handler = open(_full_file_name, "w+", encoding="utf-8")
             _success = True
         except (FileExistsError, PermissionError, FileNotFoundError) as exc:
             msg_error = f"Failed to create/open the file {_full_file_name}.. ({str(exc)}) "

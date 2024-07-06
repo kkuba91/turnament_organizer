@@ -1,6 +1,6 @@
-[![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/kkuba91/turnament_organizer)
-[![Platform: win / linux](https://img.shields.io/badge/platform-win/linux-orange)](https://github.com/kkuba91/turnament_organizer)
-![GitHub License](https://img.shields.io/github/license/kkuba91/turnament_organizer)
+[![Version: 0.2.1](https://img.shields.io/badge/version-0.2.1-blue)](https://github.com/kkuba91/turnament_organizer)
+[![Platform: win / linux](https://img.shields.io/badge/platform-win/linux-orange)](https://github.com/kkuba91/turnament_organizer?tab=readme-ov-file)
+![GitHub License](https://github.com/kkuba91/turnament_organizer?tab=MIT-1-ov-file)
 
 
 # Turnament Organizer
@@ -13,12 +13,12 @@ Lightweight tool for smart player pairing in swiss system.
 
 ## Actual Status
 - it is on stage  ``PROOF OF CONCEPT 👷``
-- simple pairing order: ``1) points`` ``2) bucholz`` ``3) progress``
+- simple pairing order (tie break): ``1) points`` ``2) bucholz`` ``3) progress``
 - command line API  ``DEPRICATED``
 - REST API  ``Fast API``
 - platforms  ``Linux`` ``Windows``
 - logging ``DEBUG (forced)`` ``console``
-- bugs 🐛 aggregation ``high 😔``
+- bugs 🐛 aggregation ``high 😔`` ``add/suspend players during event not implemented!``
 
 ## Targets
 - [must have] support swiss system matching for all rounds of defined with all rules - ✔
@@ -52,11 +52,11 @@ After the `Launch` run in cmd/bash console, open web browser on location: `http:
 
 In the window suppose to load a welcomepage:
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/WelcomeView.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.1/WelcomeView.png)
 
 To begin click `OPEN`. Select existing file (just point and click right one on the list) or type new one name. Than click `Set Tournament File`. As on presented below screenshot.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/CreateOpenFile.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.1/CreateOpenFile.png)
 
 - Tournament files are stored as sqlite3 db data files.
 - Storing directory on linux: ```~/.turnament_organizer/```.
@@ -64,26 +64,26 @@ To begin click `OPEN`. Select existing file (just point and click right one on t
 
 Now it is a moment to add players who are going to play in the tournament. Note, that tournament indicator in the top-left cornr changed. Add players one-by-one by `[+]` and than apply to start clicking `START TOURNAMENT`.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/AddPlayerTable.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.1/AddPlayerTable.png)
 
 In showed popup set quantity of rounds to play and pairing system.
 > [!WARNING]\
 > Actual version supports only swiss system!
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/StartTournamentPopup.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.1/StartTournamentPopup.png)
 
 When tournament is started, simply fill up results of right tables. To approve round result, click `Next Round`.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/SettingResults.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.1/SettingResults.png)
 
 When the last round is about to end and the last result is filled, also approve round by `Next Round`. Than final results table will show.
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.0/ResultsFinished.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.2.1/ResultsFinished.png)
 
 ### Rest API
 If interested only in rest api visit: `http://127.0.0.1:8000/docs` - openapi endpoint webpage (SmartBear© free swagger page).
 
 ## Third Party packages
 - Fast API for rest api - [![Fast API](https://img.shields.io/badge/-Fast%20API-grey?logo=github)](https://github.com/tiangolo/fastapi) ![GitHub License](https://img.shields.io/github/license/tiangolo/fastapi)
-- Bulma for frontend CSS style standard - [![Bulma](https://img.shields.io/badge/-Bulma-grey?logo=github)](https://github.com/jgthms/bulma) ![GitHub License](https://img.shields.io/github/license/jgthms/bulma)
+- Bootstrap for frontend CSS style standard - [![Bootstrap](https://img.shields.io/badge/-Bootstrap-grey?logo=github)](https://github.com/twbs/bootstrap) ![GitHub License](https://img.shields.io/github/license/twbs/bootstrap)
 

@@ -1,200 +1,249 @@
-<html>
-<title>Turnament Ogranizer</title>
-<!-- <link rel="stylesheet" href="/bulma.min.css"> -->
-<link rel="stylesheet" href="https://bulma.io/css/bulma-docs.min.css">
-<link rel="stylesheet" href="https://bulma.io/vendor/fontawesome-free-5.15.2-web/css/all.min.css">
-<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Turnament Ogranizer</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://icons.getbootstrap.com/assets/font/bootstrap-icons.min.css">
+    </head>    
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="modals.js"></script>
+<script src="home.js"></script>
 
-<body style="background-color: #383838; color: #cacaca; overflow-y: hidden; overflow-x: hidden;">
-    <!-- HEADER WITH VERSION -->
-    <section class="hero is-small is-dark" style="padding: 5px;">
-        <div class="tags has-addons">
-            <span class="tag is-link is-light is-normal"><strong>Turnament Organizer</strong></span>
-            <span class="tag is-info is-dark is-normal">0.2.0</span>
-        </div>
-    </section>
-    <!-- SUB-PANEL -->
-    <section class="hero is-small is-dark" style="padding-left: 0.5%;">
-        <div class="columns" style="padding-top: 0.2%; padding-bottom: 0.2%;">
-            <div class="column is-3">
-                <div class="tags has-addons">
-                    <span class="tag is-link is-light"><strong>Event</strong></span>
-                    <span id="turnament_status" class="tag is-light">INACTIVE</span>
-                    <span id="turnament_started" class="tag is-light">UNSTARTED</span>
-                </div>
+<!-- <body style="background-color: #383838; color: #cacaca; overflow-y: hidden; overflow-x: hidden;"> -->
+<body>
+    <!-- HEADER WITH VERSION and SUB-PANEL -->
+    <nav class="navbar sticky-top bg-body-tertiary border border-secondary-subtle">
+        <div class="container-fluid justify-content-start">
+            <div class="btn-group me-4" role="group" aria-label="app version">
+                <a href="https://github.com/kkuba91/turnament_organizer" type="button" class="btn btn-outline-light btn-sm d-flex align-items-center p-1 pe-2 rounded-pill">
+                    <i class="bi bi-github mx-1"></i><strong> Turnament Organizer</strong><span class="vr mx-2"></span>0.2.1<span class="vr mx-2"></span>MIT</a>
             </div>
-            <div class="column is-2">
-                <div class="tags has-addons">
-                    <span class="tag is-link is-light"><strong>Players</strong></span>
-                    <span id="indicator_players" class="tag is-info is-light">0</span>
-                </div>
+            <div class="btn btn-outline-light btn-sm d-flex align-items-center p-1 px-3 pe-2 rounded-3 mx-3 disabled">
+                <strong>Event</strong>
+                <span class="vr mx-2"></span>
+                <span id="turnament_status" class="text-warning">INACTIVE</span>
+                <span class="vr mx-2"></span>
+                <span id="turnament_started" class="text-warning">-------</span>
             </div>
-            <div class="column is-2">
-                <div class="tags has-addons">
-                    <span class="tag is-link is-light"><strong>Rounds</strong></span>
-                    <span id="indicator_rounds" class="tag is-info is-light">0 / 0</span>
-                </div>
+            <div class="btn-group mx-3" role="group" aria-label="players status" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Players">
+                <button type="button" class="btn btn-outline-light disabled btn-sm" disabled><strong><i class="bi bi-person-standing"></i></strong></button>
+                <button id="indicator_players" type="button" class="btn btn-outline-light disabled btn-sm" disabled>0</button>
+            </div>
+            <div class="btn-group mx-3" role="group" aria-label="rounds status" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Rounds">
+                <button type="button" class="btn btn-outline-light light btn-sm" disabled><strong><i class="bi bi-bootstrap-reboot"></i></strong></button>
+                <button id="indicator_rounds" type="button" class="btn btn-outline-light btn-sm" disabled>0 / 0</button>
             </div>
         </div>
-    </section>
+    </nav>
     <!-- APPLICATION -->
-    <div id="app" class="columns" style="height: 98%;">
-        <div style="margin-bottom: 15px; padding: 20px;" class="column is-2">
-            <div class="box" style="margin: 2%; background-color: #484848">
-                <div id="action_start" class="block">
-                    <button class="js-modal-trigger button is-success is-fullwidth is-responsive" id="action-start" data-target="popup_create_open" @click="getFiles">OPEN</button>
+    <div id="app" class="container-fluid my-10">
+        <div class="row my-3">
+            <div class="col-2">
+                <div class="d-grid gap-2 col-12 p-3 bg-body-tertiary border rounded-3 mx-auto mb-3">
+                    <button id="action-start" class="btn btn-outline-success btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#popup_create_open" onclick="app.getFiles()">OPEN</button>
+                    <button id="action-end" class="btn btn-outline-danger btn-sm" type="button" onclick="app.closeTurnament()">CLOSE</button>
                 </div>
-                <div id="action_end" class="block">
-                    <button class="button is-danger is-fullwidth is-responsive" id="action-end" @click="closeTurnament">CLOSE</button>
+                <div id="in_progress" class="d-grid gap-1 p-3 bg-body-tertiary border rounded-3 mx-auto">
+                    <button id="action-results" class="btn btn-primary btn-sm my-1" type="button" onclick="app.getPlayersResults()"><i class="bi bi-trophy"> </i> Results <i class="bi bi-trophy"></i></button>
+                    <div id="action_rounds" class="d-grid gap-2">
+                        <button class="btn btn-secondary btn-sm" type="button" id="action-rounds">Round 1</button>
+                        <button class="btn btn-secondary btn-sm" type="button" id="action-rounds">Round 2</button>
+                    </div>
                 </div>
             </div>
-            <div id="in_progress" class="box" style="margin: 2%; background-color: #484848; visibility: hidden;">
-                <div id="action_results" class="block">
-                    <button class="button is-dark is-fullwidth" id="action-results is-responsive" @click="getPlayersResults">Results</button>
-                </div>
-                <div id="action_rounds" class="block is-responsive">
-                    <button class="button is-dark is-fullwidth" id="action-rounds">Round 1</button>
-                    <button class="button is-dark is-fullwidth" id="action-rounds">Round 2</button>
-                </div>
-            </div>
-        </div>
-        <div class="column">
-            <!-- MAIN VIEW -->
-            <div class="box" style="height: 83%; margin: 1%; background-color: #484848">
-                <!-- VIEW: WELCOME -->
-                <div id="block_welcome" class="block" style="color: #cacaca; display: block;">
-                    <h1 class="title" style="color: #cacaca;">Welcome in.. <strong>Turnament organizer</strong> 💥💖✨🏆🏈</h1>
-                    <h2 class="subtitle" style="color: #cacaca;">App was created to deliver simple way of pairing players for games like chess. It is for non-professional use.</h2>
-                    <article class="message is-warning is-small">
-                        <div class="message-header is-small"><p>.*★°*.☆: NOTE :*.☆°★*。</p></div>
-                        <div class="message-body is-small">
-                            <p><strong>KEEP IN MIND: </strong>In the actual stage application is highly incomplete, suppose to deliver simple swiss-system pairing only!
-                                Maybe in the future versions functionality is going to be enlarged.</p>
-                            <p><strong>WARNING: </strong>App is <strong>not</strong> secured in any of kind (availability, integrity, authentication), that is why please use it in non commercial (professional) events!</p>
-                            <p><strong>THE MOST IMPORTANT:</strong>If app worked as You expected 😅, please, have fun in Your private tournaments!</p>
-                        </div>
-                    </article>
-                    <article class="message is-info is-small">
-                        <div class="message-header is-small"><p>.*★°*.☆: INFO :*.☆°★*。</p></div>
-                        <div class="message-body is-small">
-                            <p><strong>Quick manual:</strong></p>
-                            <p>To begin please select Your tournament. Click <button class="js-modal-trigger tag is-success is-small" id="action-start" data-target="popup_create_open" @click="getFiles" style="border-style: none;">OPEN</button> and.. </p>
-                            <li>choose existing file name to continue (or just read) written tournament</li>
-                            <li>type new file name to begin another tournament</li>
-                            <p>Than add Players to the list who are going to parcitipate and compete for championship 🏆. If the list includes all Players, start the tournament.</p>
-                            <p>Do not forget to select presumed round quantity and right pairing system. <strong>Actual supported one is swiss!</strong></p>
-                            <p>Every round can be viewed (with ongoing results) and every result in actual round can be set (with:<span class="tag is-success is-light">+1</span>, <span class="tag is-warning is-light">+½</span>, <span class="tag is-danger is-light">+0</span>).</p>
-                            <p>Any time You need to close the application, You can just do it. To switch between tournaments and close actual, just click <button class="tag is-danger" style="border-style: none;" disabled>CLOSE</button> and open interested one.</p>
-                            <p>When tournament reach the last round, click for "Next round" yo finish. All the results may be read in view "Results".</p>
-                        </div>
-                    </article>
-                </div>
-                <!-- VIEW: INITIAL PLAYER LIST (BEFORE START) -->
-                <div id="block_initial_player_list" class="block" style="color: #cacaca; display: none;">
-                    <h1 class="subtitle" style="color: #cacaca;">Table of Players:</h1>
-                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-                        <thead>
-                          <tr><th>Nr</th><th>Name</th><th>Surname</th><th>Gender</th><th>City</th><th>Club</th><th>Cat.</th><th>Elo</th><th></th></tr>
-                        </thead>
-                        <tbody id="table_rows_players_init" style="font-size: small;">
-                          <tr><th>1</th><th>Garri</th><th>Kasparov</th><th>Male</th><th>Katowice</th><th>Ksz Hetman K-ce</th><th>GM</th><th>2712</th><th><button class="button is-danger is-rounded">-</button></th></tr>
-                        </tbody>
-                    </table>
-                    <div class="block">
-                        <button class="js-modal-trigger button is-info is-small is-rounded" id="add-player" data-target="popup_add_player"><i class="fa fa-plus-square" aria-hidden="true"></i></button>
-                    </div>
-                    <div class="block">
-                        <button class="js-modal-trigger button is-link is-normal" id="start-tournament" data-target="popup_start_tournament"><i class="fa fa-play-circle" aria-hidden="true"></i>&emsp;&ensp;START TOURNAMENT</button>
-                    </div>
-                </div>
-                <!-- VIEW: ROUND -->
-                <div id="block_round" class="block" style="color: #cacaca; display: none;">
-                    <h1 id="view_round_val" class="subtitle" style="color: #cacaca;">Round ##:</h1>
-                    <table class="table is-fullwidth is-small">
-                        <thead><tr>
-                            <td><strong>Table No:</strong></td>
-                            <td><span class="tag is-light">⬜</span><span class="tag is-light"><strong>White pieces</strong></span><span class="tag is-light">⬜</span></td>
-                            <td></td>
-                            <td><span class="tag is-light">⬛</span><span class="tag is-light"><strong>Black pieces</strong></span><span class="tag is-light">⬛</span></td>
-                            <td><strong>Result:</strong></td>
-                            <td></td>
-                        </tr></thead>
-                        <tbody id="table_rows_round">
-                            <tr>
-                            <td><span class="tag is-light">1</span></td>
-                            <td><span class="tag is-light">#1</span> <span class="tag is-warning">GM</span> <span class="tag is-light"><strong>Garri Kasparov</strong></span> <span class="tag is-light">2756</span></td>
-                            <td>vs.</td>
-                            <td><span class="tag is-light">#2</span> <span class="tag is-warning">GM</span> <span class="tag is-light"><strong>Bobby Fisher</strong></span> <span class="tag is-light">2796</span></td>
-                            <td><span class="tag is-light"><i class="fa fa-question" aria-hidden="true"></i></span></td>
-                            <td>-</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p id="view_pauser"></p>
-                    <div id="buttons_act_round" class="block" style="margin-top: 3%;">
-                        <button class="button is-success" @click="nextRound">Next round</button>
-                    </div>
-                </div>
-                <!-- VIEW: RESULTS -->
-                <div id="block_results" class="block" style="color: #cacaca; display: none;">
-                    <h1 class="subtitle" style="color: #cacaca;">Results:</h1>
-                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-                        <thead>
-                          <tr><th>Place</th><th>Nr</th><th>Name</th><th>Surname</th><th>Gender</th><th>City</th><th>Club</th><th>Cat.</th><th>Elo</th><th>Points</th><th>Bucholz</th><th>Progress</th></tr>
-                        </thead>
-                        <tbody id="table_rows_players_result" style="font-size: small;">
-                          <tr><th>1</th><th>3</th><th>Garri</th><th>Kasparov</th><th>Male</th><th>Katowice</th><th>Ksz Hetman K-ce</th><th>GM</th><th>2712</th><th>7.5</th><th>44.0</th><th>15</th></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <!-- MODALS (POPUPS) -->
-        <!-- [popup] add player -->
-        <div id="popup_add_player" class="modal">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                <p class="modal-card-title">Add new Player</p>
-                <button class="delete" aria-label="close"></button>
-                </header>
-                <section class="modal-card-body">
-                    <div class="field">
-                        <label class="label">Name</label>
-                        <div class="control has-icons-left">
-                            <input class="input is-small is-info" id="add_p_name" placeholder="e.g. Garri">
-                            <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="label">Surname</label>
-                        <div class="control has-icons-left">
-                            <input class="input is-small is-info" id="add_p_surname" placeholder="e.g. Kasparow">
-                            <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column">
-                            <div class="field">
-                                <label class="label"><i class="fa fa-venus-mars"></i></label>
-                                <div class="select is-info is-small">
-                                    <select id="add_p_sex">
-                                        <option>male</option>
-                                        <option>female</option>
-                                    </select>
-                                </div>
+            <div class="col-10">
+                <!-- MAIN VIEW -->
+                <div class="d-grid gap-2 col-12 p-3 bg-body-tertiary border rounded-3 mx-auto">
+                    <!-- VIEW: WELCOME -->
+                    <div id="block_welcome" class="container-fluid">
+                        <h4>Welcome in.. <strong>Turnament organizer</strong> 💥💖✨🏆🏈</h4>
+                        App was created to deliver simple way of pairing players for games like chess. It is for non-professional use.
+
+                        <div class="card d-grid gap-0 my-3 border-secondary-subtle">
+                            <div class="card-header text-light py-0 text-warning-emphasis"><i class="bi bi-exclamation-triangle me-2"> </i>None</div>
+                            <div class="card-body py-1">
+                                <p><strong>KEEP IN MIND: </strong>In the actual stage application is highly incomplete, suppose to deliver simple swiss-system pairing only!
+                                    Maybe in the future versions functionality is going to be enlarged.</p>
+                                <p><strong>WARNING: </strong>App is <strong>not</strong> secured in any of kind (availability, integrity, authentication), that is why please use it in non commercial (professional) events!</p>
+                                <p><strong>THE MOST IMPORTANT: </strong>If app worked as You expected 😅, please, have fun in Your private tournaments!</p>
                             </div>
                         </div>
-                        <div class="column">
-                            <div class="field">
-                                <label class="label">Category</label>
-                                <div class="select is-info is-small">
-                                    <select id="add_p_category">
-                                    <option>wc</option>
+
+                        <div class="card d-grid gap-0 my-3 border-secondary-subtle">
+                            <div class="card-header text-light py-0 text-info-emphasis"><i class="bi bi-info-circle me-2"> </i>Info</div>
+                            <div class="card-body py-1">
+                                <p><strong>Quick manual:</strong></p>
+                                To begin please select Your tournament. Click 
+                                <button id="action-start" class="btn btn-outline-success btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#popup_create_open" @click="getFiles">OPEN</button>
+                                    and.. 
+                                <li>choose existing file name to continue (or just read) written tournament</li>
+                                <li>type new file name to begin another tournament</li>
+                                <p>Than add Players to the list who are going to parcitipate and compete for championship 🏆. If the list includes all Players, start the tournament.</p>
+                                <p>Do not forget to select presumed round quantity and right pairing system. <strong>Actual supported one is swiss!</strong></p>
+                                <p>Every round can be viewed (with ongoing results) and every result in actual round can be set (with:
+                                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-2">+1</span>
+                                    , 
+                                    <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-2">+½</span>
+                                    , 
+                                    <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-2">+0</span>
+                                    ).
+                                </p>
+                                <p>Any time You need to close the application, You can just do it. To switch between tournaments and close actual, just click 
+                                    <button id="action-end" class="btn btn-outline-danger btn-sm" type="button" disabled>CLOSE</button>
+                                    <!-- <button class="badge is-danger" style="border-style: none;" disabled>CLOSE</button> -->
+                                     and open interested one.</p>
+                                <p>When tournament reach the last round, click for "Next round" to finish. All the results may be read in view "Results".</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- VIEW: INITIAL PLAYER LIST (BEFORE START) -->
+                    <div id="block_initial_player_list" class="container-fluid" style="display: none;">
+                        <h4 class="subtitle">Table of Players:</h4>
+                        <div class="my-2">
+                            <table class="table table-striped table-hover table-sm my-0 text-secondary-emphasis border">
+                                <thead class="bg-light-subtle">
+                                <tr>
+                                    <th scope="col" class="bg-light-subtle">Nr</th>
+                                    <th scope="col" class="bg-light-subtle">Name</th>
+                                    <th scope="col" class="bg-light-subtle">Surname</th>
+                                    <th scope="col" class="bg-light-subtle">Gender</th>
+                                    <th scope="col" class="bg-light-subtle">City</th>
+                                    <th scope="col" class="bg-light-subtle">Club</th>
+                                    <th scope="col" class="bg-light-subtle">Cat.</th>
+                                    <th scope="col" class="bg-light-subtle">Elo</th>
+                                    <th scope="col" class="bg-light-subtle"></th>
+                                </tr>
+                                </thead>
+                                <tbody id="table_rows_players_init" style="font-size: small;">
+                                <tr><th>1</th><th>Garri</th><th>Kasparov</th><th>Male</th><th>Katowice</th><th>Ksz Hetman K-ce</th><th>GM</th><th>2712</th><th><button class="button">-</button></th></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="hstack gap-2 my-3">
+                            <button type="button" class="btn btn-outline-primary my-2 m-10" id="add-player" data-bs-toggle="modal" data-bs-target="#popup_add_player"><i class="bi bi-person-fill-add"></i></button>
+                            <span class="vr mx-2"></span>
+                            <button type="button" class="btn btn-outline-success btn-sm my-2" id="start-tournament" data-bs-toggle="modal" data-bs-target="#popup_start_tournament">START TOURNAMENT</button>
+                        </div>
+                    </div>
+                    <!-- VIEW: ROUND -->
+                    <div id="block_round" class="block" style="color: #cacaca; display: none;">
+                        <h4 id="view_round_val" class="subtitle">Round ##:</h4>
+                        <div class="table-responsive small my-2">
+                            <table class="table table-striped table-hover table-sm my-0 text-secondary-emphasis border">
+                                <thead><tr>
+                                    <th scope="col" class="bg-light-subtle"><span class="badge border border p-2"> Table No</span></th>
+                                    <th scope="col" class="bg-light-subtle"><span class="badge bg-light border border-dark text-dark p-2"> White pieces</span></th>
+                                    <th scope="col" class="bg-light-subtle"></th>
+                                    <th scope="col" class="bg-light-subtle"><span class="badge bg-dark border border-dark text-light p-2"> Black pieces</span></th>
+                                    <th scope="col" class="bg-light-subtle"><span class="badge border border p-2"> Result</span></th>
+                                    <th scope="col" class="bg-light-subtle"></th>
+                                </tr></thead>
+                                <tbody id="table_rows_round">
+                                    <tr>
+                                    <td><span class="badge is-light">1</span></td>
+                                    <td><span class="badge is-light">#1</span> <span class="badge is-warning">GM</span> <span class="badge is-light"><strong>Garri Kasparov</strong></span> <span class="badge is-light">2756</span></td>
+                                    <td>vs.</td>
+                                    <td><span class="badge is-light">#2</span> <span class="badge is-warning">GM</span> <span class="badge is-light"><strong>Bobby Fisher</strong></span> <span class="badge is-light">2796</span></td>
+                                    <td><span class="badge is-light"><i class="fa fa-question" aria-hidden="true"></i></span></td>
+                                    <td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card d-grid gap-0 my-3 border-secondary-subtle">
+                            <div class="card-header text-light py-0 text-secondary-emphasis"><i class="bi bi-info-circle me-2"> </i>Info</div>
+                            <div class="card-body">
+                                <p id="view_pauser" class="my-2"></p>
+                            </div>
+                        </div>
+
+                        <div id="buttons_act_round" class="card d-grid gap-0 me-4 my-1 border-secondary-subtle d-inline-flex">
+                            <div class="card-header text-light py-0 text-secondary-emphasis"><i class="bi bi-sliders me-2"> </i>Player changes</div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-outline-primary my-2 mx-2" id="add-player" data-bs-toggle="modal" data-bs-target="#popup_add_player"><i class="bi bi-person-fill-add"></i> Add Player</button>
+                                <span class="vr mx-3"></span>
+                                <button type="button" class="btn btn-outline-warning my-2 mx-2" id="suspend-player" data-bs-toggle="modal" data-bs-target="#popup_suspend_player"><i class="bi bi-person-fill-dash"></i> Suspend Player</button>
+                            </div>
+                        </div>
+
+                        <div id="buttons_act_round" class="card d-grid gap-0 me-3 my-1 border-secondary-subtle d-inline-flex">
+                            <div class="card-header text-light py-0 text-secondary-emphasis"><i class="bi bi-sliders me-2"> </i>Round options</div>
+                            <div class="card-body">
+                                <button id="show_round_html" type="button" class="btn btn-outline-secondary my-2 mx-2"><i class="bi bi-filetype-html"></i> Print view</button>
+                                <span class="vr mx-3"></span>
+                                <button type="button" class="btn btn-outline-success my-2 mx-2" onclick="app.nextRound()"><i class="bi bi-arrow-right-square"></i> Next round</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- VIEW: RESULTS -->
+                    <div id="block_results" class="block" style="color: #cacaca; display: none;">
+                        <h4 class="subtitle">Results:</h4>
+                        <div class="table-responsive small my-2">
+                            <table class="table table-striped table-hover table-sm my-0 text-secondary-emphasis border">
+                                <thead>
+                                <tr>
+                                    <th scope="col" class="bg-light-subtle">Place</th>
+                                    <th scope="col" class="bg-light-subtle">Nr</th>
+                                    <th scope="col" class="bg-light-subtle">Name</th>
+                                    <th scope="col" class="bg-light-subtle">Surname</th>
+                                    <th scope="col" class="bg-light-subtle">Gender</th>
+                                    <th scope="col" class="bg-light-subtle">City</th>
+                                    <th scope="col" class="bg-light-subtle">Club</th>
+                                    <th scope="col" class="bg-light-subtle">Cat.</th>
+                                    <th scope="col" class="bg-light-subtle">Elo</th>
+                                    <th scope="col" class="bg-light-subtle">Points</th>
+                                    <th scope="col" class="bg-light-subtle">Bucholz</th>
+                                    <th scope="col" class="bg-light-subtle">Progress</th>
+                                </tr>
+                                </thead>
+                                <tbody id="table_rows_players_result" style="font-size: small;">
+                                <tr><th>1</th><th>3</th><th>Garri</th><th>Kasparov</th><th>Male</th><th>Katowice</th><th>Ksz Hetman K-ce</th><th>GM</th><th>2712</th><th>7.5</th><th>44.0</th><th>15</th></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODALS (POPUPS) -->
+            <!-- [popup] add player -->
+            <div class="modal modal-lg fade my-10" id="popup_add_player" tabindex="2" aria-labelledby="addPlayer" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fs-5" id="addPlayer">Add new Player</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label for="basic-url" class="form-label">Name</label>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="bi bi-person"></i></span>
+                                <input id="add_p_name" type="text" class="form-control" placeholder="e.g. Garri" aria-label="Name" aria-describedby="basic-addon1">
+                            </div>
+                            <label for="basic-url" class="form-label">Surname</label>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="basic-addon2"><i class="bi bi-person"></i></span>
+                                <input id="add_p_surname" type="text" class="form-control" placeholder="e.g. Kasparow" aria-label="Name" aria-describedby="basic-addon2">
+                            </div>
+
+                            <div class="btn-group mb-3" role="group" aria-label="Select gender">
+                                <input id="add_p_sex_male" type="radio" class="btn-check" name="btnradio" autocomplete="off" checked>
+                                <label class="btn btn-outline-secondary" for="add_p_sex_male" value="male"><i class="bi bi-gender-male"></i></label>
+                              
+                                <input id="add_p_sex_female" type="radio" class="btn-check" name="btnradio" autocomplete="off">
+                                <label class="btn btn-outline-secondary" for="add_p_sex_female" value="female"><i class="bi bi-gender-female"></i></label>
+                            </div>
+                            <div></div>
+                            
+                            <label for="basic-url" class="form-label">Category and rating</label><div></div>
+                            <div class="btn-group mb-2" role="group" aria-label="Cat. and rating">
+                                <select id="add_p_category" class="form-select form-select-sm" aria-label=".form-select-sm example">
+                                    <option value="wc" selected>NOVICE</option>
                                     <option>V</option>
                                     <option>IV</option>
                                     <option>III</option>
@@ -205,136 +254,162 @@
                                     <option>CM</option>
                                     <option>FM</option>
                                     <option>GM</option>
-                                    </select>
+                                </select>
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="basic-addon2"><i class="bi bi-speedometer2"></i><span class="vr mx-2"></span>elo</span>
+                                <input id="add_p_elo" type="text" class="form-control" aria-label="Elo" aria-describedby="basic-addon4">
+                            </div>
+                            
+                            <label for="basic-url" class="form-label">City</label><div></div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="basic-addon2"><i class="bi bi-buildings"></i></span>
+                                <input id="add_p_city" type="text" class="form-control" aria-label="Elo" aria-describedby="basic-addon4">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="app.addPlayer()" id="set-file" data-bs-dismiss="modal">Add Player</button>
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [popup] start-tournament -->
+            <div class="modal modal-lg fade my-10" id="popup_start_tournament" tabindex="2" aria-labelledby="startTournament" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fs-5" id="startTournament">Start tournament</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label for="basic-url" class="form-label">Rounds quantity</label>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="bi bi-bootstrap-reboot"></i></span>
+                                <input id="start_t_rounds" type="text" class="form-control" placeholder="7" aria-label="Rounds" aria-describedby="basic-addon1">
+                            </div>
+                            <label for="basic-url" class="form-label">System</label>
+                            <div class="input-group input-group-sm mb-3">
+                                <select id="start_t_system" class="form-select form-select-sm" aria-label="Small select example">
+                                    <option value="swiss" selected>swiss</option>
+                                    <option value="circullar">circullar</option>
+                                    <option value="elimination">single elimination</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="app.startTournament()" id="set-file" data-bs-dismiss="modal">Start Tournament</button>
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [popup] remove files -->
+            <div class="modal modal-lg fade my-10" id="popup_remove_tournament" tabindex="2" aria-labelledby="removeTournament" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fs-5 text-danger" id="removeTournament"> <i class="bi bi-trash"></i> Remove trournament</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-bs-toggle="modal" data-bs-target="#popup_create_open" onclick="app.getFiles()"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label for="basic-url" class="form-label" id="removeTournamentLabel">Remove ...</label>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="app.removeTournament()" id="remove-files" data-bs-dismiss="modal">Remove</button>
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#popup_create_open" onclick="app.getFiles()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [popup] open or create tournament file -->
+            <div class="modal modal-lg fade my-10" id="popup_create_open" tabindex="2" aria-labelledby="createTournament" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="modal-title fs-5" id="createTournament">Create or open existing file</h3>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="my-2">
+                            <table class="table table-striped table-hover table-sm my-0 border">
+                                <thead>
+                                <tr><th class="bg-light-subtle">Existing files:</th><th class="bg-light-subtle"></th></tr>
+                                </thead>
+                                <tbody id="table_rows_files" style="font-size: small;" class="text-secondary-emphasis">
+                                <tr><th>1</th><th>1</th></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="field">
+                            <label class="label">Set tournament name:</label>
+                            <div class="control">
+                                <div id="action_open">
+                                    <input class="input is-info is-small" type="text" id="turnament_file" cols="30" rows="1" placeholder="e.g. file_name"></input>
+                                    <p class="help">Just put unique name for turnament</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="column">
-                            <div class="field">
-                                <label class="label">Elo rating</label>
-                                <div class="control has-icons-left">
-                                <input class="input is-small is-info" id="add_p_elo" value="0">
-                                <span class="icon is-small is-left"><i class="fa fa-tachometer"></i></span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                    <div class="field">
-                        <label class="label">City</label>
-                        <div class="control has-icons-left">
-                        <input class="input is-small is-info" id="add_p_city" placeholder="e.g. New York">
-                        <span class="icon is-small is-left"><i class="fa fa-building"></i></span>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="app.setFile()" id="set-file" data-bs-dismiss="modal">Set Tournament File</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                     </div>
-                </section>
-                <footer class="modal-card-foot">
-                <button class="button is-success" @click="addPlayer">Add</button>
-                <button class="button">Cancel</button>
-                </footer>
-            </div>
-        </div>
-        <!-- [popup] start-tournament -->
-        <div id="popup_start_tournament" class="modal">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                <p class="modal-card-title">Start tournament</p>
-                <button class="delete" aria-label="close"></button>
-                </header>
-                <section class="modal-card-body">
-                    <div class="field">
-                        <label class="label">Rounds quantity</label>
-                        <div class="control">
-                            <input class="input is-small is-info" id="start_t_rounds" placeholder="7">
-                            <p class="help">Value must be integer and greater than 0</p>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="label"><i class="fa fa-calculator"></i>&emsp;System</label>
-                        <div class="select is-info is-small">
-                            <select id="start_t_system">
-                                <option>swiss</option>
-                                <option>circular</option>
-                                <option>elimination</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-                <footer class="modal-card-foot">
-                <button class="button is-success" @click="startTournament">START</button>
-                <button class="button">Cancel</button>
-                </footer>
-            </div>
-        </div>
-        <!-- [popup] open or create tournament file -->
-        <div id="popup_create_open" class="modal">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                <p class="modal-card-title">Create or open existing file</p>
-                </header>
-                <section class="modal-card-body">
-                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-                        <thead>
-                          <tr><th>Existing files:</th></tr>
-                        </thead>
-                        <tbody id="table_rows_files" style="font-size: small;">
-                          <tr><th>1</th></tr>
-                        </tbody>
-                    </table>
-                    <div class="field">
-                        <label class="label">Set tournament name:</label>
-                        <div class="control">
-                            <div id="action_open">
-                                <input class="input is-info is-small" type="text" id="turnament_file" cols="30" rows="1" placeholder="e.g. file_name"></input>
-                                <p class="help">Skip ".db", just put name of file as for turnament</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <footer class="modal-card-foot">
-                <button class="button is-success" @click="setFile" id="set-file">Set Tournament File</button>
-                <button class="button">Cancel</button>
-                </footer>
-            </div>
-        </div>
-        <!-- [popup] set result -->
-        <div id="popup_set_result" class="modal">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                <p class="modal-card-title">Set result</p>
-                </header>
-                <section class="modal-card-body">
-                    <div class="field">
-                        <label class="label">Round:<span id="popup_set_result_round"></span>, Table:<span id="popup_set_result_table"></span></label>
-                        <label class="label" style="text-align: center;"><span id="popup_set_result_wh"></span> vs <span id="popup_set_result_bl"></span></label>
-
-                    </div>
-                </section>
-                <footer class="modal-card-foot">
-                <div class="buttons has-addons" style="padding-left: 10%;">
-                    <button class="button" @click="setWin">⬜ wins</button>
-                    <button class="button" @click="setDraw">½--½</button>
-                    <button class="button" @click="setLoose">⬛ wins</button>
+                  </div>
                 </div>
-                <div class="buttons has-addons" style="padding-left: 20%;">
-                    <button class="button" @click="setNothing">No result</button>
+              </div>
+            <!-- [popup] set result -->
+            <div class="modal modal-lg fade my-10" id="popup_set_result" tabindex="2" aria-labelledby="setResult" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="modal-title fs-5" id="setResult">Set result for the game</h3>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div><label class="label"><strong>Round:<span id="popup_set_result_round"></span></strong></label></div>
+                        <div class="my-1"><label class="label"><strong>Table:<span id="popup_set_result_table"></span></strong></label></div>
+                        <div class="d-grid gap-2"><label class="label" style="text-align: center;">⬜ <span id="popup_set_result_wh"></span> &emsp; &emsp; - &emsp; &emsp; ⬛ <span id="popup_set_result_bl"></span></label></div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="buttons has-addons" style="padding-left: 10%;">
+                            <button class="btn btn-primary btn-sm" onclick="app.setWin()" data-bs-dismiss="modal">⬜ wins</button>
+                            <button class="btn btn-primary btn-sm" onclick="app.setDraw()" data-bs-dismiss="modal">½--½</button>
+                            <button class="btn btn-primary btn-sm me-5" onclick="app.setLoose()" data-bs-dismiss="modal">⬛ wins</button>
+                            <button class="btn btn-primary btn-sm me-5" onclick="app.setNothing()" data-bs-dismiss="modal">No result</button>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </div>
                 </div>
-                </footer>
-            </div>
+             </div>
         </div>
     </div>
-
-    <script src="vue_logic.js"></script>
+    <nav class="navbar fixed-bottom bg-body-tertiary border border-secondary-subtle">
+        <div class="container-fluid justify-content-end">
+            <span class="vr mx-4"></span>
+            <div class="btn-group dropup mx-2">
+                <button type="button" class="btn btn-outline-light d-flex align-items-center p-1 border border-secondary-subtle rounded-pill dropdown-toggle text-secondary" data-bs-toggle="dropdown" aria-expanded="false">@kkuba91
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" style="background:transparent; border: 0px;">
+                    <!-- Dropdown menu links -->
+                    <a href="https://github.com/kkuba91" type="button" class="btn btn-outline-light d-flex align-items-center p-2 border border-secondary-subtle rounded-pill" style="max-width: 36px;">
+                        <i class="bi bi-github"></i>
+                    </a>
+                    <a href="https://lichess.org/@/kkuba91" type="button" class="btn btn-outline-light d-flex align-items-center p-2 px-2 border border-secondary-subtle rounded-pill" style="max-width: 36px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-0-circle" viewBox="0 0 24 24">
+                            <path d="M10.457 6.161a.237.237 0 0 0-.296.165c-.8 2.785 2.819 5.579 5.214 7.428.653.504 1.216.939 1.591 1.292 1.745 1.642 2.564 2.851 2.733 3.178a.24.24 0 0 0 .275.122c.047-.013 4.726-1.3 3.934-4.574a.257.257 0 0 0-.023-.06L18.204 3.407 18.93.295a.24.24 0 0 0-.262-.293c-1.7.201-3.115.435-4.5 1.425-4.844-.323-8.718.9-11.213 3.539C.334 7.737-.246 11.515.085 14.128c.763 5.655 5.191 8.631 9.081 9.532.993.229 1.974.34 2.923.34 3.344 0 6.297-1.381 7.946-3.85a.24.24 0 0 0-.372-.3c-3.411 3.527-9.002 4.134-13.296 1.444-4.485-2.81-6.202-8.41-3.91-12.749C4.741 4.221 8.801 2.362 13.888 3.31c.056.01.115 0 .165-.029l.335-.197c.926-.546 1.961-1.157 2.873-1.279l-.694 1.993a.243.243 0 0 0 .02.202l6.082 10.192c-.193 2.028-1.706 2.506-2.226 2.611-.287-.645-.814-1.364-2.306-2.803-.422-.407-1.21-.941-2.124-1.56-2.364-1.601-5.937-4.02-5.391-5.984a.239.239 0 0 0-.165-.295z"/></svg> 
+                        </svg>
+                    </a>
+                    <a href="mailto:kkuba91@o2.pl" type="button" class="btn btn-outline-light d-flex align-items-center p-2 px-2 border border-secondary-subtle rounded-pill" style="max-width: 36px;">
+                        <i class="bi bi-envelope-at"></i>
+                    </a>
+                    <a href="https://pl.linkedin.com/in/jakub-kochaniak-332824b6" type="button" class="btn btn-outline-light d-flex align-items-center p-2 px-2 border border-secondary-subtle rounded-pill" style="max-width: 36px;">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                </ul>
+            </div>
+        </div>
+    </nav>
 </body>
-<footer class="hero is-small is-dark" style="position: fixed; bottom: 0; width: 100%;">
-    <div class="content has-text-centered" style="margin-top: auto;">
-      <p>
-        <strong>Turnament Ogranizer</strong> by <a href="https://github.com/kkuba91/turnament_organizer"><span class="icon-text"><span class="icon"><i class="fa fa-github"></i></span><span>kkuba91</span></span></a>. The source code is licensed
-        <strong>MIT</strong>. The website content styled with <a href="https://bulma.io/"><strong><i class="fa fa-copyright" aria-hidden="true"></i> bulma</strong></a></i> MIT licensed.
-      </p>
-    </div>
-</footer>
-
 </html>
