@@ -206,7 +206,7 @@ class SqlUtils(object):
         self._replace_None(list_of_dicts=players, key_names=['city', 'club'], replace_to="")
         logging.debug(f"Reading Players from table \"{table_name}\":\n{players}")
         return players
-    
+
     @staticmethod
     def _replace_None(list_of_dicts: list, key_names: list, replace_to: any) -> list:
         for element in list_of_dicts:
@@ -214,7 +214,6 @@ class SqlUtils(object):
                 if key_name in element:
                     element[key_name] = replace_to
         return list_of_dicts
-
 
     def results_init(self):
         table_name = "Results"

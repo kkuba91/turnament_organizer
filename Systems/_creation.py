@@ -21,7 +21,7 @@ def get_system(system_type: int):
     elif system_type == SystemType.SINGLE_ELIMINATION:
         system = SystemSingleElimination()
     else:
-        msg_error = f"Wrong system typed. Please type valid system key."
+        msg_error = "Wrong system typed. Please type valid system key."
         logging.error(msg=msg_error)
         return system
     return system

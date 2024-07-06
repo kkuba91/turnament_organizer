@@ -7,20 +7,20 @@ import os
 import logging
 
 TABLE_ROW = \
-"""
-                            <tr>
-                                <td><span class="badge border border-secondary-emphasis text-secondary">{table_nr}</span></td>
-                                <td><span class="badge border border-secondary-emphasis text-secondary">#{w_player_nr}</span>
-                                    <span class="badge border border-secondary-emphasis text-secondary">{w_player_cat}</span>
-                                    <span class="text-secondary">{w_player_surname} {w_player_name}</span>
-                                    <span class="text-secondary"><i> {w_player_elo}</i></span></td>
-                                <td><span class="badge border border-secondary-emphasis text-secondary">#{b_player_nr}</span>
-                                    <span class="badge border border-secondary-emphasis text-secondary">{b_player_cat}</span>
-                                    <span class="text-secondary">{b_player_surname} {b_player_name}</span>
-                                    <span class="text-secondary"><i> {b_player_elo}</i></span></td>
-                                <td> {table_result}</td>
-                            </tr>
-"""
+    """
+                                <tr>
+                                    <td><span class="badge border border-secondary-emphasis text-secondary">{table_nr}</span></td>
+                                    <td><span class="badge border border-secondary-emphasis text-secondary">#{w_player_nr}</span>
+                                        <span class="badge border border-secondary-emphasis text-secondary">{w_player_cat}</span>
+                                        <span class="text-secondary">{w_player_surname} {w_player_name}</span>
+                                        <span class="text-secondary"><i> {w_player_elo}</i></span></td>
+                                    <td><span class="badge border border-secondary-emphasis text-secondary">#{b_player_nr}</span>
+                                        <span class="badge border border-secondary-emphasis text-secondary">{b_player_cat}</span>
+                                        <span class="text-secondary">{b_player_surname} {b_player_name}</span>
+                                        <span class="text-secondary"><i> {b_player_elo}</i></span></td>
+                                    <td> {table_result}</td>
+                                </tr>
+    """
 INFO_VIEW = \
     """
                 <div class="card d-grid gap-0 my-3 border-secondary-subtle">
@@ -48,7 +48,7 @@ SUSPENDED = \
 
 
 class RoundView(object):
-    def __init__(self, data: dict=None) -> None:
+    def __init__(self, data: dict = None) -> None:
         self._template_name = "round.html"
         self.destination_name = ""
         self.data = data
@@ -64,12 +64,12 @@ class RoundView(object):
     def update(self):
         # Update filename
         self._update_dest_name()
-        
+
         # Update content
         self._update_line(template_str="Round ## out of ##", new_str=f"Round {self.print_round}")
         self._add_player_rows()
         self._update_info()
-    
+
     def _update_dest_name(self):
         """Update filename"""
         self.destination_name = f"round_{self.print_round}.html"

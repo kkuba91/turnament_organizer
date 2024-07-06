@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
 
-templates = Jinja2Templates(directory="Templates") 
+templates = Jinja2Templates(directory="Templates")
 
 api = FastAPI(title="Chess turnament manager",
               description="Swiss, single elimination, circular systems",
@@ -88,7 +88,7 @@ class ApiData:
                                         description="Get app status about turnament processing",
                                         tags=[tag])
         self.api.include_router(self.routers[tag], prefix="/{}".format(tag))
-        
+
         # Turnament:
         tag = self.Tags.turnament
         self.routers[tag] = APIRouter()
@@ -194,7 +194,7 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Creating turnament with name: {} ..'.format(name))
         return self.app.actions.open(name=name, cmd="New", path=path)
-    
+
     async def close_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Closing turnament ..')
@@ -204,28 +204,28 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Get tournament files: ..')
         return self.app.actions.get_files(path=path)
-    
+
     async def remove_files(self, tournament_name: str = ""):
         await asyncio.sleep(0.01)
         logging.info('[API]: Remove tournament files: ..')
         return self.app.actions.remove_files(tournament_name=tournament_name)
-    
+
     async def start_turnament(self, rounds: int, system_type: str):
         await asyncio.sleep(0.01)
         logging.info('[API]: Starting actual turnament. Rounds: {}. System: {} ..'
                      .format(rounds, system_type))
         return self.app.actions.turnament_start(rounds=rounds, system_type=system_type)
-    
+
     async def save_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Saving state of actual turnament ..')
         raise NotImplementedError
-    
+
     async def load_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Loading last state of actual turnament ..')
         raise NotImplementedError
-    
+
     async def finish_turnament(self):
         await asyncio.sleep(0.01)
         logging.info('[API]: Finishing actual turnament ..')
@@ -254,7 +254,7 @@ class ApiData:
         logging.info('[API]: Remove Player: {} ..'.format(name))
         return self.app.actions.player_del(name=name,
                                            surname=surname)
-    
+
     async def turnament_players(self,
                                 type: str):
         await asyncio.sleep(0.01)
@@ -271,12 +271,12 @@ class ApiData:
         await asyncio.sleep(0.01)
         logging.info('[API]: Get round data ..')
         return self.app.actions.turnament_round(nr=nr, full=full)
-    
+
     async def turnament_round_html(self, nr=0, full=True):
         await asyncio.sleep(0.01)
         logging.info('[API]: Get round data in html ..')
         return self.app.actions.turnament_round_to_html(nr=nr, full=full)
-    
+
     async def set_round_result(self, table_nr: int, result: float):
         await asyncio.sleep(0.01)
         logging.info('[API]: Set round result ..')

@@ -29,8 +29,10 @@ class ArgInfo:
             description='Fast pairing program to manage chess tournaments.',
             epilog=f'To start, type: "{self._cmd_start} runner.py".'
                    f'For more detailed help, type: "{self._cmd_start} runner.py -h"')
-        self._parser.add_argument('-p', '--port', default=default_port, type=int, help=f"service port run on localhost (by default port={default_port})")
-        self._parser.add_argument('--debug', action='store_true', help=f"run logging in debug level (by default debug={default_debug})")
+        self._parser.add_argument('-p', '--port', default=default_port, type=int,
+                                  help=f"service port run on localhost (by default port={default_port})")
+        self._parser.add_argument('--debug', action='store_true',
+                                  help=f"run logging in debug level (by default debug={default_debug})")
         args = self._parser.parse_args()
         self.port = args.port
         self.debug = args.debug or default_debug
@@ -54,7 +56,7 @@ class Application:
         webbrowser.open(f"http://127.0.0.1:{self._port}/")
         self._run_api()
         self._run_cli()
-    
+
     def end(self):
         self._end = True
 

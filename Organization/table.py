@@ -44,7 +44,7 @@ class Table(ModelTable):
         elif self.result == 1.0:
             _str = "1.0/0.0"
         return _str
-    
+
     def get(self, full=True, specific=[]):
         if full:
             return {
@@ -60,8 +60,6 @@ class Table(ModelTable):
                 'black': self.b_player.get_repr(),
                 'result': self._dump_result()
             }
-
-
 
     def dump(self):
         _str = f"Table: #{self.number}  --  result: {self._dump_result()}"

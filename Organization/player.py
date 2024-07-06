@@ -51,7 +51,7 @@ class Player(ModelPlayer):
             return self.get_repr()
         else:
             return None
-        
+
     def get_repr(self):
         return f"({self.id}) {self.surname.title()} {self.name.title()}"
 
@@ -87,7 +87,6 @@ class Player(ModelPlayer):
 
     def refresh_possible_opponents(self, players):
         self.possible_opponents.clear()
-        # self.possible_opponents = [opponent for opponent in players if (opponent.id not in self.opponents) and (opponent not in self.possible_opponents) and (self.id != opponent.id)]
         for player in players:
             if self.pauser:
                 if not player.paused and player.id != self.id:
@@ -95,9 +94,6 @@ class Player(ModelPlayer):
             else:
                 if player.id != self.id and player.id not in self.opponents:
                     self.possible_opponents.append(player)
-        # if self.paused:
-        #     self.possible_opponents.append(-1)
-        
 
     def get(self, specific=[]):
         """Get JSON organized data
@@ -128,7 +124,6 @@ class Player(ModelPlayer):
             return return_data
         else:
             return data
-
 
     def dump(self):
         _dump = f"\nPLAYER (#{self.id}): {self.name} {self.surname}\n"

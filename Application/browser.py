@@ -126,7 +126,7 @@ class Browser(object):
             return self._file.verify()
         else:
             return False
-    
+
     def remove_tournament_from_list(self, tournament_name, path=""):
         if tournament_name:
             if not path:
@@ -177,7 +177,7 @@ class Browser(object):
 
     def is_file_opened(self):
         return self._file_opened
-    
+
     def get_file_list(self, path="") -> list:
         _user_path = self._get_user_path(path=path)
         return [d for d in os.listdir(_user_path) if os.path.isdir(os.path.join(_user_path, d))]
@@ -204,14 +204,14 @@ class Browser(object):
             self.engine.connect()
             logging.debug(f"Connected to db file: {self.engine.url}")
         return _success
-    
+
     def add_or_update_extra_file(self, filename, content):
         _user_path = self._get_user_path()
         _full_file_name = _user_path + os.path.sep + filename
         with open(_full_file_name, "w+", encoding="utf-8") as file_handler:
             file_handler.write(content)
         return (_full_file_name, filename) if os.path.isfile(_full_file_name) else ("", "")
-    
+
     def _get_user_path(self, path=""):
         _user_path = os.path.expanduser('~') if "/root" != os.path.expanduser('~') else ""
         _user_path += os.path.sep + path if path else os.path.sep + ".turnament_organizer" + os.path.sep + self._file.name

@@ -115,7 +115,7 @@ class SystemSwiss(System):
                     player.paused = True
 
         return _round
-    
+
     def _validate_with_next_pairing_2(self, players_list: list, players_set: list, act_player, act_opponent):
         """Deph 2 validation."""
         p_list = players_list.copy()
@@ -195,7 +195,7 @@ class SystemSwiss(System):
         # 1.1 Add optional Pauser (fantom opponent for pausing Player) to the end:
         if len(players_list) % 2 == 1:
             players_list.append(Player(pauser=True))
-        
+
         # 1.2 Dump possible opponents:
         for player in players_list:
             player.refresh_possible_opponents(players_list)
