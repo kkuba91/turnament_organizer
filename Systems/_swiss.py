@@ -24,7 +24,8 @@ class SystemSwiss(System):
         self.players = []
 
     def prepare_round(self, players: list, round_nr: int):
-        self.players = players
+        active_players = [p for p in players if not p.is_suspended(round_nr)]
+        self.players = active_players
         self._round = round_nr
         scored_players = self._sort_players()
         if self._round == 1:

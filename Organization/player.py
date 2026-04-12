@@ -54,6 +54,14 @@ class Player(ModelPlayer):
 
     def get_repr(self):
         return f"({self.id}) {self.surname.title()} {self.name.title()}"
+    
+    def suspend_player(self, round_numbers):
+        round_numbers = set(round_numbers) if isinstance(round_numbers, list) else ...
+        self.suspended_rounds.add(round_numbers) if isinstance(round_numbers, int) else ...
+        self.suspended_rounds + round_numbers if isinstance(round_numbers, set) else ...
+
+    def is_suspended(self, round_number):
+        return round_number in self.suspended_rounds
 
     def calculate_rank(self):
         if self.elo > 0:

@@ -42,6 +42,7 @@ class ModelPlayer(BaseModel):
     possible_opponents: List[int] = []
     results: List[int] = []
     round_done: bool = False
+    suspended_rounds = set()
 
     @validator('name')
     def name_any_match(cls, name, values):
