@@ -1,9 +1,10 @@
 """__init__.py
 
-    Application class with initailization, run and ending.
-    Than layer suppose to handle main app machine state decisions.
+Application class with initailization, run and ending.
+Than layer suppose to handle main app machine state decisions.
 
 """
+
 # noqa: F401
 # Global package imports:
 import argparse
@@ -25,14 +26,23 @@ class ArgInfo:
     def __init__(self, default_port: int, default_debug: bool, app_name: str) -> None:
         self._cmd_start = "py" if "win" in platform.system().lower() else "python3"
         self._parser = argparse.ArgumentParser(
-            prog=f'{app_name} v{__version__}',
-            description='Fast pairing program to manage chess tournaments.',
+            prog=f"{app_name} v{__version__}",
+            description="Fast pairing program to manage chess tournaments.",
             epilog=f'To start, type: "{self._cmd_start} runner.py".'
-                   f'For more detailed help, type: "{self._cmd_start} runner.py -h"')
-        self._parser.add_argument('-p', '--port', default=default_port, type=int,
-                                  help=f"service port run on localhost (by default port={default_port})")
-        self._parser.add_argument('--debug', action='store_true',
-                                  help=f"run logging in debug level (by default debug={default_debug})")
+            f'For more detailed help, type: "{self._cmd_start} runner.py -h"',
+        )
+        self._parser.add_argument(
+            "-p",
+            "--port",
+            default=default_port,
+            type=int,
+            help=f"service port run on localhost (by default port={default_port})",
+        )
+        self._parser.add_argument(
+            "--debug",
+            action="store_true",
+            help=f"run logging in debug level (by default debug={default_debug})",
+        )
         args = self._parser.parse_args()
         self.port = args.port
         self.debug = args.debug or default_debug

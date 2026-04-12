@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "turnament-organizer"
+version = "0.2.2"
+description = "A tournament organization and management application"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "colorama~=0.4.6",
+    "numpy~=1.26.0",
+    "pydantic~=1.10.12",
+    "FastAPI~=0.103.1",
+    "fastapi_utils",
+    "tabulate",
+    "uvicorn[standard]~=0.23.2",
+    "SQLAlchemy~=1.4.49",
+    "jinja2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+turnament-organizer = "runner:main"
+
+[tool.setuptools]
+py-modules = ["runner"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+
+[tool.setuptools.package-data]
+Templates = ["*.html", "*.css", "*.js", "*.pug", "Styles/*"]
+Application = ["Templates/*", "Templates/**/*"]
+

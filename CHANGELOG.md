@@ -1,4 +1,7 @@
 ## 0.2.1
+- Change code to Python module and run as `turnament-organizer` CLI entrypoint
+
+## 0.2.1
 
 - Moved UI to `Bootstrap` © styling
 - Add easy print version of Round View

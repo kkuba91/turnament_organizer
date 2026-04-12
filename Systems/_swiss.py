@@ -1,8 +1,9 @@
 """_swiss.py
 
-    System class with swiss system calculation model.
+System class with swiss system calculation model.
 
 """
+
 # Global package imports:
 import numpy as np
 import logging
@@ -15,7 +16,6 @@ from Resources import SystemType
 
 
 class SystemSwiss(System):
-
     """Swiss system for turnament run."""
 
     def __init__(self):
@@ -82,7 +82,6 @@ class SystemSwiss(System):
         # 2. Foreach point perspective groups:
         reserved_player = None
         for point in np.arange(start=float(self._round - 1), stop=-0.5, step=-0.5):
-
             # 2.1 Check if any Player from higher score group has to play with lower:
             if reserved_player:
                 scored_nums[point] += 1
@@ -117,7 +116,9 @@ class SystemSwiss(System):
 
         return _round
 
-    def _validate_with_next_pairing_2(self, players_list: list, players_set: list, act_player, act_opponent):
+    def _validate_with_next_pairing_2(
+        self, players_list: list, players_set: list, act_player, act_opponent
+    ):
         """Deph 2 validation."""
         p_list = players_list.copy()
         p_set = players_set.copy()
@@ -147,7 +148,9 @@ class SystemSwiss(System):
                             player.refresh_possible_opponents(players_list)
         return covered >= p_available_qty
 
-    def _validate_with_next_pairing(self, players_list: list, players_set: list, act_player, act_opponent):
+    def _validate_with_next_pairing(
+        self, players_list: list, players_set: list, act_player, act_opponent
+    ):
         """Deph 1 validation."""
         p_list = players_list.copy()
         p_set = players_set.copy()
@@ -170,7 +173,9 @@ class SystemSwiss(System):
                     if not opponent_found and opponent.id not in player.opponents:
                         if player.id not in p_set and opponent.id not in p_set:
                             # OK, current Player and free Opponent match:
-                            if self._validate_with_next_pairing_2(p_list, p_set, player, opponent):
+                            if self._validate_with_next_pairing_2(
+                                p_list, p_set, player, opponent
+                            ):
                                 opponent_found = True  # Set flag, opponnent_found
                                 p_set.append(player.id)
                                 p_set.append(opponent.id)
@@ -202,7 +207,9 @@ class SystemSwiss(System):
             player.refresh_possible_opponents(players_list)
 
         # 2. Simple iterable for next Player to play:
-        p_available = [player for player in players_list if (player.id not in players_set)]
+        p_available = [
+            player for player in players_list if (player.id not in players_set)
+        ]
         for player in p_available:
             # 2.1. List of available Opponents:
             opponent_found = False
@@ -212,7 +219,9 @@ class SystemSwiss(System):
                 if not opponent_found and opponent.id not in player.opponents:
                     if player.id not in players_set and opponent.id not in players_set:
                         # OK, current Player and free Opponent match:
-                        if self._validate_with_next_pairing(players_list, players_set, player, opponent):
+                        if self._validate_with_next_pairing(
+                            players_list, players_set, player, opponent
+                        ):
                             opponent_found = True  # Set flag, opponnent_found
                             players_set.append(player.id)  # Add players to 'set' list
                             players_set.append(opponent.id)
@@ -232,5 +241,7 @@ class SystemSwiss(System):
                             elif (parity + self._round - 1) % 2 == 0:
                                 _round.tables[table_nr].swap_players()
 
-            p_available = [player for player in players_list if (player.id not in players_set)]
+            p_available = [
+                player for player in players_list if (player.id not in players_set)
+            ]
         return _round

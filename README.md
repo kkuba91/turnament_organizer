@@ -1,4 +1,4 @@
-[![Version: 0.2.1](https://img.shields.io/badge/version-0.2.1-blue)](https://github.com/kkuba91/turnament_organizer)
+[![Version: 0.2.2](https://img.shields.io/badge/version-0.2.1-blue)](https://github.com/kkuba91/turnament_organizer)
 [![Platform: win / linux](https://img.shields.io/badge/platform-win/linux-orange)](https://github.com/kkuba91/turnament_organizer?tab=readme-ov-file)
 
 
@@ -32,18 +32,13 @@ Lightweight tool for smart player pairing in swiss system.
 ## Launch
 Update pip packages:
 ``` bash
-$ pip install -r ./requirements.txt
+$ pip install ./turnament_organizer/
 ```
 
-Main launcher is `runner.py`.
+Main launcher is `runner.py`. Used as entrypoint used to run:
 
-On Linux:
 ``` bash
-$ python3 runner.py
-```
-On Windows:
-``` bash
-$ py -3 runner.py
+$ turnament-organizer
 ```
 
 ## Quick Manual

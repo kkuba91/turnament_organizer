@@ -1,8 +1,8 @@
 """table.py
 
-    Chess table class. First player plays whites,
-    second player plays blacks. Result of table as
-    for player which plays whites.
+Chess table class. First player plays whites,
+second player plays blacks. Result of table as
+for player which plays whites.
 
 """
 # Global package imports:
@@ -12,7 +12,6 @@ from Organization.Models import ModelTable
 
 
 class Table(ModelTable):
-
     """Table with chessboard score class."""
 
     def set_result(self, result):
@@ -48,17 +47,17 @@ class Table(ModelTable):
     def get(self, full=True, specific=[]):
         if full:
             return {
-                'nr': self.number,
-                'white': self.w_player.get(specific=specific),
-                'black': self.b_player.get(specific=specific),
-                'result': self._dump_result()
+                "nr": self.number,
+                "white": self.w_player.get(specific=specific),
+                "black": self.b_player.get(specific=specific),
+                "result": self._dump_result(),
             }
         else:
             return {
-                'nr': self.number,
-                'white': self.w_player.get_repr(),
-                'black': self.b_player.get_repr(),
-                'result': self._dump_result()
+                "nr": self.number,
+                "white": self.w_player.get_repr(),
+                "black": self.b_player.get_repr(),
+                "result": self._dump_result(),
             }
 
     def dump(self):
