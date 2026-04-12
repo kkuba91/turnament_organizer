@@ -35,6 +35,7 @@ class Turnament(object):
         self._system = SystemType.UNKNOWN
         self._players = []
         self._rounds = []
+        self._preserved_player_ids = {}  # Map to preserve player IDs during round re-pairing
         self.sql = SqlUtils(engine)
 
         # Additional:
@@ -132,8 +133,19 @@ class Turnament(object):
                 msg_error_2 = f"\nCannot add Player {name} {surname} with invalid data."
                 logging.error(msg=str(exc) + msg_error_2)
             else:
+                # Assign player ID
                 if _id:
                     player.id = _id
+                elif self._act_round_nr > 0:
+                    # Tournament is active (in a round) - assign next available ID
+                    max_id = max([p.id for p in self._players if p.id > 0], default=0)
+                    player.id = max_id + 1
+                # else: player.id remains 0 (will be assigned when begin() is called)
+
+                # PRESERVE all existing player IDs BEFORE adding new player (for round re-pairing)
+                if self._act_round_nr > 0 and self.fine_to_begin:
+                    self._preserved_player_ids = {p.name: p.id for p in self._players}
+
                 self._players.append(player)
                 if insert_to_db:
                     self.sql.insert_player_info(
@@ -149,6 +161,10 @@ class Turnament(object):
                     + f"[elo: {player.elo}, cat: {player.category}] in turnament."
                 )
                 logging.info(msg=msg_info)
+
+                # If tournament is active, re-pair the current round
+                if self._act_round_nr > 0 and self.fine_to_begin:
+                    self._repair_current_round()
 
     def del_player(self, name="", surname=""):
         list_index = 0
@@ -220,8 +236,14 @@ class Turnament(object):
                 )
                 ident += 1
         system = get_system(self._system)
+        # Store player IDs BEFORE system preparation
+        player_id_map = {p.name: p.id for p in self._players if p.id > 0}
         self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
         self._players = system.players
+        # Restore original player IDs after system preparation
+        for player in self._players:
+            if player.name in player_id_map:
+                player.id = player_id_map[player.name]
 
     def load_results(self):
         # Load "Results" list and apply them creating rounds besides
@@ -346,6 +368,102 @@ class Turnament(object):
         self._players.sort(key=lambda x: x.bucholz, reverse=True)
         self._players.sort(key=lambda x: x.progress, reverse=True)
         self._players.sort(key=lambda x: x.points, reverse=True)
+
+    def _repair_current_round(self):
+        """Re-pair the current round after a new player has been added."""
+        if self._act_round_nr > 0 and self._rounds:
+            try:
+                # Use preserved player IDs to restore all players' original numbers
+                preserved_ids = self._preserved_player_ids
+                new_player_name = None
+
+                # Find the new player (not in preserved_ids)
+                for player in self._players:
+                    if player.name not in preserved_ids:
+                        new_player_name = player.name
+                        break
+
+                # Get the system and re-prepare the round
+                system = get_system(self._system)
+                self._rounds.pop()
+                new_round = system.prepare_round(self._players, self._act_round_nr)
+                self._rounds.append(new_round)
+                self._players = system.players
+
+                # RESTORE all original player IDs from preserved map
+                for player in self._players:
+                    if player.name in preserved_ids:
+                        player.id = preserved_ids[player.name]
+
+                # Ensure new player has the highest ID
+                if new_player_name:
+                    new_player = next(
+                        (p for p in self._players if p.name == new_player_name), None
+                    )
+                    if new_player:
+                        max_existing_id = max(
+                            [p.id for p in self._players if p.name != new_player_name],
+                            default=0,
+                        )
+                        new_player.id = max_existing_id + 1
+                        msg_info = f"New player '{new_player_name}' assigned ID: {new_player.id}"
+                        logging.info(msg=msg_info)
+
+                # Verify and fix any duplicate IDs
+                self._verify_unique_player_ids()
+
+                msg_info = f"Round {self._act_round_nr} has been re-paired with new player. All original IDs preserved."
+                logging.info(msg=msg_info)
+
+            except Exception as exc:
+                msg_error = f"Failed to re-pair round {self._act_round_nr}: {str(exc)}"
+                logging.error(msg=msg_error)
+
+    def _verify_unique_player_ids(self):
+        """Verify that all player IDs are unique and log any issues."""
+        ids = [p.id for p in self._players if p.id > 0]
+        seen = set()
+        duplicates = set()
+
+        for player_id in ids:
+            if player_id in seen:
+                duplicates.add(player_id)
+            seen.add(player_id)
+
+        if duplicates:
+            msg_error = (
+                f"Duplicate player IDs detected: {duplicates}. Attempting to fix..."
+            )
+            logging.error(msg=msg_error)
+            self._fix_duplicate_ids(duplicates)
+        else:
+            msg_debug = f"All {len(ids)} player IDs are unique."
+            logging.debug(msg=msg_debug)
+
+    def _fix_duplicate_ids(self, duplicates):
+        """Fix duplicate player IDs by reassigning them."""
+        # Get all assigned IDs
+        assigned_ids = {p.id for p in self._players if p.id > 0}
+        next_available_id = max(assigned_ids) + 1 if assigned_ids else 1
+
+        # Find players with duplicate IDs
+        id_count = {}
+        for player in self._players:
+            if player.id > 0:
+                id_count[player.id] = id_count.get(player.id, 0) + 1
+
+        # Reassign duplicates
+        for player in self._players:
+            if player.id in duplicates and id_count[player.id] > 1:
+                # This is a duplicate - reassign it
+                while next_available_id in assigned_ids:
+                    next_available_id += 1
+                old_id = player.id
+                player.id = next_available_id
+                assigned_ids.add(next_available_id)
+                id_count[old_id] -= 1
+                msg_info = f"Reassigned duplicate ID {old_id} to {next_available_id} for player {player.name} {player.surname}"
+                logging.info(msg=msg_info)
 
     def delete_players(self):
         if self._players:
