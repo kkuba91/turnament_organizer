@@ -62,6 +62,20 @@ RESULTS_TABLE_COLS = [
     Column("Result", Float),
 ]
 
+PAIRINGS_TABLE_COLS = [
+    Column("_Id", Integer, primary_key=True, nullable=False),
+    Column("Round", Integer),
+    Column("Table", Integer),
+    Column("Player_w", Integer),
+    Column("Player_b", Integer),
+]
+
+PAUSES_TABLE_COLS = [
+    Column("_Id", Integer, primary_key=True, nullable=False),
+    Column("Round", Integer),
+    Column("Player_id", Integer),
+]
+
 
 class SqlUtils(object):
     @dataclass
@@ -69,6 +83,8 @@ class SqlUtils(object):
         turnament = None
         players = None
         results = None
+        pairings = None
+        pauses = None
 
     def __init__(self, engine) -> None:
         self.engine = engine
@@ -84,6 +100,8 @@ class SqlUtils(object):
         )
         self.players_init()
         self.results_init()
+        self.pairings_init()
+        self.pauses_init()
 
     def get_turnament_info(self):
         table_name = "Turnament"
@@ -329,13 +347,148 @@ class SqlUtils(object):
         logging.debug(f'Reading Results from table "{table_name}":\n{results}')
         return results
 
+    def pairings_init(self):
+        table_name = "Pairings"
+        log_method(self, self.pairings_init)
+        self.db.pairings = self._sql_init_table_or_get_existing(
+            table_name=table_name, table_cols=PAIRINGS_TABLE_COLS
+        )
+
+    def insert_pairing(self, **kwargs):
+        table_name = "Pairings"
+        log_method(self, self.insert_pairing)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        data = {}
+        logging.debug(f"kwargs: {kwargs}")
+        data["Round"] = kwargs.get("round")
+        data["Table"] = kwargs.get("table")
+        data["Player_w"] = kwargs.get("player_w")
+        data["Player_b"] = kwargs.get("player_b")
+
+        act_pairings = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.pairings,
+            table_cols=PAIRINGS_TABLE_COLS,
+        )
+        if any(
+            [
+                data["Round"] == act["round"] and data["Table"] == act["table"]
+                for act in act_pairings
+            ]
+        ):
+            stmt_update = (
+                self.db.pairings.update()
+                .where(self.db.pairings.c.Round == data["Round"])
+                .where(self.db.pairings.c.Table == data["Table"])
+                .values(data)
+            )
+            self.engine.execute(
+                stmt_update,
+                [
+                    data,
+                ],
+            )
+            logging.debug(f'Updating {kwargs} into table "{table_name}"')
+        else:
+            stmt_insert = self.db.pairings.insert()
+            self.engine.execute(
+                stmt_insert,
+                [
+                    data,
+                ],
+            )
+            logging.debug(f'Inserting {kwargs} into table "{table_name}"')
+
+    def read_pairings_info(self, **kwargs):
+        table_name = "Pairings"
+        log_method(self, self.read_pairings_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        pairings = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.pairings,
+            table_cols=PAIRINGS_TABLE_COLS,
+        )
+        logging.debug(f'Reading Pairings from table "{table_name}":\n{pairings}')
+        return pairings
+
+    def pauses_init(self):
+        table_name = "Pauses"
+        log_method(self, self.pauses_init)
+        self.db.pauses = self._sql_init_table_or_get_existing(
+            table_name=table_name, table_cols=PAUSES_TABLE_COLS
+        )
+
+    def insert_pause(self, **kwargs):
+        table_name = "Pauses"
+        log_method(self, self.insert_pause)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        data = {}
+        logging.debug(f"kwargs: {kwargs}")
+        data["Round"] = kwargs.get("round")
+        data["Player_id"] = kwargs.get("player_id")
+
+        act_pauses = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.pauses,
+            table_cols=PAUSES_TABLE_COLS,
+        )
+        if any(
+            [
+                data["Round"] == act["round"] and data["Player_id"] == act["player_id"]
+                for act in act_pauses
+            ]
+        ):
+            logging.debug(
+                f"Pause already exists for round {data['Round']}, player {data['Player_id']}"
+            )
+        else:
+            stmt_insert = self.db.pauses.insert()
+            self.engine.execute(
+                stmt_insert,
+                [
+                    data,
+                ],
+            )
+            logging.debug(f'Inserting {kwargs} into table "{table_name}"')
+
+    def read_pauses_info(self, **kwargs):
+        table_name = "Pauses"
+        log_method(self, self.read_pauses_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        pauses = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.pauses,
+            table_cols=PAUSES_TABLE_COLS,
+        )
+        logging.debug(f'Reading Pauses from table "{table_name}":\n{pauses}')
+        return pauses
+
     def _sql_init_table_or_get_existing(self, table_name: str, table_cols: list):
         log_method(self, self._sql_init_table_or_get_existing)
         self.engine.connect()
         self.meta_data.reflect(bind=self.engine)
         if table_name not in inspect(self.engine).get_table_names():
             logging.debug(f'Creating new table: "{table_name}"')
-            db_table = Table(table_name, self.meta_data, *table_cols)
+            # Clone the columns to avoid SQLAlchemy conflicts
+            cloned_cols = []
+            for col in table_cols:
+                cloned_cols.append(
+                    Column(
+                        col.name,
+                        col.type,
+                        primary_key=col.primary_key,
+                        nullable=col.nullable,
+                    )
+                )
+            db_table = Table(table_name, self.meta_data, *cloned_cols)
             self.meta_data.create_all()
         else:
             logging.debug(f'Getting existing table: "{table_name}"')

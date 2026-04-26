@@ -16,6 +16,13 @@ from Resources import CATEGORY
 class Player(ModelPlayer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        # Ensure suspended_rounds is instance-local (ModelPlayer default used a class-level set)
+        try:
+            # replace any shared default with a fresh set for this instance
+            if not isinstance(self.suspended_rounds, set):
+                self.suspended_rounds = set()
+        except Exception:
+            self.suspended_rounds = set()
         pauser = kwargs.get("pauser")
         if pauser:
             attr_val = kwargs.get("pauser")
@@ -57,11 +64,20 @@ class Player(ModelPlayer):
         return f"({self.id}) {self.surname.title()} {self.name.title()}"
 
     def suspend_player(self, round_numbers):
-        round_numbers = set(round_numbers) if isinstance(round_numbers, list) else ...
-        self.suspended_rounds.add(round_numbers) if isinstance(
-            round_numbers, int
-        ) else ...
-        self.suspended_rounds + round_numbers if isinstance(round_numbers, set) else ...
+        """Mark player as suspended for given round(s).
+
+        Accepts an int (single round) or an iterable of ints.
+        """
+        if isinstance(round_numbers, int):
+            self.suspended_rounds.add(round_numbers)
+            return
+        try:
+            for rn in round_numbers:
+                if isinstance(rn, int):
+                    self.suspended_rounds.add(rn)
+        except TypeError:
+            # not iterable - ignore
+            return
 
     def is_suspended(self, round_number):
         return round_number in self.suspended_rounds

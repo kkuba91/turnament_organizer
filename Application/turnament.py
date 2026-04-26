@@ -111,15 +111,19 @@ class Turnament(object):
         _id=None,
         insert_to_db=True,
     ):
-        # Validate Player add:
-        _dont_add = False
-        for p in self._players:
-            if p.name == name and p.surname == surname:
-                _dont_add = True
-                msg_error_1 = f"\nPlayer {name} {surname} already set into turnament."
-                logging.error(msg=msg_error_1)
+        def _player_already_exists(name, surname):
+            # Validate Player add:
+            for player in self._players:
+                if player.name == name and player.surname == surname:
+                    msg_error_1 = (
+                        f"\nPlayer {name} {surname} already set into turnament."
+                    )
+                    logging.error(msg=msg_error_1)
+                    return True
+            return False
+
         # Add Player:
-        if not _dont_add:
+        if not _player_already_exists(name, surname):
             try:
                 player = Player(
                     name=name,
@@ -158,13 +162,13 @@ class Turnament(object):
                     )
                 msg_info = (
                     f"Set Player: {player.name} {player.surname}, "
-                    + f"[elo: {player.elo}, cat: {player.category}] in turnament."
+                    + f"[elo: {player.elo}, cat: {player.category}] into turnament."
                 )
                 logging.info(msg=msg_info)
 
                 # If tournament is active, re-pair the current round
                 if self._act_round_nr > 0 and self.fine_to_begin:
-                    self._repair_current_round()
+                    self._repair_current_round()  # XXX: Check IT !!!
 
     def del_player(self, name="", surname=""):
         list_index = 0
@@ -247,53 +251,77 @@ class Turnament(object):
 
     def load_results(self):
         # Load "Results" list and apply them creating rounds besides
+        if self._act_round_nr <= 0:
+            logging.debug("No tournament started yet, skipping load_results")
+            return
+
         results_loaded = 0
         system = get_system(self._system)
+        if system is None:
+            logging.error("System is not properly set, cannot load results")
+            return
+
+        self.fine_to_begin = True
+        data = self.sql.read_results_info()
+        logging.debug(
+            f"Loaded results data consists info:\n"
+            f" - actual round nr:  {self._act_round_nr}\n"
+            f" - turnament rounds: {self._rounds_num}\n"
+            f" - games:            {len(data)}\n"
+            f" Raw results data: \n{data}"
+        )
         if self._act_round_nr > 0:
-            self.fine_to_begin = True
-            data = self.sql.read_results_info()
-            logging.debug(
-                f"Loaded results data consists info:\n"
-                f" - actual round nr:  {self._act_round_nr}\n"
-                f" - turnament rounds: {self._rounds_num}\n"
-                f" - games:            {len(data)}\n"
-                f" Raw results data: \n{data}"
-            )
-            if self._act_round_nr > 0:
-                try_to_load_rounds = self._act_round_nr
-                self._act_round_nr = 1
-                for r in range(1, try_to_load_rounds + 1):
-                    if len(self._rounds) >= r:
-                        _round = self._rounds[r - 1]
-                    else:
-                        _round = system.prepare_round(self._players, r)
-                    _results = [result for result in data if result.get("round") == r]
-                    logging.debug(f"Round #{r} results={_results}.")
-                    for result in _results:
-                        logging.debug(f"Loaded result={result}.")
-                        # @ToDo: Finish loading results!!!!
-                        # _round.add_table(player_w=result['player_w'], player_b=result['player_b'])
-                        _round.set_result(
-                            table_nr=result["table"], result=result["result"]
-                        )
-                        results_loaded += 1
-                    if len(self._rounds) >= r:
-                        self._rounds[r - 1] = _round
-                    else:
-                        self._rounds.append(_round)
-                    # if _round.all_results and (len(data) > results_loaded or self._finished):
-                    if _round.all_results or self._finished:
-                        self.apply_round_results()
-                        self.next_round()
+            try_to_load_rounds = self._act_round_nr
+            self._act_round_nr = 1
+            for r in range(1, try_to_load_rounds + 1):
+                # Try to load pairings from DB first
+                loaded_round = self._load_round_pairings(r)
+                if loaded_round:
+                    _round = loaded_round
+                elif len(self._rounds) >= r:
+                    _round = self._rounds[r - 1]
+                else:
+                    _round = system.prepare_round(self._players, r)
+                _results = [result for result in data if result.get("round") == r]
+                logging.debug(f"Round #{r} results={_results}.")
+                for result in _results:
+                    logging.debug(f"Loaded result={result}.")
+                    # @ToDo: Finish loading results!!!!
+                    # _round.add_table(player_w=result['player_w'], player_b=result['player_b'])
+                    _round.set_result(table_nr=result["table"], result=result["result"])
+                    results_loaded += 1
+                if len(self._rounds) >= r:
+                    self._rounds[r - 1] = _round
+                else:
+                    self._rounds.append(_round)
+                # if _round.all_results and (len(data) > results_loaded or self._finished):
+                if _round.all_results or self._finished:
+                    self.apply_round_results()
+                    self.next_round()
 
     def next_round(self):
         _ret = None
         if self._act_round_nr < self._rounds_num:
+            # Save pairings and pause info for the current round before moving to the next
+            self._save_round_pairings(self._act_round_nr)
+
             self._act_round_nr += 1
             self._finished_round_nr = self._act_round_nr - 1
-            system = get_system(self._system)
-            self._rounds.append(system.prepare_round(self._players, self._act_round_nr))
-            self._players = system.players
+
+            # Try to load pairings from DB first
+            loaded_pairings = self._load_round_pairings(self._act_round_nr)
+            if loaded_pairings:
+                # Use loaded pairings instead of creating new ones
+                self._rounds.append(loaded_pairings)
+                msg_info = f"Round {self._act_round_nr} pairings loaded from DB"
+                logging.info(msg=msg_info)
+            else:
+                # Create new pairings if not in DB
+                system = get_system(self._system)
+                self._rounds.append(
+                    system.prepare_round(self._players, self._act_round_nr)
+                )
+                self._players = system.players
             _ret = None
         else:
             _ret = -1
@@ -559,6 +587,94 @@ class Turnament(object):
             "finished": self._finished,
             "system": SystemNames[self._system],
         }
+
+    def _save_round_pairings(self, round_nr):
+        """Save pairings and pause info for a completed round to DB."""
+        if round_nr > 0 and round_nr <= len(self._rounds):
+            _round = self._rounds[round_nr - 1]
+            # Save pairings for each table
+            for table_nr in _round.tables:
+                table = _round.tables[table_nr]
+                # Replace pausing player (-1) with 0 for DB storage
+                player_w_id = table.w_player.id if table.w_player.id > 0 else 0
+                player_b_id = table.b_player.id if table.b_player.id > 0 else 0
+
+                # Only save if at least one real player exists
+                if player_w_id > 0 or player_b_id > 0:
+                    self.sql.insert_pairing(
+                        round=round_nr,
+                        table=table_nr,
+                        player_w=player_w_id,
+                        player_b=player_b_id,
+                    )
+            # Save pause info if there's a pausing player
+            if _round.pausing > 0:
+                self.sql.insert_pause(
+                    round=round_nr,
+                    player_id=_round.pausing,
+                )
+            msg_info = f"Pairings for round {round_nr} saved to DB"
+            logging.info(msg=msg_info)
+
+    def _load_round_pairings(self, round_nr):
+        """Load pairings for a round from DB and rebuild the Round object."""
+        pairings = self.sql.read_pairings_info()
+        round_pairings = [p for p in pairings if p.get("round") == round_nr]
+
+        # Check for pause info
+        pauses = self.sql.read_pauses_info()
+        round_pause = next((p for p in pauses if p.get("round") == round_nr), None)
+        pausing_player_id = round_pause.get("player_id", 0) if round_pause else 0
+
+        # If no pairings and no pauses, return None
+        if not round_pairings and not pausing_player_id:
+            msg_debug = f"No saved pairings found for round {round_nr}"
+            logging.debug(msg=msg_debug)
+            return None
+
+        # Create a new Round object from saved pairings
+        _round = Round(number=round_nr)
+        _round.pausing = pausing_player_id
+
+        # Create player objects from current player list
+        player_map = {p.id: p for p in self._players}
+
+        # Create pausing player (fantom) for later use
+        pausing_player = Player(pauser=True) if pausing_player_id > 0 else None
+
+        # Rebuild tables from saved pairings
+        for pairing in round_pairings:
+            table_nr = pairing.get("table")
+            player_w_id = pairing.get("player_w")
+            player_b_id = pairing.get("player_b")
+
+            # Handle player IDs (0 means pausing player, which we'll treat as fantom)
+            player_w = player_map.get(player_w_id) if player_w_id > 0 else None
+            player_b = player_map.get(player_b_id) if player_b_id > 0 else None
+
+            # If one of the players is 0 (pausing player), use fantom
+            if player_w_id == 0 and pausing_player:
+                player_w = pausing_player
+            if player_b_id == 0 and pausing_player:
+                player_b = pausing_player
+
+            # At least one player must be found
+            if (player_w_id > 0 and not player_w) or (player_b_id > 0 and not player_b):
+                msg_error = (
+                    f"Could not find player for table {table_nr} in round {round_nr}"
+                )
+                logging.error(msg=msg_error)
+                return None
+
+            # Both players must exist at this point
+            if player_w and player_b:
+                _round.add_table(player_w=player_w, player_b=player_b)
+
+        msg_info = f"Round {round_nr} successfully loaded from DB with {len(round_pairings)} pairings"
+        if pausing_player_id > 0:
+            msg_info += f" and pausing player #{pausing_player_id}"
+        logging.info(msg=msg_info)
+        return _round
 
     def dump(self):
         _dump = f"TURNAMENT: {self._name}\n"
