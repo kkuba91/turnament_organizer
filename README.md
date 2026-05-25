@@ -80,7 +80,7 @@ table will show.
 During the tournament, You can go to `Players` view to check Players list, their data (and correct it if needed).  
 From the view there is also a possibility to go to each player `Stats` view, where some statistics about the player is shown (like points, opponents, etc.).
 
-![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.3.0/PlayersStats.png)
+![alt text](https://raw.githubusercontent.com/kkuba91/turnament_organizer/main/.screenshots/0.3.0/PlayerStats.png)
 
 ### Rest API
 If interested only in rest api visit: `http://127.0.0.1:8000/docs` - openapi endpoint webpage (SmartBear© free swagger page).
