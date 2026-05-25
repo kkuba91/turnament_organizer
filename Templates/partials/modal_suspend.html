@@ -1,0 +1,36 @@
+<div class="modal fade" id="popup_suspend_player" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-dash me-2"></i>Suspend Players</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); font-size: 13px;">
+                    Check players to be suspended from the <strong>next round</strong>.
+                    A suspended player will not participate in subsequent rounds until unsuspended.
+                </p>
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">
+                                    <span style="color: var(--text-muted); font-size:11px;">Status</span>
+                                </th>
+                                <th>Nr</th>
+                                <th>Player</th>
+                                <th>Cat.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table_suspend_players">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning btn-sm" onclick="app.applySuspensions()" data-bs-dismiss="modal">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>

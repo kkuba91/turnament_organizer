@@ -1,8 +1,9 @@
 """_creation.py
 
-    System object 'factory' function.
+System object 'factory' function.
 
 """
+
 # Global package imports:
 import logging
 

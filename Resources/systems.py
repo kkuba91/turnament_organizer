@@ -1,13 +1,13 @@
 """systems.py
 
-    System types resources.
+System types resources.
 
 """
+
 from enum import IntEnum
 
 
 class SystemType(IntEnum):
-
     """System Types (Enum)."""
 
     UNKNOWN = 0

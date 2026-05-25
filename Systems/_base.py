@@ -1,8 +1,9 @@
 """_base.py
 
-    Base System class with methods declaration.
+Base System class with methods declaration.
 
 """
+
 # Global package imports:
 from abc import ABC, abstractmethod
 import logging

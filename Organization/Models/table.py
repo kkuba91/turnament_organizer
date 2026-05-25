@@ -1,8 +1,9 @@
 """table.py
 
-    Chess table model.
+Chess table model.
 
 """
+
 # Global package imports:
 from pydantic import BaseModel, validator
 
@@ -11,7 +12,6 @@ from Organization.Models import ModelPlayer
 
 
 class ModelTable(BaseModel):
-
     """Table data model."""
 
     number: int = 1
@@ -20,14 +20,14 @@ class ModelTable(BaseModel):
     result: float = -1.0
 
     @classmethod
-    @validator('number')
+    @validator("number")
     def number_match(cls, val):
         if not isinstance(val, int) or val <= 0:
-            raise ValueError(f'Not valid table nr. ({val})')
+            raise ValueError(f"Not valid table nr. ({val})")
         return val
 
     @classmethod
-    @validator('w_player')
+    @validator("w_player")
     def w_player_match(cls, val):
         if val != -1:
             if not isinstance(val, int) or val < 0:
@@ -36,7 +36,7 @@ class ModelTable(BaseModel):
         return val
 
     @classmethod
-    @validator('b_player')
+    @validator("b_player")
     def b_player_match(cls, val):
         if val != -1:
             if not isinstance(val, int) or val < 0:
@@ -45,7 +45,7 @@ class ModelTable(BaseModel):
         return val
 
     @classmethod
-    @validator('result')
+    @validator("result")
     def result_match(cls, val):
         _val = 0.0
         try:

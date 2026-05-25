@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Turnament Organizer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🏆</text></svg>" type="image/svg+xml">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://icons.getbootstrap.com/assets/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --surface-0: #24283b;
+            --surface-1: #1f2335;
+            --surface-2: #292e42;
+            --surface-3: #3b4261;
+            --border-default: #3b4261;
+            --border-muted: #292e42;
+            --text-primary: #c0caf5;
+            --text-secondary: #a9b1d6;
+            --text-muted: #565f89;
+            --accent-primary: #7aa2f7;
+            --accent-success: #9ece6a;
+            --accent-warning: #e0af68;
+            --accent-danger: #f7768e;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        body {
+            background-color: var(--surface-0);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace;
+            font-size: 13px;
+        }
+        .navbar {
+            background-color: var(--surface-1) !important;
+            border: none !important;
+            border-bottom: 1px solid var(--border-default) !important;
+            padding: 8px 16px;
+        }
+        .navbar-bottom {
+            background-color: var(--surface-1) !important;
+            border: none !important;
+            border-top: 1px solid var(--border-default) !important;
+            padding: 6px 16px;
+        }
+        .sidebar {
+            background-color: var(--surface-1);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 12px;
+        }
+        .main-panel {
+            background-color: var(--surface-1);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+        .card-custom {
+            background-color: var(--surface-2);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+        }
+        .card-custom .card-header {
+            background-color: var(--surface-2);
+            border-bottom: 1px solid var(--border-default);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .card-custom .card-body {
+            padding: 12px;
+        }
+        .btn-action {
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 5px 12px;
+            transition: all 0.15s ease;
+        }
+        .btn-sidebar {
+            width: 100%;
+            text-align: left;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            padding: 6px 12px;
+            margin-bottom: 2px;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            transition: all 0.15s ease;
+        }
+        .btn-sidebar:hover {
+            background-color: var(--surface-2);
+            color: var(--text-primary);
+        }
+        .btn-sidebar.active {
+            background-color: var(--surface-2);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text-primary);
+            --bs-table-border-color: var(--border-default);
+            font-size: 13px;
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .table-responsive {
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .table thead th {
+            background-color: var(--surface-2);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-default);
+        }
+        .table tbody td, .table tbody th {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-muted);
+            vertical-align: middle;
+        }
+        .table-hover tbody tr:hover {
+            background-color: var(--surface-2);
+        }
+        .badge-cat {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            min-width: 36px;
+            text-align: center;
+            display: inline-block;
+        }
+        .badge-cat-high {
+            background-color: rgba(224, 175, 104, 0.15);
+            color: var(--accent-warning);
+            border: 1px solid rgba(224, 175, 104, 0.3);
+        }
+        .badge-cat-low {
+            background-color: var(--surface-2);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-default);
+        }
+        .badge-result {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-win {
+            background-color: rgba(158, 206, 106, 0.15);
+            color: var(--accent-success);
+            border: 1px solid rgba(158, 206, 106, 0.3);
+        }
+        .badge-draw {
+            background-color: rgba(224, 175, 104, 0.15);
+            color: var(--accent-warning);
+            border: 1px solid rgba(224, 175, 104, 0.3);
+        }
+        .badge-loss {
+            background-color: rgba(247, 118, 142, 0.15);
+            color: var(--accent-danger);
+            border: 1px solid rgba(247, 118, 142, 0.3);
+        }
+        .status-badge {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            border: 1px solid var(--border-default);
+        }
+        .info-box {
+            background-color: var(--surface-2);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            font-size: 13px;
+        }
+        .info-box-accent {
+            border-left: 3px solid var(--accent-primary);
+        }
+        .modal-content {
+            background-color: var(--surface-1);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+        }
+        .modal-header {
+            border-bottom: 1px solid var(--border-default);
+        }
+        .modal-footer {
+            border-top: 1px solid var(--border-default);
+        }
+        .form-control, .form-select {
+            background-color: var(--surface-0);
+            border: 1px solid var(--border-default);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--surface-0);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+        .input-group-text {
+            background-color: var(--surface-2);
+            border: 1px solid var(--border-default);
+            color: var(--text-secondary);
+        }
+        h4, h5, h6 {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .text-muted-custom {
+            color: var(--text-muted) !important;
+        }
+        .separator {
+            border-top: 1px solid var(--border-default);
+            margin: 12px 0;
+        }
+        .player-id {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+        }
+        .round-btn-group .btn {
+            font-size: 12px;
+            padding: 4px 10px;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar sticky-top">
+        <div class="container-fluid d-flex align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <a href="https://github.com/kkuba91/turnament_organizer" class="text-decoration-none d-flex align-items-center gap-2" target="_blank">
+                    <i class="bi bi-trophy text-warning"></i>
+                    <span class="fw-semibold" style="color: var(--text-primary);font-size: 1.2em;margin-right: 12px;">TURNAMENT ORGANIZER</span>
+                    <span class="status-badge" style="background: var(--surface-2); color: var(--text-muted);">v{{ version }}</span>
+                </a>
+                <span style="color: var(--border-default);">|</span>
+                <span id="turnament_status" class="status-badge" style="background: var(--surface-2); color: var(--accent-warning);">INACTIVE</span>
+                <span id="turnament_started" class="status-badge" style="background: var(--surface-2); color: var(--text-muted); display:none;">---</span>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-people" style="color: var(--text-muted); font-size: 1.2em;"></i>
+                    <span id="indicator_players" style="color: var(--text-secondary); font-size: 1.2em;">0</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-repeat" style="color: var(--text-muted); font-size: 1.2em;"></i>
+                    <span id="indicator_rounds" style="color: var(--text-secondary); font-size: 1.2em;">0 / 0</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <button id="action-end" class="btn btn-outline-danger btn-action btn-sm" type="button" onclick="app.closeTurnament()" style="display:none;">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-3">
+        <div class="row g-3">
+            <!-- SIDEBAR -->
+            <div class="col-2">
+                <div class="sidebar">
+                    <div class="d-grid gap-1 mb-3">
+                        <button id="action-start" class="btn btn-outline-success btn-action btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#popup_create_open" onclick="app.getFiles()">
+                            <i class="bi bi-folder2-open me-1"></i> Open
+                        </button>
+                    </div>
+                    <!-- <div class="separator"></div> -->
+                    <div id="in_progress" style="visibility: hidden;">
+                        <div class="d-grid gap-1 mb-2">
+                            <button id="action-players-list" class="btn btn-sidebar" type="button" onclick="app.showPlayersView()">
+                                <i class="bi bi-people me-2"></i>Players
+                            </button>
+                            <button id="action-results" class="btn btn-sidebar" type="button" onclick="app.getPlayersResults()">
+                                <i class="bi bi-trophy me-2"></i>Results
+                            </button>
+                        </div>
+                        <div class="separator"></div>
+                        <div class="mb-1" style="font-size:11px; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; padding: 4px 12px;">Rounds</div>
+                        <div id="action_rounds" class="d-grid gap-1 round-btn-group">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="col-10">
+                <div class="main-panel">
+                    {% block content %}
+                    <!-- Dynamic content loaded here -->
+                    {% endblock %}
+
+                    <!-- VIEW: WELCOME -->
+                    <div id="block_welcome" class="view-block">
+                        {% include 'partials/welcome.html' %}
+                    </div>
+
+                    <!-- VIEW: INITIAL PLAYER LIST -->
+                    <div id="block_initial_player_list" class="view-block" style="display: none;">
+                        {% include 'partials/player_list_init.html' %}
+                    </div>
+
+                    <!-- VIEW: ROUND -->
+                    <div id="block_round" class="view-block" style="display: none;">
+                        {% include 'partials/round_view.html' %}
+                    </div>
+
+                    <!-- VIEW: RESULTS -->
+                    <div id="block_results" class="view-block" style="display: none;">
+                        {% include 'partials/results.html' %}
+                    </div>
+
+                    <!-- VIEW: PLAYERS LIST (during tournament) -->
+                    <div id="block_players_view" class="view-block" style="display: none;">
+                        {% include 'partials/players_view.html' %}
+                    </div>
+
+                    <!-- VIEW: PLAYER STATS -->
+                    <div id="block_player_stats" class="view-block" style="display: none;">
+                        {% include 'partials/player_stats.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    {% include 'partials/modal_open.html' %}
+    {% include 'partials/modal_remove.html' %}
+    {% include 'partials/modal_add_player.html' %}
+    {% include 'partials/modal_start.html' %}
+    {% include 'partials/modal_set_result.html' %}
+    {% include 'partials/modal_suspend.html' %}
+
+    <!-- FOOTER -->
+    <nav class="navbar fixed-bottom navbar-bottom">
+        <div class="container-fluid d-flex justify-content-end align-items-center">
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    <script src="/static/app.js?v={{ version }}"></script>
+</body>
+</html>

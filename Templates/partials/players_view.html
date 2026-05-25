@@ -1,0 +1,97 @@
+<div>
+    <h5 class="mb-3">Players</h5>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Nr</th>
+                    <th>Name</th>
+                    <th>Surname</th>
+                    <th>Gender</th>
+                    <th>City</th>
+                    <th style="cursor:pointer;user-select:none;" onclick="app.sortPlayersView('cat')">Cat. <i id="sort_icon_cat" class="bi bi-arrow-down-up" style="font-size:10px;opacity:0.5;"></i></th>
+                    <th style="cursor:pointer;user-select:none;" onclick="app.sortPlayersView('elo')">Elo <i id="sort_icon_elo" class="bi bi-arrow-down-up" style="font-size:10px;opacity:0.5;"></i></th>
+                    <th>Status</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="table_rows_players_view">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Edit Player Modal -->
+<div class="modal fade" id="popup_edit_player" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Player</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit_p_id">
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Name</label>
+                        <input id="edit_p_name" type="text" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Surname</label>
+                        <input id="edit_p_surname" type="text" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" style="color: var(--text-secondary); font-size:12px;">City</label>
+                        <input id="edit_p_city" type="text" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Elo</label>
+                        <input id="edit_p_elo" type="number" class="form-control form-control-sm" min="1000" max="3999">
+                    </div>
+                </div>
+                <div class="row g-2 mb-0">
+                    <div class="col-6">
+                        <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Category</label>
+                        <select id="edit_p_category" class="form-select form-select-sm">
+                            <option value="wc">No category</option>
+                            <option value="V">V</option>
+                            <option value="V+">V+</option>
+                            <option value="IV">IV</option>
+                            <option value="IV+">IV+</option>
+                            <option value="III">III</option>
+                            <option value="III+">III+</option>
+                            <option value="II">II</option>
+                            <option value="II+">II+</option>
+                            <option value="II++">II++</option>
+                            <option value="I">I</option>
+                            <option value="I+">I+</option>
+                            <option value="I++">I++</option>
+                            <option value="CM">CM</option>
+                            <option value="CM+">CM+</option>
+                            <option value="CM++">CM++</option>
+                            <option value="FM">FM</option>
+                            <option value="IM">IM</option>
+                            <option value="GM">GM</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Gender</label>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input id="edit_p_sex_male" type="radio" class="btn-check" name="edit_sex_radio" autocomplete="off" checked>
+                            <label class="btn btn-outline-secondary" for="edit_p_sex_male"><i class="bi bi-gender-male"></i></label>
+                            <input id="edit_p_sex_female" type="radio" class="btn-check" name="edit_sex_radio" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="edit_p_sex_female"><i class="bi bi-gender-female"></i></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="app.savePlayerEdit()" data-bs-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>

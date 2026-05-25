@@ -1,6 +1,6 @@
 """_circular.py
 
-    System class with circular system calculation model.
+System class with circular system calculation model.
 
 """
 # Global package imports:

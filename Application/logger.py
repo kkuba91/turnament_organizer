@@ -1,8 +1,9 @@
 """logger.py
 
-    Application logger.
+Application logger.
 
 """
+
 # Global package imports:
 from colorama import init, Fore, Style
 import logging
@@ -14,6 +15,7 @@ init(autoreset=True)
 
 class FMT:
     """Format data class."""
+
     asctime = Fore.LIGHTBLACK_EX + "%(asctime)s " + Style.RESET_ALL
     levelname = "%(levelname)-6s" + Style.RESET_ALL
     message = "%(message)s"
@@ -72,8 +74,8 @@ def debug(func):
 def set_logging(**kwargs):
     """Set logging configuration."""
     _debug = kwargs.pop("debug", None)
-    if 'logger_name' in kwargs:
-        logger = logging.getLogger(kwargs['logger_name'])
+    if "logger_name" in kwargs:
+        logger = logging.getLogger(kwargs["logger_name"])
     else:
         logger = logging.getLogger()
     stdout_handler = logging.StreamHandler()
@@ -114,4 +116,6 @@ def set_fastapi_logging(**kwargs):
 
 def log_method(obj=object, func=None):
     if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-        logging.debug("Call method: {}(), from {}". format(func.__name__, obj.__class__.__name__))
+        logging.debug(
+            "Call method: {}(), from {}".format(func.__name__, obj.__class__.__name__)
+        )
