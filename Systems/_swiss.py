@@ -1,8 +1,9 @@
 """_swiss.py
 
-    System class with swiss system calculation model.
+System class with swiss system calculation model.
 
 """
+
 # Global package imports:
 import numpy as np
 import logging
@@ -15,7 +16,6 @@ from Resources import SystemType
 
 
 class SystemSwiss(System):
-
     """Swiss system for turnament run."""
 
     def __init__(self):
@@ -24,7 +24,10 @@ class SystemSwiss(System):
         self.players = []
 
     def prepare_round(self, players: list, round_nr: int):
-        self.players = players
+        active_players = [
+            p for p in players if not p.is_suspended(round_nr) and not p.pauser
+        ]
+        self.players = active_players
         self._round = round_nr
         scored_players = self._sort_players()
         if self._round == 1:
@@ -35,7 +38,6 @@ class SystemSwiss(System):
             _round = self._set_tables(scored_players)
         msg_info = f"Prepare round #{self._round}."
         logging.info(msg=msg_info)
-        # _round.correct_table_order()
         return _round
 
     def _sort_players(self):
@@ -81,7 +83,6 @@ class SystemSwiss(System):
         # 2. Foreach point perspective groups:
         reserved_player = None
         for point in np.arange(start=float(self._round - 1), stop=-0.5, step=-0.5):
-
             # 2.1 Check if any Player from higher score group has to play with lower:
             if reserved_player:
                 scored_nums[point] += 1
@@ -91,7 +92,16 @@ class SystemSwiss(System):
             # 2.2 Check if number of players are paired:
             not_paired = scored_nums[point] % 2 == 1
             if not_paired:
-                reserved_player = scored_players[point][scored_nums[point] - 1]
+                # Prefer player who hasn't paused before
+                last_idx = scored_nums[point] - 1
+                best_pause_idx = last_idx
+                for idx in range(last_idx, -1, -1):
+                    if not scored_players[point][idx].paused:
+                        best_pause_idx = idx
+                        break
+                reserved_player = scored_players[point][best_pause_idx]
+                # Remove from pairing list
+                scored_players[point].pop(best_pause_idx)
                 scored_nums[point] -= 1
 
             # 2.3 Set the tables with paired players:
@@ -106,7 +116,7 @@ class SystemSwiss(System):
                 if parity % 2 == 0:
                     _round.tables[nr].swap_players()
 
-            # 2.4 Check id any player pausing:
+            # 2.4 Check if any player pausing:
             if reserved_player:
                 _round.pausing = reserved_player.id
             # 2.5 Set flag 'paused' for particular player
@@ -116,7 +126,9 @@ class SystemSwiss(System):
 
         return _round
 
-    def _validate_with_next_pairing_2(self, players_list: list, players_set: list, act_player, act_opponent):
+    def _validate_with_next_pairing_2(
+        self, players_list: list, players_set: list, act_player, act_opponent
+    ):
         """Deph 2 validation."""
         p_list = players_list.copy()
         p_set = players_set.copy()
@@ -146,7 +158,9 @@ class SystemSwiss(System):
                             player.refresh_possible_opponents(players_list)
         return covered >= p_available_qty
 
-    def _validate_with_next_pairing(self, players_list: list, players_set: list, act_player, act_opponent):
+    def _validate_with_next_pairing(
+        self, players_list: list, players_set: list, act_player, act_opponent
+    ):
         """Deph 1 validation."""
         p_list = players_list.copy()
         p_set = players_set.copy()
@@ -169,7 +183,9 @@ class SystemSwiss(System):
                     if not opponent_found and opponent.id not in player.opponents:
                         if player.id not in p_set and opponent.id not in p_set:
                             # OK, current Player and free Opponent match:
-                            if self._validate_with_next_pairing_2(p_list, p_set, player, opponent):
+                            if self._validate_with_next_pairing_2(
+                                p_list, p_set, player, opponent
+                            ):
                                 opponent_found = True  # Set flag, opponnent_found
                                 p_set.append(player.id)
                                 p_set.append(opponent.id)
@@ -185,9 +201,6 @@ class SystemSwiss(System):
         players_list = []  # plain list with sorted players
         players_set = []  # list of players IDs already paired
 
-        # Set the tables with paired players
-        # Begin with actual top Players, end with last ones:
-
         # 1. Put players into plain list:
         for point in np.arange(start=float(self._round - 1), stop=-0.5, step=-0.5):
             for player in scored_players[point]:
@@ -200,36 +213,65 @@ class SystemSwiss(System):
         for player in players_list:
             player.refresh_possible_opponents(players_list)
 
-        # 2. Simple iterable for next Player to play:
-        p_available = [player for player in players_list if (player.id not in players_set)]
+        # 2. Try strict pairing (no re-matches):
+        p_available = [
+            player for player in players_list if (player.id not in players_set)
+        ]
         for player in p_available:
-            # 2.1. List of available Opponents:
             opponent_found = False
             player.refresh_possible_opponents(players_list)
             for opponent in player.possible_opponents:
-                # 2.1.2 Set next free Opponent to Player
                 if not opponent_found and opponent.id not in player.opponents:
                     if player.id not in players_set and opponent.id not in players_set:
-                        # OK, current Player and free Opponent match:
-                        if self._validate_with_next_pairing(players_list, players_set, player, opponent):
-                            opponent_found = True  # Set flag, opponnent_found
-                            players_set.append(player.id)  # Add players to 'set' list
+                        if self._validate_with_next_pairing(
+                            players_list, players_set, player, opponent
+                        ):
+                            opponent_found = True
+                            players_set.append(player.id)
                             players_set.append(opponent.id)
-                            # Add table with these two players:
                             table_nr = _round.add_table(
                                 player_w=player, player_b=opponent
                             )
                             player.refresh_possible_opponents(players_list)
 
-                            # 2.1.3 Check if Opponent is not a Pauser:
                             parity += 1
                             if opponent.id == -1:
                                 _round.pausing = player.id
                                 player.paused = True
-
-                            # Swap order every odd table:
                             elif (parity + self._round - 1) % 2 == 0:
                                 _round.tables[table_nr].swap_players()
 
-            p_available = [player for player in players_list if (player.id not in players_set)]
+            p_available = [
+                player for player in players_list if (player.id not in players_set)
+            ]
+
+        # 3. Fallback: if not all players paired, allow re-matches
+        unpaired = [p for p in players_list if p.id not in players_set]
+        if len(unpaired) >= 2:
+            logging.warning(
+                f"Round #{self._round}: {len(unpaired)} players couldn't be paired "
+                f"without re-matches. Allowing re-pairing."
+            )
+            while len(unpaired) >= 2:
+                player = unpaired.pop(0)
+                # Find least-played opponent
+                best_opponent = None
+                min_encounters = float("inf")
+                for opp in unpaired:
+                    encounters = player.opponents.count(opp.id)
+                    if encounters < min_encounters:
+                        min_encounters = encounters
+                        best_opponent = opp
+                if best_opponent:
+                    unpaired.remove(best_opponent)
+                    players_set.append(player.id)
+                    players_set.append(best_opponent.id)
+                    parity += 1
+                    table_nr = _round.add_table(player_w=player, player_b=best_opponent)
+                    if best_opponent.id == -1:
+                        _round.pausing = player.id
+                        player.paused = True
+                    elif (parity + self._round - 1) % 2 == 0:
+                        _round.tables[table_nr].swap_players()
+
         return _round

@@ -1,0 +1,28 @@
+<div class="modal fade" id="popup_start_tournament" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-play-circle me-2"></i>Start Tournament</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Number of rounds</label>
+                    <input id="start_t_rounds" type="number" class="form-control form-control-sm" placeholder="7" min="1" max="22">
+                </div>
+                <div class="mb-0">
+                    <label class="form-label" style="color: var(--text-secondary); font-size:12px;">Pairing system</label>
+                    <select id="start_t_system" class="form-select form-select-sm">
+                        <option value="swiss" selected>Swiss</option>
+                        <option value="circullar">Round-robin</option>
+                        <option value="elimination">Single elimination</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="app.startTournament()" data-bs-dismiss="modal">Start</button>
+            </div>
+        </div>
+    </div>
+</div>

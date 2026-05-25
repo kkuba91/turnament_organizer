@@ -1,9 +1,10 @@
 """player.py
 
-    Chess player class. All data related to Player,
-    which can b set at the begining and during the game.
+Chess player class. All data related to Player,
+which can b set at the begining and during the game.
 
 """
+
 # Global package imports:
 import logging
 
@@ -15,9 +16,16 @@ from Resources import CATEGORY
 class Player(ModelPlayer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        pauser = kwargs.get('pauser')
+        # Ensure suspended_rounds is instance-local (ModelPlayer default used a class-level set)
+        try:
+            # replace any shared default with a fresh set for this instance
+            if not isinstance(self.suspended_rounds, set):
+                self.suspended_rounds = set()
+        except Exception:
+            self.suspended_rounds = set()
+        pauser = kwargs.get("pauser")
         if pauser:
-            attr_val = kwargs.get('pauser')
+            attr_val = kwargs.get("pauser")
             if isinstance(attr_val, bool):
                 self.pauser = attr_val
             else:
@@ -27,8 +35,8 @@ class Player(ModelPlayer):
             self.rank = 0
             self.elo = 0
             self.category = "wc"
-            self.name = ' -- '
-            self.surname = ' -- '
+            self.name = " -- "
+            self.surname = " -- "
         else:
             self.calculate_rank()
 
@@ -55,6 +63,25 @@ class Player(ModelPlayer):
     def get_repr(self):
         return f"({self.id}) {self.surname.title()} {self.name.title()}"
 
+    def suspend_player(self, round_numbers):
+        """Mark player as suspended for given round(s).
+
+        Accepts an int (single round) or an iterable of ints.
+        """
+        if isinstance(round_numbers, int):
+            self.suspended_rounds.add(round_numbers)
+            return
+        try:
+            for rn in round_numbers:
+                if isinstance(rn, int):
+                    self.suspended_rounds.add(rn)
+        except TypeError:
+            # not iterable - ignore
+            return
+
+    def is_suspended(self, round_number):
+        return round_number in self.suspended_rounds
+
     def calculate_rank(self):
         if self.elo > 0:
             self.rank = self.elo
@@ -62,7 +89,11 @@ class Player(ModelPlayer):
             try:
                 self.rank = CATEGORY[self.sex][self.category]
             except KeyError as exc:
-                logging.error("{}, for keys: sex='{}', category='{}'".format(exc, self.sex, self.category))
+                logging.error(
+                    "{}, for keys: sex='{}', category='{}'".format(
+                        exc, self.sex, self.category
+                    )
+                )
         return self
 
     def exist(self, name, surname):
@@ -103,19 +134,19 @@ class Player(ModelPlayer):
         if not self.pauser:
             self.calculate_rank()
         data = {
-                'id': self.id,
-                'name': self.name,
-                'surname': self.surname,
-                'sex': self.sex,
-                'city': self.city,
-                'club': self.club,
-                'elo': self.elo,
-                'rank': self.rank,
-                'cat': self.category,
-                'result': sum(self.results),
-                'progress': self.progress,
-                'bucholz': self.bucholz
-            }
+            "id": self.id,
+            "name": self.name,
+            "surname": self.surname,
+            "sex": self.sex,
+            "city": self.city,
+            "club": self.club,
+            "elo": self.elo,
+            "rank": self.rank,
+            "cat": self.category,
+            "result": sum(self.results),
+            "progress": self.progress,
+            "bucholz": self.bucholz,
+        }
         if specific:
             return_data = {}
             for key in specific:
@@ -144,7 +175,7 @@ class Player(ModelPlayer):
         _dump = "Opponents:\n"
         for oppo in self.opponents:
             _dump += (
-                f"Round {_round_nr}: #{oppo}, Result: {self.results[_round_nr-1]}\n"
+                f"Round {_round_nr}: #{oppo}, Result: {self.results[_round_nr - 1]}\n"
             )
             _round_nr += 1
         return _dump

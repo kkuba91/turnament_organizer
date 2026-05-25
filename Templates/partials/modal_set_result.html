@@ -1,0 +1,31 @@
+<div class="modal fade" id="popup_set_result" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Set Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between mb-2" style="color: var(--text-secondary); font-size:13px;">
+                    <span>Round: <strong id="popup_set_result_round"></strong></span>
+                    <span>Table: <strong id="popup_set_result_table"></strong></span>
+                </div>
+                <div class="info-box text-center mb-3">
+                    <span id="popup_set_result_wh"></span>
+                    <span style="color: var(--text-muted); margin: 0 12px;">vs</span>
+                    <span id="popup_set_result_bl"></span>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center gap-2">
+                <button class="btn btn-outline-primary btn-sm" style="height: 30px;" onclick="app.setWin()" data-bs-dismiss="modal">
+                    <span style="display:inline-block;width:14px;height:14px;background:#fff;border-radius:2px;margin-right:4px;"></span> Wins
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="app.setDraw()" data-bs-dismiss="modal" style="font-family: monospace; font-size: 1.2em; height: 30px">½ - ½</button>
+                <button class="btn btn-outline-primary btn-sm" style="height: 30px;" onclick="app.setLoose()" data-bs-dismiss="modal">
+                    <span style="display:inline-block;width:14px;height:14px;background:#000;border-radius:2px;margin-right:4px;border:1px solid #666;"></span> Wins
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" style="height: 30px;" onclick="app.setNothing()" data-bs-dismiss="modal">No result</button>
+            </div>
+        </div>
+    </div>
+</div>

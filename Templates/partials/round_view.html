@@ -1,0 +1,58 @@
+<div>
+    <h5 id="view_round_val" class="mb-3">Round #:</h5>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+            <thead>
+                <tr>
+                    <th style="width:60px;">Table</th>
+                    <th><span style="display:inline-block;width:12px;height:12px;background:#fff;border-radius:2px;margin-right:4px;border:1px solid var(--border-default);"></span> White</th>
+                    <th style="width:40px;"></th>
+                    <th><span style="display:inline-block;width:12px;height:12px;background:#000;border-radius:2px;margin-right:4px;border:1px solid var(--border-default);"></span> Black</th>
+                    <th>Result</th>
+                    <th style="width:40px;"></th>
+                </tr>
+            </thead>
+            <tbody id="table_rows_round">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="round_info_box" class="info-box info-box-accent mt-3" style="display:none;">
+        <div id="view_pauser" class="mb-1"></div>
+        <div id="view_suspended"></div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <!-- Print button - always visible for any round -->
+        <div id="btn_print_round" class="card-custom d-inline-flex">
+            <div class="card-body d-flex gap-2 flex-wrap py-2">
+                <button id="show_round_html" type="button" class="btn btn-outline-secondary btn-action btn-sm">
+                    <i class="bi bi-printer me-1"></i> Print
+                </button>
+            </div>
+        </div>
+
+        <!-- Action buttons - only visible for current active round -->
+        <div id="buttons_act_round" class="d-inline-flex flex-wrap gap-2" style="display:none;">
+            <div class="card-custom d-inline-flex">
+                <div class="card-header"><i class="bi bi-people me-1"></i> Management</div>
+                <div class="card-body d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-primary btn-action btn-sm" data-bs-toggle="modal" data-bs-target="#popup_add_player">
+                        <i class="bi bi-person-plus me-1"></i> Add
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-action btn-sm" data-bs-toggle="modal" data-bs-target="#popup_suspend_player" onclick="app.loadSuspendList()">
+                        <i class="bi bi-person-dash me-1"></i> Suspend
+                    </button>
+                </div>
+            </div>
+            <div class="card-custom d-inline-flex">
+                <div class="card-header"><i class="bi bi-gear me-1"></i> Round</div>
+                <div class="card-body d-flex gap-2 flex-wrap">
+                    <button id="btn_next_round" type="button" class="btn btn-success btn-action btn-sm" onclick="app.nextRound()">
+                        <i class="bi bi-arrow-right me-1"></i> Next Round
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,61 @@
+<div>
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <button class="btn btn-outline-secondary btn-action btn-sm" onclick="app.goBack()" style="margin-right: 12px;">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </button>
+        <h5 class="mb-0" id="player_stats_title">Player Statistics</h5>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="card-custom">
+                <div class="card-body text-center">
+                    <div class="stat-label">Points</div>
+                    <div class="stat-value" id="stat_points">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-custom">
+                <div class="card-body text-center">
+                    <div class="stat-label">Elo</div>
+                    <div class="stat-value" id="stat_elo">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-custom">
+                <div class="card-body text-center">
+                    <div class="stat-label">Elo Change</div>
+                    <div class="stat-value" id="stat_elo_change">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-custom">
+                <div class="card-body text-center">
+                    <div class="stat-label">Buchholz</div>
+                    <div class="stat-value" id="stat_bucholz">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h6 class="mb-2">Round-by-round Results</h6>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Round</th>
+                    <th>Opponent</th>
+                    <th>Opp. Elo</th>
+                    <th>Color</th>
+                    <th>Result</th>
+                    <th>Elo Change</th>
+                </tr>
+            </thead>
+            <tbody id="table_player_stats_rounds">
+            </tbody>
+        </table>
+    </div>
+</div>

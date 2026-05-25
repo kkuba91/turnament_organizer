@@ -1,13 +1,13 @@
 """__init__.py
 
-    Commandline API class.
+Commandline API class.
 
 """
+
 import logging
 
 
 class Command:
-
     """Commandline class handler."""
 
     def __init__(self) -> None:

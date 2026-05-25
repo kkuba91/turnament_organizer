@@ -1,0 +1,2 @@
+recursive-include Templates *.html *.css *.js *.pug
+recursive-include Application/Templates *.html *.css *.js *.pug

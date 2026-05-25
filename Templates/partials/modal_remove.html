@@ -1,0 +1,17 @@
+<div class="modal fade" id="popup_remove_tournament" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="bi bi-trash me-2"></i>Delete Tournament</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="removeTournamentLabel" style="color: var(--text-secondary);">Are you sure you want to delete this tournament?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#popup_create_open" onclick="app.getFiles()">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="app.removeTournament()" id="remove-files" data-bs-dismiss="modal">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

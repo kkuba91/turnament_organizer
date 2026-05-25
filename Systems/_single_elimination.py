@@ -1,6 +1,6 @@
 """_single_elimination.py
 
-    System class with single elimination system calculation model.
+System class with single elimination system calculation model.
 
 """
 # Global package imports:
