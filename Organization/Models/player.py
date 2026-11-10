@@ -26,6 +26,7 @@ class ModelPlayer(BaseModel):
     elo: int = 0
     rank: int = 0
     club: str = ""
+    federation: str = "🇺🇳"
 
     # Feature:
     pauser: bool = False

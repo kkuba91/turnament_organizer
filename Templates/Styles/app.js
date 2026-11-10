@@ -11,6 +11,8 @@ var app = {
         previous_view: "block_results",
         players_view_sort: { field: null, direction: 0 },
         players_view_cache: [],
+        edit_from_round: false,
+        round_all_results: false,
     },
 
     switchView(request) {
@@ -93,7 +95,8 @@ var app = {
             var buttons = "";
             for (var i = 1; i <= this.state.turnament.actual; i++) {
                 var activeClass = (i === this.state.show_round) ? " active" : "";
-                buttons += '<button class="btn btn-sidebar' + activeClass + '" onclick="app.showRound(' + i + ')"><i class="bi bi-circle-fill me-2" style="font-size:6px;"></i>Round ' + i + '</button>';
+                var activeRound = (i === this.state.turnament.actual && !this.state.finished) ? " ⚔️" : "";
+                buttons += '<button class="btn btn-sidebar' + activeClass + '" onclick="app.showRound(' + i + ')"><i class="bi bi-circle-fill me-2" style="font-size:6px;"></i>Round ' + i + activeRound + '</button>';
             }
             button_rounds.innerHTML = buttons;
         } else {
@@ -156,9 +159,31 @@ var app = {
     },
 
     removeTournament(element) {
+        var removeModalEl = document.getElementById("popup_remove_tournament");
+        var openModalEl = document.getElementById("popup_create_open");
+        // The confirmation modal is dismissed on click; reopen the list only
+        // after it has finished hiding and the file has actually been deleted.
+        var modalHidden = !removeModalEl;
+        var fileDeleted = false;
+        var showOpenModal = function () {
+            if (!fileDeleted || !modalHidden) return;
+            if (openModalEl && window.bootstrap) {
+                window.bootstrap.Modal.getOrCreateInstance(openModalEl).show();
+            }
+        };
+        if (removeModalEl) {
+            removeModalEl.addEventListener("hidden.bs.modal", function () {
+                modalHidden = true;
+                showOpenModal();
+            }, { once: true });
+        }
         fetch("/Turnament/remove_file?tournament_name=" + encodeURIComponent(element), {
             method: "POST", headers: { "Content-Type": "application/json" }
-        }).then(r => r.json()).then(() => { this.getFiles(); });
+        }).then(r => r.json()).then(() => {
+            fileDeleted = true;
+            this.getFiles();
+            showOpenModal();
+        });
     },
 
     closeTurnament() {
@@ -172,16 +197,36 @@ var app = {
         });
     },
 
+    validateAddPlayer() {
+        var nameInput = document.getElementById("add_p_name");
+        var surnameInput = document.getElementById("add_p_surname");
+        var submit = document.getElementById("add_player_submit");
+        if (!nameInput || !surnameInput || !submit) return false;
+        var name = nameInput.value.trim();
+        var surname = surnameInput.value.trim();
+        var valid = name.length > 0 && surname.length > 0;
+        submit.disabled = !valid;
+        return valid;
+    },
+
     addPlayer() {
-        var name = document.getElementById("add_p_name").value;
-        var surname = document.getElementById("add_p_surname").value;
+        var name = document.getElementById("add_p_name").value.trim();
+        var surname = document.getElementById("add_p_surname").value.trim();
+        if (!name || !surname) {
+            this.validateAddPlayer();
+            return;
+        }
         var sex = document.getElementById("add_p_sex_female").checked ? "female" : "male";
         var city = document.getElementById("add_p_city").value || "";
+        var club = document.getElementById("add_p_club").value || "";
+        var federation = document.getElementById("add_p_federation").value || "🇺🇳";
         var category = document.getElementById("add_p_category").value || "wc";
         var elo = parseInt(document.getElementById("add_p_elo").value) || 0;
         if (elo > 0 && (elo < 1000 || elo > 3999)) { elo = Math.max(1000, Math.min(3999, elo)); }
         var params = "name=" + encodeURIComponent(name) + "&surname=" + encodeURIComponent(surname) +
-            "&sex=" + sex + "&city=" + encodeURIComponent(city) + "&category=" + encodeURIComponent(category) + "&elo=" + elo;
+            "&sex=" + sex + "&city=" + encodeURIComponent(city) + "&club=" + encodeURIComponent(club) +
+            "&federation=" + encodeURIComponent(federation) +
+            "&category=" + encodeURIComponent(category) + "&elo=" + elo;
         fetch("/Turnament/turnament/player/add?" + params, {
             method: "POST", headers: { "Content-Type": "application/json" }
         }).then(r => r.json()).then(() => { this.getStatus(); });
@@ -200,6 +245,7 @@ var app = {
             players.forEach(el => {
                 rows += '<tr>';
                 rows += '<td class="player-id">' + el.nr + '</td>';
+                rows += '<td>' + (el.federation || '🇺🇳') + '</td>';
                 rows += '<td>' + el.name + '</td>';
                 rows += '<td><strong>' + el.surname + '</strong></td>';
                 rows += '<td style="color:var(--text-muted);">' + (el.sex === "male" ? '<i class="bi bi-gender-male"></i>' : '<i class="bi bi-gender-female"></i>') + '</td>';
@@ -232,6 +278,7 @@ var app = {
                 rows += '<tr>';
                 rows += '<td><strong>' + place + '</strong>' + medal + '</td>';
                 rows += '<td class="player-id">' + el.id + '</td>';
+                rows += '<td>' + (el.federation || '🇺🇳') + '</td>';
                 rows += '<td>' + el.name + '</td>';
                 rows += '<td><strong>' + el.surname + '</strong></td>';
                 rows += '<td><span class="badge-cat ' + catClass + '">' + el.cat + '</span></td>';
@@ -303,33 +350,94 @@ var app = {
         }
     },
 
+    populateFederations() {
+        if (typeof FEDERATIONS === "undefined") return;
+        ["add_p_federation", "edit_p_federation"].forEach(function (id) {
+            var select = document.getElementById(id);
+            if (!select) return;
+            var options = "";
+            FEDERATIONS.forEach(function (federation) {
+                options += '<option value="' + federation + '">' + federation + '</option>';
+            });
+            select.innerHTML = options;
+        });
+        this._setFederationValue("add_p_federation", FEDERATIONS[0]);
+    },
+
+    _setFederationValue(selectId, federation) {
+        var select = document.getElementById(selectId);
+        if (!select) return;
+        var value = federation || "🇺🇳";
+        var exists = false;
+        for (var i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === value) { exists = true; break; }
+        }
+        if (!exists) {
+            var option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+        }
+        select.value = value;
+    },
+
+    _escapeHtml(value) {
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    },
+
+    _openPrintWindow(html) {
+        var blob = new Blob([html], { type: "text/html" });
+        var url = URL.createObjectURL(blob);
+        var tab = window.open(url, "_blank");
+        if (!tab) {
+            var printFrame = document.createElement("iframe");
+            printFrame.style.display = "none";
+            document.body.appendChild(printFrame);
+            printFrame.contentDocument.open();
+            printFrame.contentDocument.write(html);
+            printFrame.contentDocument.close();
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+            setTimeout(function () { document.body.removeChild(printFrame); }, 1000);
+        }
+    },
+
     _renderPlayersView(players) {
         var rows = "";
         players.forEach(el => {
             var catClass = ["CM", "CM+", "CM++", "FM", "IM", "GM"].includes(el.cat) ? "badge-cat-high" : "badge-cat-low";
             rows += '<tr>';
             rows += '<td class="player-id">' + el.id + '</td>';
+            rows += '<td>' + (el.federation || '🇺🇳') + '</td>';
             rows += '<td>' + el.name + '</td>';
             rows += '<td><strong>' + el.surname + '</strong></td>';
             rows += '<td style="color:var(--text-muted);">' + (el.sex === "male" ? '<i class="bi bi-gender-male"></i>' : '<i class="bi bi-gender-female"></i>') + '</td>';
             rows += '<td style="color:var(--text-secondary);">' + (el.city || '') + '</td>';
+            rows += '<td style="color:var(--text-secondary);">' + (el.club || '') + '</td>';
             rows += '<td><span class="badge-cat ' + catClass + '">' + el.cat + '</span></td>';
             rows += '<td style="color:var(--text-secondary);">' + (el.elo > 0 ? el.elo : '-') + '</td>';
             rows += '<td><span class="status-badge" style="background:rgba(63,185,80,0.15);color:var(--accent-success);font-size:11px;">Active</span></td>';
             rows += '<td><button class="btn btn-outline-secondary btn-sm" style="padding:1px 6px;font-size:11px;" onclick="app.showPlayerStats(' + el.id + ')"><i class="bi bi-bar-chart me-1"></i>Stats</button></td>';
-            rows += '<td><button class="btn btn-outline-primary btn-sm" style="padding:1px 6px;font-size:11px;" data-bs-toggle="modal" data-bs-target="#popup_edit_player" onclick="app.editPlayer(' + el.id + ', \'' + el.name.replace(/'/g, "\\'") + '\', \'' + el.surname.replace(/'/g, "\\'") + '\', \'' + (el.city || '').replace(/'/g, "\\'") + '\', ' + el.elo + ', \'' + el.cat + '\', \'' + el.sex + '\')"><i class="bi bi-pencil me-1"></i>Edit</button></td>';
+            rows += '<td><button class="btn btn-outline-primary btn-sm" style="padding:1px 6px;font-size:11px;" data-bs-toggle="modal" data-bs-target="#popup_edit_player" onclick="app.editPlayer(' + el.id + ', \'' + el.name.replace(/'/g, "\\'") + '\', \'' + el.surname.replace(/'/g, "\\'") + '\', \'' + (el.city || '').replace(/'/g, "\\'") + '\', \'' + (el.club || '').replace(/'/g, "\\'") + '\', ' + el.elo + ', \'' + el.cat + '\', \'' + el.sex + '\', \'' + (el.federation || '🇺🇳').replace(/'/g, "\\'") + '\')"><i class="bi bi-pencil me-1"></i>Edit</button></td>';
             rows += '</tr>';
         });
         document.getElementById("table_rows_players_view").innerHTML = rows;
     },
 
-    editPlayer(id, name, surname, city, elo, cat, sex) {
+    editPlayer(id, name, surname, city, club, elo, cat, sex, federation, fromRound) {
+        this.state.edit_from_round = !!fromRound;
         document.getElementById("edit_p_id").value = id;
         document.getElementById("edit_p_name").value = name;
         document.getElementById("edit_p_surname").value = surname;
         document.getElementById("edit_p_city").value = city;
+        document.getElementById("edit_p_club").value = club || "";
         document.getElementById("edit_p_elo").value = elo;
         document.getElementById("edit_p_category").value = cat;
+        this._setFederationValue("edit_p_federation", federation);
         if (sex === "female") {
             document.getElementById("edit_p_sex_female").checked = true;
         } else {
@@ -337,21 +445,36 @@ var app = {
         }
     },
 
+    editPlayerFromRound(id, name, surname, city, club, elo, cat, sex, federation) {
+        this.editPlayer(id, name, surname, city, club, elo, cat, sex, federation, true);
+    },
+
     savePlayerEdit() {
         var id = document.getElementById("edit_p_id").value;
         var name = document.getElementById("edit_p_name").value;
         var surname = document.getElementById("edit_p_surname").value;
         var city = document.getElementById("edit_p_city").value || "";
+        var club = document.getElementById("edit_p_club").value || "";
+        var federation = document.getElementById("edit_p_federation").value || "🇺🇳";
         var elo = parseInt(document.getElementById("edit_p_elo").value) || 0;
         if (elo > 0 && (elo < 1000 || elo > 3999)) { elo = Math.max(1000, Math.min(3999, elo)); }
         var category = document.getElementById("edit_p_category").value || "wc";
         var sex = document.getElementById("edit_p_sex_female").checked ? "female" : "male";
         var params = "player_id=" + id + "&name=" + encodeURIComponent(name) + "&surname=" + encodeURIComponent(surname) +
-            "&city=" + encodeURIComponent(city) + "&elo=" + elo + "&category=" + encodeURIComponent(category) + "&sex=" + sex;
+            "&city=" + encodeURIComponent(city) + "&club=" + encodeURIComponent(club) +
+            "&federation=" + encodeURIComponent(federation) +
+            "&elo=" + elo + "&category=" + encodeURIComponent(category) + "&sex=" + sex;
+        var fromRound = this.state.edit_from_round;
         fetch("/Turnament/turnament/player/edit?" + params, {
             method: "POST", headers: { "Content-Type": "application/json" }
         }).then(r => r.json()).then(() => {
-            this.showPlayersView();
+            this.state.edit_from_round = false;
+            if (fromRound) {
+                this.getRound(this.state.show_round);
+                this.getStatus();
+            } else {
+                this.showPlayersView();
+            }
         });
     },
 
@@ -361,6 +484,9 @@ var app = {
             this.switchView("block_player_stats");
             var p = data.player;
             document.getElementById("player_stats_title").textContent = p.name + " " + p.surname;
+            document.getElementById("player_stats_federation").textContent = p.federation || "🇺🇳";
+            this.state.player_stats_name = p.name + " " + p.surname;
+            this.state.player_stats_federation = p.federation || "🇺🇳";
             document.getElementById("stat_points").textContent = p.points.toFixed(1);
             document.getElementById("stat_elo").textContent = p.elo || "-";
             document.getElementById("stat_elo_change").textContent = (p.elo_change >= 0 ? "+" : "") + p.elo_change.toFixed(1);
@@ -412,6 +538,7 @@ var app = {
             var rows = "";
             var tables = data.round.tables;
             var roundNr = data.round.nr;
+            this.state.round_all_results = !!data.round.all_results;
 
             tables.forEach(element => {
                 var wh = element.white;
@@ -449,11 +576,13 @@ var app = {
             document.getElementById("table_rows_round").innerHTML = rows;
             document.getElementById("view_round_val").textContent = "Round " + roundNr + ":";
 
-            // Pauser info
+            // Pauser / Future suspended / Suspended info
             var infoBox = document.getElementById("round_info_box");
             var pauserEl = document.getElementById("view_pauser");
+            var futureEl = document.getElementById("view_future_suspended");
             var suspendedEl = document.getElementById("view_suspended");
             pauserEl.innerHTML = "";
+            futureEl.innerHTML = "";
             suspendedEl.innerHTML = "";
             var showInfo = false;
 
@@ -463,11 +592,39 @@ var app = {
                 pauserEl.innerHTML = '<i class="bi bi-pause-circle me-1" style="color:var(--accent-warning);"></i><strong>Bye:</strong> <span class="player-id me-1">#' + p.id + '</span> <span class="badge-cat ' + pCat + ' me-1">' + p.cat + '</span> <strong>' + p.surname + ' ' + p.name + '</strong> (+1 pt)';
                 showInfo = true;
             }
+            if (data.round.future_suspended && data.round.future_suspended.length > 0) {
+                var futureHtml = '<i class="bi bi-hourglass-split me-1" style="color:var(--accent-warning);"></i><strong>Future suspended:</strong> ';
+                data.round.future_suspended.forEach(function (s) {
+                    var sCat = ["CM", "CM+", "CM++", "FM", "IM", "GM"].includes(s.cat) ? "badge-cat-high" : "badge-cat-low";
+                    var until = s.plays_until ? ' <span style="color:var(--text-muted);font-size:11px;">(plays until round ' + s.plays_until + ' end)</span>' : '';
+                    var actions = '';
+                    if (s.can_unsuspend) {
+                        actions += ' <button class="btn btn-outline-danger btn-sm ms-1" style="padding:0 5px;font-size:10px;" title="Cancel future suspension" onclick="app.unsuspendFuture(' + s.id + ')"><i class="bi bi-trash"></i></button>';
+                    }
+                    futureHtml += '<span class="me-2 d-inline-block"><span class="player-id me-1">#' + s.id + '</span> <span class="badge-cat ' + sCat + ' me-1">' + s.cat + '</span> ' + s.surname + ' ' + s.name + until + actions + '</span>';
+                });
+                futureEl.innerHTML = futureHtml;
+                showInfo = true;
+            }
             if (data.round.suspended && data.round.suspended.length > 0) {
                 var html = '<i class="bi bi-person-dash me-1" style="color:var(--accent-danger);"></i><strong>Suspended:</strong> ';
                 data.round.suspended.forEach(function (s) {
                     var sCat = ["CM", "CM+", "CM++", "FM", "IM", "GM"].includes(s.cat) ? "badge-cat-high" : "badge-cat-low";
-                    html += '<span class="player-id me-1">#' + s.id + '</span> <span class="badge-cat ' + sCat + ' me-1">' + s.cat + '</span> ' + s.surname + ' ' + s.name + ' &nbsp; ';
+                    var playsIn = s.plays_in ? ' <span style="color:var(--text-muted);font-size:11px;">(plays in round ' + s.plays_in + ')</span>' : '';
+                    var actions = '';
+                    if (s.can_edit) {
+                        var qName = (s.name || '').replace(/'/g, "\\'");
+                        var qSurname = (s.surname || '').replace(/'/g, "\\'");
+                        var qCity = (s.city || '').replace(/'/g, "\\'");
+                        var qClub = (s.club || '').replace(/'/g, "\\'");
+                        var qCat = (s.cat || 'wc').replace(/'/g, "\\'");
+                        var qSex = (s.sex || 'male').replace(/'/g, "\\'");
+                        var qFederation = (s.federation || '🇺🇳').replace(/'/g, "\\'");
+                        var qElo = parseInt(s.elo) || 0;
+                        actions += ' <button class="btn btn-outline-danger btn-sm ms-1" style="padding:0 5px;font-size:10px;" title="Undo adding player" onclick="app.removeAddedPlayer(\'' + qName + '\', \'' + qSurname + '\')"><i class="bi bi-trash"></i></button>';
+                        actions += ' <button class="btn btn-outline-secondary btn-sm" style="padding:0 5px;font-size:10px;" title="Edit player" data-bs-toggle="modal" data-bs-target="#popup_edit_player" onclick="app.editPlayerFromRound(' + s.id + ', \'' + qName + '\', \'' + qSurname + '\', \'' + qCity + '\', \'' + qClub + '\', ' + qElo + ', \'' + qCat + '\', \'' + qSex + '\', \'' + qFederation + '\')"><i class="bi bi-pencil"></i></button>';
+                    }
+                    html += '<span class="me-2 d-inline-block"><span class="player-id me-1">#' + s.id + '</span> <span class="badge-cat ' + sCat + ' me-1">' + s.cat + '</span> ' + s.surname + ' ' + s.name + playsIn + actions + '</span>';
                 });
                 suspendedEl.innerHTML = html;
                 showInfo = true;
@@ -491,6 +648,8 @@ var app = {
             } else {
                 nextBtn.innerHTML = '<i class="bi bi-arrow-right me-1"></i> Next Round';
             }
+            nextBtn.disabled = isCurrentActiveRound && !this.state.round_all_results;
+            nextBtn.title = nextBtn.disabled ? "Enter all table results first" : "";
         }
         var printBtn = document.getElementById("show_round_html");
         if (printBtn) {
@@ -562,11 +721,23 @@ var app = {
     printResults() {
         var table = document.getElementById("results_table");
         if (!table) return;
+        // Print-only copy without the headerless Stats column.
+        var printTable = table.cloneNode(true);
+        printTable.querySelectorAll("tr").forEach(function (row) {
+            if (row.lastElementChild) {
+                row.removeChild(row.lastElementChild);
+            }
+        });
+        var turnamentName = (this.state.turnament.name || "Tournament")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
         var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Results</title>';
         html += '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">';
         html += '<style>body{padding:20px;font-size:13px;}@media print{.no-print{display:none;}}</style></head><body>';
-        html += '<h4>Tournament Results</h4>';
-        html += '<table class="table table-sm table-bordered">' + table.innerHTML + '</table>';
+        html += '<h4>' + turnamentName + ' results</h4>';
+        html += '<table class="table table-sm table-bordered">' + printTable.innerHTML + '</table>';
         html += '<div class="no-print mt-3"><button class="btn btn-sm btn-outline-dark" onclick="window.print()">Print</button></div>';
         html += '</body></html>';
         var blob = new Blob([html], { type: "text/html" });
@@ -583,6 +754,44 @@ var app = {
             printFrame.contentWindow.print();
             setTimeout(function () { document.body.removeChild(printFrame); }, 1000);
         }
+    },
+
+    printPlayersView() {
+        var table = document.getElementById("players_view_table");
+        if (!table) return;
+        var printTable = table.cloneNode(true);
+        printTable.querySelectorAll("tr").forEach(function (row) {
+            // Drop the headerless Stats and Edit action columns.
+            if (row.lastElementChild) { row.removeChild(row.lastElementChild); }
+            if (row.lastElementChild) { row.removeChild(row.lastElementChild); }
+        });
+        var turnamentName = this._escapeHtml(this.state.turnament.name || "Tournament");
+        var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Players</title>';
+        html += '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">';
+        html += '<style>body{padding:20px;font-size:13px;}@media print{.no-print{display:none;}}</style></head><body>';
+        html += '<h4>' + turnamentName + ' players</h4>';
+        html += '<table class="table table-sm table-bordered">' + printTable.innerHTML + '</table>';
+        html += '<div class="no-print mt-3"><button class="btn btn-sm btn-outline-dark" onclick="window.print()">Print</button></div>';
+        html += '</body></html>';
+        this._openPrintWindow(html);
+    },
+
+    printPlayerStats() {
+        var container = document.getElementById("block_player_stats");
+        if (!container) return;
+        var printCopy = container.cloneNode(true);
+        printCopy.querySelectorAll(".btn-action").forEach(function (el) { el.remove(); });
+        var title = this._escapeHtml(
+            (this.state.player_stats_federation || "🇺🇳") + " " +
+            (this.state.player_stats_name || "Player statistics")
+        );
+        var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title>';
+        html += '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">';
+        html += '<style>body{padding:20px;font-size:13px;}.card-custom{border:1px solid #ccc;border-radius:4px;}@media print{.no-print{display:none;}}</style></head><body>';
+        html += printCopy.innerHTML;
+        html += '<div class="no-print mt-3"><button class="btn btn-sm btn-outline-dark" onclick="window.print()">Print</button></div>';
+        html += '</body></html>';
+        this._openPrintWindow(html);
     },
 
     loadSuspendList() {
@@ -618,9 +827,47 @@ var app = {
         }).then(r => r.json()).then(() => {
             this.getRound(this.state.show_round);
         });
+    },
+
+    unsuspendFuture(playerId) {
+        fetch("/Turnament/turnament/players/suspend", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ suspended: [], unsuspended: [playerId] })
+        }).then(r => r.json()).then(() => {
+            this.getRound(this.state.show_round);
+        });
+    },
+
+    removeAddedPlayer(name, surname) {
+        var params = "name=" + encodeURIComponent(name) + "&surname=" + encodeURIComponent(surname);
+        fetch("/Turnament/turnament/player/del?" + params, {
+            method: "POST", headers: { "Content-Type": "application/json" }
+        }).then(r => r.json()).then(() => {
+            this.getRound(this.state.show_round);
+            this.getStatus();
+        });
     }
 };
 
 document.addEventListener("DOMContentLoaded", function () {
+    var addPlayerModal = document.getElementById("popup_add_player");
+    if (addPlayerModal) {
+        addPlayerModal.addEventListener("shown.bs.modal", function () {
+            app.validateAddPlayer();
+        });
+    }
+    ["add_p_name", "add_p_surname"].forEach(function (id) {
+        var input = document.getElementById(id);
+        if (input) {
+            ["input", "keyup", "change", "paste", "cut"].forEach(function (eventName) {
+                input.addEventListener(eventName, function () {
+                    app.validateAddPlayer();
+                });
+            });
+        }
+    });
+    app.populateFederations();
+    app.validateAddPlayer();
     app.getStatus();
 });

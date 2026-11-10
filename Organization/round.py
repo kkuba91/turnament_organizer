@@ -79,7 +79,12 @@ class Round(ModelRound):
                     _n_replaced = False
 
     def get(self, full=True):
-        data = {"nr": self.number, "tables": [], "pauser": self.pausing}
+        data = {
+            "nr": self.number,
+            "tables": [],
+            "pauser": self.pausing,
+            "all_results": self.all_results,
+        }
         table_nr = 1
         for _ in range(1, len(self.tables) + 1):
             if table_nr not in self.tables:
