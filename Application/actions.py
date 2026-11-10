@@ -110,7 +110,15 @@ class Actions:
         return data
 
     def player_add(
-        self, name="", surname="", sex="male", city="", category="wc", elo=0
+        self,
+        name="",
+        surname="",
+        sex="male",
+        city="",
+        club="",
+        federation="🇺🇳",
+        category="wc",
+        elo=0,
     ):
         log_method(obj=self, func=self.player_add)
         if not self.turnament:
@@ -122,6 +130,8 @@ class Actions:
                 surname=surname,
                 sex=sex,
                 city=city,
+                club=club,
+                federation=federation,
                 category=category,
                 elo=elo,
             )
@@ -146,6 +156,8 @@ class Actions:
         surname="",
         sex="male",
         city="",
+        club="",
+        federation="🇺🇳",
         category="wc",
         elo=0,
     ):
@@ -162,6 +174,8 @@ class Actions:
                 p.surname = surname
                 p.sex = sex
                 p.city = city
+                p.club = club
+                p.federation = federation or "🇺🇳"
                 p.category = category
                 p.elo = int(elo) if elo else 0
                 p.calculate_rank()
@@ -176,6 +190,8 @@ class Actions:
                     surname=surname,
                     sex=sex,
                     city=city,
+                    club=club,
+                    federation=federation or "🇺🇳",
                     category=category,
                     elo=int(elo) if elo else 0,
                 )
@@ -319,6 +335,7 @@ class Actions:
                 "surname": player.surname,
                 "elo": player.elo,
                 "cat": player.category,
+                "federation": player.federation,
                 "points": sum(player.results) if player.results else 0.0,
                 "bucholz": player.bucholz,
                 "progress": player.progress,
@@ -362,12 +379,14 @@ class Actions:
 
         for p in self.turnament._players:
             if p.id in suspended:
-                for r in range(next_round, max_round + 1):
-                    p.suspend_player(r)
+                self.turnament.suspend_player(
+                    player=p, rounds=range(next_round, max_round + 1)
+                )
                 logging.info(f"Player #{p.id} suspended from round {next_round}")
             elif p.id in unsuspended:
-                for r in range(next_round, max_round + 1):
-                    p.suspended_rounds.discard(r)
+                self.turnament.unsuspend_player(
+                    player=p, rounds=range(next_round, max_round + 1)
+                )
                 logging.info(f"Player #{p.id} unsuspended from round {next_round}")
 
         return {"status": True}
@@ -379,36 +398,90 @@ class Actions:
             logging.error("No turnament active. Please start turnament with Players.")
             data = {"status": False, "round": None}
         elif nr == -1 or nr in range(len(self.turnament._rounds)):
-            data = {"status": True, "round": self.turnament._rounds[nr].get(full=full)}
+            _round = self.turnament._rounds[nr]
+            data = {"status": True, "round": _round.get(full=full)}
+            pauser_id = (
+                int(_round.pausing)
+                if isinstance(_round.pausing, int) and _round.pausing > 0
+                else 0
+            )
             # Resolve pauser info - show actual player data if pauser exists
-            if "pauser" in data["round"] and data["round"]["pauser"] > 0:
-                p_id = data["round"]["pauser"]
-                pauser_found = False
+            data["round"]["pauser"] = None
+            if pauser_id:
                 for player in self.turnament._players:
-                    if player.id == p_id:
+                    if player.id == pauser_id:
                         data["round"]["pauser"] = player.get(
-                            specific=["id", "name", "surname", "cat", "elo"]
+                            specific=[
+                                "id",
+                                "name",
+                                "surname",
+                                "cat",
+                                "elo",
+                                "federation",
+                            ]
                         )
-                        pauser_found = True
                         break
-                if not pauser_found:
-                    data["round"]["pauser"] = None
-            else:
-                data["round"]["pauser"] = None
 
-            # Add suspended players info for this round
-            round_nr = nr + 1 if nr >= 0 else len(self.turnament._rounds)
-            suspended = self.turnament.get_suspended_players(round_nr)
-            # Filter out the pauser from suspended list to avoid duplication
-            pauser_id = self.turnament._rounds[nr].pausing if nr >= 0 else 0
-            suspended = [p for p in suspended if p.id != pauser_id]
-            if suspended:
-                data["round"]["suspended"] = [
-                    p.get(specific=["id", "name", "surname", "cat", "elo"])
-                    for p in suspended
-                ]
-            else:
-                data["round"]["suspended"] = []
+            # Add all players not taking part in this round (suspended, or
+            # joined the tournament later) together with their next round.
+            round_nr = (
+                _round.number
+                if _round.number
+                else (nr + 1 if nr >= 0 else len(self.turnament._rounds))
+            )
+            is_active = self.turnament.is_round_active(round_nr)
+            absent = self.turnament.get_round_absent_players(round_nr)
+            suspended_data = []
+            for player, plays_in in absent:
+                if player.id == pauser_id:
+                    continue
+                added_in_round = self.turnament.get_player_join_round(player.id)
+                entry = player.get(
+                    specific=[
+                        "id",
+                        "name",
+                        "surname",
+                        "cat",
+                        "elo",
+                        "city",
+                        "club",
+                        "sex",
+                        "federation",
+                    ]
+                )
+                entry["plays_in"] = plays_in
+                entry["added_in_round"] = added_in_round
+                entry["can_edit"] = bool(
+                    is_active
+                    and added_in_round is not None
+                    and added_in_round == round_nr
+                )
+                suspended_data.append(entry)
+            data["round"]["suspended"] = suspended_data
+
+            # Players who still play this round, but are suspended from the
+            # next one ("Future suspended").
+            future = self.turnament.get_round_future_suspended(round_nr)
+            data["round"]["future_suspended"] = [
+                {
+                    **player.get(
+                        specific=[
+                            "id",
+                            "name",
+                            "surname",
+                            "cat",
+                            "elo",
+                            "city",
+                            "club",
+                            "sex",
+                            "federation",
+                        ]
+                    ),
+                    "plays_until": round_nr,
+                    "can_unsuspend": is_active,
+                }
+                for player in future
+            ]
             logging.debug("Rounds: \n{}".format(self.turnament._rounds))
         else:
             logging.error("Wrong round number.")
@@ -445,8 +518,15 @@ class Actions:
         log_method(obj=self, func=self.apply_round)
         round_nr = len(self.turnament._rounds)
         if self.turnament._rounds[round_nr - 1].all_results:
-            logging.info(f"Round {round_nr} applied.")
-            self.turnament.apply_round_results()
+            # load_results() replays only already-confirmed rounds, so the
+            # active round must be applied here - exactly once, also after a
+            # reopen. A finished tournament is the exception: its rounds were
+            # replayed on load and must not be counted twice.
+            if self.turnament._finished_round_nr < round_nr:
+                self.turnament.apply_round_results()
+                logging.info(f"Round {round_nr} applied.")
+            else:
+                logging.info(f"Round {round_nr} results already applied.")
             self.turnament.next_round()
             return True
         else:

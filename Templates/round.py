@@ -26,6 +26,7 @@ INFO_VIEW = """
                     <div class="card-header text-light py-0 text-secondary-emphasis"><i class="bi bi-info-circle me-2"> </i>Info</div>
                     <div class="card-body">
                         <!-- PAUSER -->
+                        <!-- FUTURE_SUSPENDED -->
                         <!-- SUSPENDED -->
                     </div>
                 </div>
@@ -36,11 +37,19 @@ PAUSER = """
                         <span class="text-secondary">{player_surname} {player_name}</span>
                         <span class="text-secondary"><i> {player_elo}</i></span>
     """
+FUTURE_SUSPENDED = """
+                        <p>Future suspended: <span class="badge border border-secondary-emphasis text-secondary">#{player_nr}</span>
+                        <span class="badge border border-secondary-emphasis text-secondary">{player_cat}</span>
+                        <span class="text-secondary">{player_surname} {player_name}</span>
+                        <span class="text-secondary"><i> {player_elo}</i></span>
+                        {player_plays_until}</p>
+    """
 SUSPENDED = """
                         <p><span class="badge border border-secondary-emphasis text-secondary">#{player_nr}</span>
                         <span class="badge border border-secondary-emphasis text-secondary">{player_cat}</span>
                         <span class="text-secondary">{player_surname} {player_name}</span>
-                        <span class="text-secondary"><i> {player_elo}</i></span></p>
+                        <span class="text-secondary"><i> {player_elo}</i></span>
+                        {player_plays_in}</p>
     """
 
 
@@ -60,6 +69,11 @@ class RoundView(object):
         self._suspended = (
             self.data["round"]["suspended"]
             if status and self.data["round"].get("suspended", False)
+            else None
+        )
+        self._future_suspended = (
+            self.data["round"]["future_suspended"]
+            if status and self.data["round"].get("future_suspended", False)
             else None
         )
         print("PAUSER:", self._pauser, "SUSPENDED:", self._suspended)
@@ -105,7 +119,7 @@ class RoundView(object):
 
     def _update_info(self):
         """Update content - extra info about Pauser or suspended Players"""
-        if self._pauser or self._suspended:
+        if self._pauser or self._future_suspended or self._suspended:
             self._template = self._template.replace("<!-- INFO -->", INFO_VIEW)
             if self._pauser:
                 pauser = PAUSER.format(
@@ -116,15 +130,45 @@ class RoundView(object):
                     player_elo=self._pauser["elo"] if self._pauser["elo"] > 0 else "",
                 )
                 self._template = self._template.replace("<!-- PAUSER -->", pauser)
+            if self._future_suspended:
+                future_suspended = "Future suspended: "
+                for player in self._future_suspended:
+                    plays_until = player.get("plays_until")
+                    player_plays_until = (
+                        f'<span class="text-secondary" style="font-size:12px;">'
+                        f"(plays until round {plays_until} end)</span>"
+                        if plays_until
+                        else ""
+                    )
+                    row = FUTURE_SUSPENDED.format(
+                        player_nr=player["id"],
+                        player_cat=player["cat"],
+                        player_name=player["name"],
+                        player_surname=player["surname"],
+                        player_elo=player["elo"] if player["elo"] > 0 else "",
+                        player_plays_until=player_plays_until,
+                    )
+                    future_suspended += row
+                self._template = self._template.replace(
+                    "<!-- FUTURE_SUSPENDED -->", future_suspended
+                )
             if self._suspended:
                 suspended = "Suspended: "
                 for player in self._suspended:
+                    plays_in = player.get("plays_in")
+                    player_plays_in = (
+                        f'<span class="text-secondary" style="font-size:12px;">'
+                        f"(plays in round {plays_in})</span>"
+                        if plays_in
+                        else ""
+                    )
                     row = SUSPENDED.format(
                         player_nr=player["id"],
                         player_cat=player["cat"],
                         player_name=player["name"],
                         player_surname=player["surname"],
                         player_elo=player["elo"] if player["elo"] > 0 else "",
+                        player_plays_in=player_plays_in,
                     )
                     suspended += row
                 self._template = self._template.replace("<!-- SUSPENDED -->", suspended)

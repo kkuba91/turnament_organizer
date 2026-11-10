@@ -58,7 +58,8 @@ class File(object):
     def _is_name_valid(self) -> bool:
         _valid = False
         if isinstance(self._name, str):
-            if self._name.replace("_", "").isalnum():
+            # Allow letters, digits, underscores and spaces in tournament name.
+            if self._name.replace("_", "").replace(" ", "").isalnum():
                 _valid = True
             else:
                 msg_error = f"Wrong filename.. ({self._name})"

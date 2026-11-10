@@ -36,6 +36,7 @@ class Turnament(object):
         self._system = SystemType.UNKNOWN
         self._players = []
         self._rounds = []
+        self._player_join_rounds = {}
         self.sql = SqlUtils(engine)
 
         # Additional:
@@ -73,10 +74,16 @@ class Turnament(object):
                 surname=player.get("surname"),
                 sex=player.get("sex", "male"),
                 city=player.get("city", ""),
+                club=player.get("club", ""),
+                federation=player.get("federation") or "🇺🇳",
                 category=player.get("category", "wc"),
                 elo=player.get("elo", 0),
                 insert_to_db=False,
             )
+        # Initialize suspensions (players not taking part in given rounds):
+        self.load_suspensions()
+        # Initialize information about players who joined mid-tournament:
+        self.load_registrations()
         # Initialize results of Rounds from db:
         self.load_results()
 
@@ -106,6 +113,8 @@ class Turnament(object):
         surname="",
         sex="male",
         city="",
+        club="",
+        federation="🇺🇳",
         category="wc",
         elo=0,
         _id=None,
@@ -130,6 +139,8 @@ class Turnament(object):
                     surname=surname,
                     sex=sex or "male",
                     city=city,
+                    club=club,
+                    federation=federation or "🇺🇳",
                     category=str(category),
                     elo=elo,
                 )
@@ -146,13 +157,25 @@ class Turnament(object):
                     player.id = max_id + 1
                 # else: player.id remains 0 (will be assigned when begin() is called)
 
-                # If tournament is active, suspend the player for the current round
-                # They will participate starting from the next round
+                # If tournament is active, remember the round in which the
+                # player joined and suspend them for all rounds that already
+                # took place (and the current one). They will participate
+                # starting from the next round.
                 if self._act_round_nr > 0 and self.fine_to_begin:
-                    player.suspend_player(self._act_round_nr)
+                    self._player_join_rounds[player.id] = self._act_round_nr
+                    if insert_to_db:
+                        self.sql.insert_registration(
+                            round=self._act_round_nr, player_id=player.id
+                        )
+                    self.suspend_player(
+                        player=player,
+                        rounds=range(1, self._act_round_nr + 1),
+                        insert_to_db=insert_to_db,
+                    )
                     msg_info = (
                         f"Player {player.name} {player.surname} suspended for "
-                        f"round {self._act_round_nr}, will play from round {self._act_round_nr + 1}."
+                        f"rounds 1-{self._act_round_nr}, "
+                        f"will play from round {self._act_round_nr + 1}."
                     )
                     logging.info(msg=msg_info)
 
@@ -163,6 +186,8 @@ class Turnament(object):
                         surname=surname,
                         sex=sex,
                         city=city,
+                        club=club,
+                        federation=federation or "🇺🇳",
                         category=category,
                         elo=elo,
                     )
@@ -187,6 +212,9 @@ class Turnament(object):
                 logging.info(msg=msg_info)
                 self._players.pop(list_index)
                 self.sql.remove_player_info(name=name, surname=surname)
+                self.sql.remove_suspension(player_id=player.id)
+                self.sql.remove_registration(player_id=player.id)
+                self._player_join_rounds.pop(player.id, None)
                 logging.debug(f"Last players: {self._players}")
                 return True
             list_index += 1
@@ -264,6 +292,57 @@ class Turnament(object):
         # Save pairings for the first round to DB
         self._save_round_pairings(self._act_round_nr)
 
+    def load_suspensions(self):
+        """Load persisted player suspensions from DB into player objects."""
+        suspensions = self.sql.read_suspensions_info()
+        if not isinstance(suspensions, list):
+            return
+        players_by_id = {p.id: p for p in self._players if p.id > 0}
+        for suspension in suspensions:
+            player = players_by_id.get(suspension.get("player_id"))
+            round_nr = suspension.get("round")
+            if player and round_nr:
+                player.suspend_player(int(round_nr))
+
+    def load_registrations(self):
+        """Load rounds in which players joined the tournament from DB."""
+        registrations = self.sql.read_registrations_info()
+        if not isinstance(registrations, list):
+            return
+        self._player_join_rounds = {}
+        for registration in registrations:
+            player_id = registration.get("player_id")
+            round_nr = registration.get("round")
+            if player_id and round_nr:
+                self._player_join_rounds[int(player_id)] = int(round_nr)
+
+    def get_player_join_round(self, player_id):
+        """Return the round in which the player joined, or None."""
+        return self._player_join_rounds.get(player_id)
+
+    def is_round_active(self, round_nr):
+        """Return True if the round is the current, unfinished round."""
+        return (
+            self.fine_to_begin
+            and not self._finished
+            and round_nr == self._act_round_nr
+            and round_nr > 0
+        )
+
+    def suspend_player(self, player, rounds, insert_to_db=True):
+        """Suspend a player for given rounds in memory and persist in DB."""
+        for round_nr in rounds:
+            player.suspend_player(round_nr)
+            if insert_to_db and player.id > 0:
+                self.sql.insert_suspension(round=round_nr, player_id=player.id)
+
+    def unsuspend_player(self, player, rounds):
+        """Remove player suspension for given rounds in memory and DB."""
+        for round_nr in rounds:
+            player.suspended_rounds.discard(round_nr)
+            if player.id > 0:
+                self.sql.remove_suspension(round=round_nr, player_id=player.id)
+
     def load_results(self):
         """Load results and rebuild rounds from DB-saved pairings for repeatability."""
         if self._act_round_nr <= 0:
@@ -331,8 +410,12 @@ class Turnament(object):
             else:
                 self._rounds.append(_round)
 
-            # If round is complete, apply results for player scoring
-            if _round.all_results or (self._finished and r < target_round_nr):
+            # Replay results for confirmed rounds only. The still-active round is
+            # applied exactly once by apply_round() when the user moves on, which
+            # also picks up any result edits made after reopening the tournament.
+            # A finished tournament replays every round, including the last one.
+            is_active_round = r == target_round_nr and not self._finished
+            if _round.all_results and not is_active_round:
                 self.apply_round_results()
                 self._save_round_pairings(r)
                 self._finished_round_nr = r
@@ -435,6 +518,9 @@ class Turnament(object):
         if _round.pausing > 0:
             for player in self._players:
                 if player.id == _round.pausing and player.id > 0:
+                    # Remember that this player already had a bye, so future
+                    # rounds can prefer someone who has not paused yet.
+                    player.paused = True
                     player.points += 1
                     player.progress += player.points
                     player.add_opponent(-1)
@@ -472,6 +558,7 @@ class Turnament(object):
                 "club",
                 "city",
                 "sex",
+                "federation",
                 "rank",
                 "result",
                 "progress",
@@ -487,6 +574,7 @@ class Turnament(object):
                 "club",
                 "city",
                 "sex",
+                "federation",
                 "rank",
             ]
         elif _type in ("name", "names", "fullname", "fullnames"):
@@ -514,6 +602,77 @@ class Turnament(object):
     def get_suspended_players(self, round_nr):
         """Return list of players suspended for a given round."""
         return [p for p in self._players if p.is_suspended(round_nr) and not p.pauser]
+
+    def get_round_participants(self, round_nr):
+        """Return IDs of players taking part in a given round (playing or pausing)."""
+        if round_nr <= 0 or round_nr > len(self._rounds):
+            return set()
+        _round = self._rounds[round_nr - 1]
+        participants = set()
+        for table in _round.tables.values():
+            for player in (table.w_player, table.b_player):
+                if player.id > 0:
+                    participants.add(player.id)
+        if isinstance(_round.pausing, int) and _round.pausing > 0:
+            participants.add(_round.pausing)
+        return participants
+
+    def get_player_plays_in(self, player_id, round_nr):
+        """Return the next round after `round_nr` in which player will take part.
+
+        For rounds already generated pairings are used. For future rounds the
+        suspension state decides whether the player is going to play.
+        """
+        player = next((p for p in self._players if p.id == player_id), None)
+        if not player:
+            return None
+
+        for next_round in range(round_nr + 1, self._rounds_num + 1):
+            if next_round <= len(self._rounds):
+                if player_id in self.get_round_participants(next_round):
+                    return next_round
+            elif next_round > self._act_round_nr:
+                if not player.is_suspended(next_round):
+                    return next_round
+        return None
+
+    def get_round_absent_players(self, round_nr):
+        """Return players not taking part in a round with their next round.
+
+        This covers both explicitly suspended players and players who joined
+        the tournament later (so they did not take part in earlier rounds).
+        """
+        participants = self.get_round_participants(round_nr)
+        absent = []
+        for player in self._players:
+            if player.pauser or player.id <= 0:
+                continue
+            if player.id in participants:
+                continue
+            plays_in = self.get_player_plays_in(player.id, round_nr)
+            absent.append((player, plays_in))
+        absent.sort(key=lambda item: item[0].id)
+        return absent
+
+    def get_round_future_suspended(self, round_nr):
+        """Return players playing a round who are suspended from the next one.
+
+        Such a player takes part in `round_nr`, but has been marked to leave
+        the tournament and will not take part in `round_nr + 1` and later.
+        """
+        if round_nr <= 0 or round_nr >= self._rounds_num:
+            return []
+        participants = self.get_round_participants(round_nr)
+        future = [
+            player
+            for player in self._players
+            if not player.pauser
+            and player.id > 0
+            and player.id in participants
+            and player.is_suspended(round_nr + 1)
+        ]
+        future.sort(key=lambda p: p.id)
+        return future
 
     def dump_act_results(self):
         _dump = f"RESULTS AFTER ROUND NR: #{self._act_round_nr}:\n\n"
