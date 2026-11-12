@@ -235,9 +235,14 @@ class SystemSwiss(System):
                             player.refresh_possible_opponents(players_list)
 
                             parity += 1
-                            if opponent.id == -1:
-                                _round.pausing = player.id
-                                player.paused = True
+                            pausing_player = None
+                            if player.id == -1:
+                                pausing_player = opponent
+                            elif opponent.id == -1:
+                                pausing_player = player
+                            if pausing_player is not None:
+                                _round.pausing = pausing_player.id
+                                pausing_player.paused = True
                             elif (parity + self._round - 1) % 2 == 0:
                                 _round.tables[table_nr].swap_players()
 
@@ -268,9 +273,14 @@ class SystemSwiss(System):
                     players_set.append(best_opponent.id)
                     parity += 1
                     table_nr = _round.add_table(player_w=player, player_b=best_opponent)
-                    if best_opponent.id == -1:
-                        _round.pausing = player.id
-                        player.paused = True
+                    pausing_player = None
+                    if player.id == -1:
+                        pausing_player = best_opponent
+                    elif best_opponent.id == -1:
+                        pausing_player = player
+                    if pausing_player is not None:
+                        _round.pausing = pausing_player.id
+                        pausing_player.paused = True
                     elif (parity + self._round - 1) % 2 == 0:
                         _round.tables[table_nr].swap_players()
 

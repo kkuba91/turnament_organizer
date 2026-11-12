@@ -24,6 +24,15 @@ _module_root = Path(__file__).parent.parent.parent
 _templates_dir = str(_module_root / "Templates")
 templates = Jinja2Templates(directory=_templates_dir)
 
+# Cache-busting value for static assets (changes when they are modified).
+try:
+    _static_version = max(
+        int((_module_root / "Templates" / "Styles" / "app.js").stat().st_mtime),
+        int((_module_root / "Templates" / "Styles" / "federations.js").stat().st_mtime),
+    )
+except OSError:
+    _static_version = __version__
+
 api = FastAPI(
     title="Chess turnament manager",
     description="Swiss, single elimination, circular systems",
@@ -74,6 +83,7 @@ class ApiData:
             {
                 "request": request,
                 "version": __version__,
+                "static_version": _static_version,
             },
         )
 
@@ -307,12 +317,27 @@ class ApiData:
         raise NotImplementedError
 
     async def turnament_player_add(
-        self, name: str, surname: str, sex="male", city="", category="wc", elo=0
+        self,
+        name: str,
+        surname: str,
+        sex="male",
+        city="",
+        club="",
+        federation="🇺🇳",
+        category="wc",
+        elo=0,
     ):
         await asyncio.sleep(0.01)
         logging.info("[API]: Add Player: {} ..".format(name))
         return self.app.actions.player_add(
-            name=name, surname=surname, sex=sex, city=city, category=category, elo=elo
+            name=name,
+            surname=surname,
+            sex=sex,
+            city=city,
+            club=club,
+            federation=federation,
+            category=category,
+            elo=elo,
         )
 
     async def turnament_player_del(self, name: str, surname=""):
@@ -327,6 +352,8 @@ class ApiData:
         surname: str,
         sex="male",
         city="",
+        club="",
+        federation="🇺🇳",
         category="wc",
         elo=0,
     ):
@@ -338,6 +365,8 @@ class ApiData:
             surname=surname,
             sex=sex,
             city=city,
+            club=club,
+            federation=federation,
             category=category,
             elo=elo,
         )

@@ -140,6 +140,7 @@ class Player(ModelPlayer):
             "sex": self.sex,
             "city": self.city,
             "club": self.club,
+            "federation": self.federation,
             "elo": self.elo,
             "rank": self.rank,
             "cat": self.category,

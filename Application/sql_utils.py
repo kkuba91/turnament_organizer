@@ -51,6 +51,7 @@ PLAYERS_TABLE_COLS = [
     Column("Elo", Integer),
     Column("Elo_rapid", Integer),
     Column("Elo_blitz", Integer),
+    Column("Federation", String),
 ]
 
 RESULTS_TABLE_COLS = [
@@ -76,6 +77,18 @@ PAUSES_TABLE_COLS = [
     Column("Player_id", Integer),
 ]
 
+SUSPENSIONS_TABLE_COLS = [
+    Column("_Id", Integer, primary_key=True, nullable=False),
+    Column("Round", Integer),
+    Column("Player_id", Integer),
+]
+
+REGISTRATIONS_TABLE_COLS = [
+    Column("_Id", Integer, primary_key=True, nullable=False),
+    Column("Round", Integer),
+    Column("Player_id", Integer),
+]
+
 
 class SqlUtils(object):
     @dataclass
@@ -85,6 +98,8 @@ class SqlUtils(object):
         results = None
         pairings = None
         pauses = None
+        suspensions = None
+        registrations = None
 
     def __init__(self, engine) -> None:
         self.engine = engine
@@ -102,6 +117,8 @@ class SqlUtils(object):
         self.results_init()
         self.pairings_init()
         self.pauses_init()
+        self.suspensions_init()
+        self.registrations_init()
 
     def get_turnament_info(self):
         table_name = "Turnament"
@@ -163,6 +180,12 @@ class SqlUtils(object):
         self.db.players = self._sql_init_table_or_get_existing(
             table_name=table_name, table_cols=PLAYERS_TABLE_COLS
         )
+        # Existing tournament files predate the Federation column.
+        federation_col = next(
+            col for col in PLAYERS_TABLE_COLS if col.key == "Federation"
+        )
+        self._ensure_table_column(table_name, federation_col)
+        self.db.players = self.meta_data.tables[table_name]
 
     def get_players_info(self):
         table_name = "Players"
@@ -183,8 +206,9 @@ class SqlUtils(object):
         bind_data = {}
         logging.debug(f"kwargs: {kwargs}")
         for col in PLAYERS_TABLE_COLS:
-            if not col.primary_key and kwargs.get(str(col.key).lower()):
-                data[str(col.key)] = kwargs[str(col.key).lower()]
+            key = str(col.key).lower()
+            if not col.primary_key and key in kwargs and kwargs[key] is not None:
+                data[str(col.key)] = kwargs[key]
                 bind_data[str(col.key)] = bindparam(str(col.key))
         logging.debug(f"data: {data}")
 
@@ -239,8 +263,9 @@ class SqlUtils(object):
         bind_data = {}
         logging.debug(f"kwargs: {kwargs}")
         for col in PLAYERS_TABLE_COLS:
-            if not col.primary_key and kwargs.get(str(col.key).lower()):
-                data[str(col.key)] = kwargs[str(col.key).lower()]
+            key = str(col.key).lower()
+            if not col.primary_key and key in kwargs and kwargs[key] is not None:
+                data[str(col.key)] = kwargs[key]
                 bind_data[str(col.key)] = bindparam(str(col.key))
         logging.debug(f"data: {data}")
 
@@ -265,8 +290,15 @@ class SqlUtils(object):
             table_cols=PLAYERS_TABLE_COLS,
         )
         self._replace_None(
-            list_of_dicts=players, key_names=["city", "club"], replace_to=""
+            list_of_dicts=players,
+            key_names=["city", "club"],
+            replace_to="",
         )
+        self._replace_None(
+            list_of_dicts=players, key_names=["federation"], replace_to="🇺🇳"
+        )
+        # Older database files may contain NULL for values equal to zero.
+        self._replace_None(list_of_dicts=players, key_names=["elo"], replace_to=0)
         logging.debug(f'Reading Players from table "{table_name}":\n{players}')
         return players
 
@@ -470,6 +502,172 @@ class SqlUtils(object):
         )
         logging.debug(f'Reading Pauses from table "{table_name}":\n{pauses}')
         return pauses
+
+    def suspensions_init(self):
+        table_name = "Suspensions"
+        log_method(self, self.suspensions_init)
+        self.db.suspensions = self._sql_init_table_or_get_existing(
+            table_name=table_name, table_cols=SUSPENSIONS_TABLE_COLS
+        )
+
+    def insert_suspension(self, **kwargs):
+        table_name = "Suspensions"
+        log_method(self, self.insert_suspension)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        data = {
+            "Round": kwargs.get("round"),
+            "Player_id": kwargs.get("player_id"),
+        }
+        logging.debug(f"kwargs: {kwargs}")
+
+        act_suspensions = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.suspensions,
+            table_cols=SUSPENSIONS_TABLE_COLS,
+        )
+        if any(
+            [
+                data["Round"] == act["round"] and data["Player_id"] == act["player_id"]
+                for act in act_suspensions
+            ]
+        ):
+            logging.debug(
+                f"Suspension already exists for round {data['Round']}, "
+                f"player {data['Player_id']}"
+            )
+        else:
+            stmt_insert = self.db.suspensions.insert()
+            self.engine.execute(
+                stmt_insert,
+                [
+                    data,
+                ],
+            )
+            logging.debug(f'Inserting {kwargs} into table "{table_name}"')
+
+    def remove_suspension(self, round=None, player_id=None):
+        table_name = "Suspensions"
+        log_method(self, self.remove_suspension)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        if round is None and player_id is None:
+            logging.error("No suspension filter provided - nothing to delete.")
+            return {}
+        stmt_delete = self.db.suspensions.delete()
+        if round is not None:
+            stmt_delete = stmt_delete.where(self.db.suspensions.c.Round == round)
+        if player_id is not None:
+            stmt_delete = stmt_delete.where(
+                self.db.suspensions.c.Player_id == player_id
+            )
+        logging.debug(
+            f"Deleting suspension(s) for round={round}, player={player_id} "
+            f'from table "{table_name}"'
+        )
+        self.engine.execute(stmt_delete)
+
+    def read_suspensions_info(self, **kwargs):
+        table_name = "Suspensions"
+        log_method(self, self.read_suspensions_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        suspensions = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.suspensions,
+            table_cols=SUSPENSIONS_TABLE_COLS,
+        )
+        logging.debug(f'Reading Suspensions from table "{table_name}":\n{suspensions}')
+        return suspensions
+
+    def registrations_init(self):
+        table_name = "Registrations"
+        log_method(self, self.registrations_init)
+        self.db.registrations = self._sql_init_table_or_get_existing(
+            table_name=table_name, table_cols=REGISTRATIONS_TABLE_COLS
+        )
+
+    def insert_registration(self, **kwargs):
+        table_name = "Registrations"
+        log_method(self, self.insert_registration)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        data = {
+            "Round": kwargs.get("round"),
+            "Player_id": kwargs.get("player_id"),
+        }
+        logging.debug(f"kwargs: {kwargs}")
+
+        act_registrations = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.registrations,
+            table_cols=REGISTRATIONS_TABLE_COLS,
+        )
+        if any([data["Player_id"] == act["player_id"] for act in act_registrations]):
+            logging.debug(f"Registration already exists for player {data['Player_id']}")
+        else:
+            stmt_insert = self.db.registrations.insert()
+            self.engine.execute(
+                stmt_insert,
+                [
+                    data,
+                ],
+            )
+            logging.debug(f'Inserting {kwargs} into table "{table_name}"')
+
+    def remove_registration(self, player_id=None):
+        table_name = "Registrations"
+        log_method(self, self.remove_registration)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        if player_id is None:
+            logging.error("No player provided - nothing to delete.")
+            return {}
+        stmt_delete = self.db.registrations.delete().where(
+            self.db.registrations.c.Player_id == player_id
+        )
+        logging.debug(
+            f'Deleting registration for player={player_id} from table "{table_name}"'
+        )
+        self.engine.execute(stmt_delete)
+
+    def read_registrations_info(self, **kwargs):
+        table_name = "Registrations"
+        log_method(self, self.read_registrations_info)
+        if table_name not in inspect(self.engine).get_table_names():
+            logging.error(f'No table "{table_name}"!')
+            return {}
+        registrations = self._get_table_data(
+            table_name=table_name,
+            db_table=self.db.registrations,
+            table_cols=REGISTRATIONS_TABLE_COLS,
+        )
+        logging.debug(
+            f'Reading Registrations from table "{table_name}":\n{registrations}'
+        )
+        return registrations
+
+    def _ensure_table_column(self, table_name: str, column: Column):
+        """Add a column to an existing table (simple schema migration)."""
+        log_method(self, self._ensure_table_column)
+        existing_columns = {
+            col["name"] for col in inspect(self.engine).get_columns(table_name)
+        }
+        if column.name in existing_columns:
+            return
+        column_type = column.type.compile(dialect=self.engine.dialect)
+        logging.info(f'Adding column "{column.name}" to table "{table_name}".')
+        self.engine.execute(
+            f'ALTER TABLE "{table_name}" ADD COLUMN "{column.name}" {column_type}'
+        )
+        # Refresh reflected metadata so the new column can be used.
+        self.meta_data.remove(self.meta_data.tables[table_name])
+        self.meta_data.reflect(bind=self.engine, only=[table_name])
 
     def _sql_init_table_or_get_existing(self, table_name: str, table_cols: list):
         log_method(self, self._sql_init_table_or_get_existing)
